@@ -30,7 +30,7 @@
         this["default"] = __bind(this["default"], this);
         var _this = this;
         _.bindAll(this);
-        this.options = _.extend(_(this).result('default'), options);
+        this.options = _.extend({}, _(this).result('default'), options);
         this.makeMap();
         this.entries = this.getEntries();
         this.entries.then(function() {
@@ -41,16 +41,13 @@
       MapList.prototype.build = function(genreId) {
         var _this = this;
         return this.entries.then(function(entries) {
-          var entry, info, listElem, marker, _i, _len, _ref, _ref1, _ref2, _ref3, _results;
+          var entry, info, listElem, marker, _i, _len, _ref, _ref1, _results;
           _this.usingEntries = _this.filterdEntries(genreId, entries);
           _ref = _this.usingEntries;
           _results = [];
           for (_i = 0, _len = _ref.length; _i < _len; _i++) {
             entry = _ref[_i];
-            info = (_ref1 = entry.__info) != null ? _ref1 : entry.__info = _this.makeInfo(entry);
-            marker = (_ref2 = entry.__marker) != null ? _ref2 : entry.__marker = _this.makeMarker(entry, info);
-            listElem = (_ref3 = entry.__listElem) != null ? _ref3 : entry.__listElem = _this.makeListElem(entry, info, marker);
-            log(marker);
+            _ref1 = _this.getEntryData(entry), info = _ref1[0], marker = _ref1[1], listElem = _ref1[2];
             _results.push(marker.setMap(_this.map));
           }
           return _results;
@@ -96,13 +93,21 @@
         return entries;
       };
 
+      MapList.prototype.getEntryData = function(entry) {
+        var info, listElem, marker, _ref, _ref1, _ref2;
+        info = (_ref = entry.__info) != null ? _ref : entry.__info = this.makeInfo(entry);
+        marker = (_ref1 = entry.__marker) != null ? _ref1 : entry.__marker = this.makeMarker(entry, info);
+        listElem = (_ref2 = entry.__listElem) != null ? _ref2 : entry.__listElem = this.makeListElem(entry, info, marker);
+        return [info, marker, listElem];
+      };
+
       MapList.prototype.makeInfo = function() {
         return null;
       };
 
       MapList.prototype.makeMarker = function(entry, info) {
         var marker, position;
-        log(entry);
+        log("makeMarker");
         position = new google.maps.LatLng(entry.lat, entry.lng);
         return marker = new google.maps.Marker({
           position: position,
@@ -146,7 +151,7 @@
               lat: $place.attr('latitude'),
               lng: $place.attr('longitude')
             };
-            return _.extend(genre, position, res);
+            return _.extend({}, genre, position, res);
           });
         });
       };
