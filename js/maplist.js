@@ -36,10 +36,18 @@
         this.entries.then(function() {
           return _this.build(_this.options.firstGenre);
         });
+        this.entries.then(function(data) {
+          return log(data);
+        });
       }
 
-      MapList.prototype.build = function(genre) {
-        return build;
+      MapList.prototype.build = function(genreId) {};
+
+      MapList.prototype.clear = function() {};
+
+      MapList.prototype.rebuild = function(genreId) {
+        this.clear();
+        return this.build(genreId);
       };
 
       MapList.prototype.makeMap = function() {
@@ -85,14 +93,14 @@
           _this = this;
         $root = $(">*:first", data);
         alias = this.options.genreAlias;
-        return $.map($root.find(">genre"), function(genre) {
+        return $.map($root.find(">" + alias), function(genre) {
           var $genre;
           $genre = $(genre);
           genre = {
-            alias: $genre.attr("id"),
-            "genreName": $genre.attr("name"),
             "icon": $genre.attr("icon")
           };
+          genre["" + alias] = $genre.attr("id");
+          genre["" + alias + "Name"] = $genre.attr("name");
           return $.map($genre.find(">place"), function(place) {
             var $place, res;
             $place = $(place);

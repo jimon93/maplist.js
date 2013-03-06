@@ -27,6 +27,8 @@ do ($=jQuery)->
       @entries.then =>
         @build( @options.firstGenre )
 
+      @entries.then (data)=> log data
+
     build:(genreId)->
 
     clear:->
@@ -70,11 +72,9 @@ do ($=jQuery)->
       alias = @options.genreAlias
       $.map $root.find(">#{alias}"), (genre)=>
         $genre = $(genre)
-        genre = {
-          "#{alias}"     : $genre.attr("id")
-          "#{alias}Name" : $genre.attr("name")
-          "icon"      : $genre.attr("icon")
-        }
+        genre = { "icon" : $genre.attr("icon") }
+        genre["#{alias}"] = $genre.attr("id")
+        genre["#{alias}Name"] = $genre.attr("name")
         $.map $genre.find(">place"), (place)=>
           $place = $(place)
           res = {} # reduceでやりたい
