@@ -33,10 +33,14 @@
         this.options = _.extend(_(this).result('default'), options);
         this.makeMap();
         this.entries = this.getEntries();
-        this.entries.then(function(data) {
-          return log(data);
+        this.entries.then(function() {
+          return _this.build(_this.options.firstGenre);
         });
       }
+
+      MapList.prototype.build = function(genre) {
+        return build;
+      };
 
       MapList.prototype.makeMap = function() {
         var canvas, mapOptions;
@@ -68,25 +72,26 @@
 
       MapList.prototype.parse = function(data) {
         if ($.isXMLDoc(data)) {
-          return this.parseForXML(data);
+          return this._parseForXML(data);
         } else if (_.isObject(data)) {
-          return this.parseForObject(data);
+          return this._parseForObject(data);
         } else {
           return data;
         }
       };
 
-      MapList.prototype.parseForXML = function(data) {
-        var $root,
+      MapList.prototype._parseForXML = function(data) {
+        var $root, alias,
           _this = this;
         $root = $(">*:first", data);
+        alias = this.options.genreAlias;
         return $.map($root.find(">genre"), function(genre) {
           var $genre;
           $genre = $(genre);
           genre = {
-            genre: $genre.attr("id"),
-            genreName: $genre.attr("name"),
-            icon: $genre.attr("icon")
+            alias: $genre.attr("id"),
+            "genreName": $genre.attr("name"),
+            "icon": $genre.attr("icon")
           };
           return $.map($genre.find(">place"), function(place) {
             var $place, res;
@@ -100,7 +105,7 @@
         });
       };
 
-      MapList.prototype.parseForObject = function(data) {
+      MapList.prototype._parseForObject = function(data) {
         return data;
       };
 

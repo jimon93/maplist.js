@@ -24,9 +24,19 @@ do ($=jQuery)->
       @makeMap()
       @entries = @getEntries()
 
-      @entries.then (data)=>
-        log data
+      @entries.then =>
+        @build( @options.firstGenre )
 
+    build:(genreId)->
+
+    clear:->
+
+    rebuild:(genreId)->
+      @clear()
+      @build(genreId)
+
+    # private
+    #--------------------------------------------------
     makeMap:->
       mapOptions = _(@options).clone()
       canvas = $(@options.mapSelector).get(0)
@@ -49,20 +59,21 @@ do ($=jQuery)->
 
     parse:(data)->
       if $.isXMLDoc(data)
-        @parseForXML( data )
+        @_parseForXML( data )
       else if _.isObject(data)
-        @parseForObject( data )
+        @_parseForObject( data )
       else
         data
 
-    parseForXML:(data)->
+    _parseForXML:(data)->
       $root = $(">*:first", data)
-      $.map $root.find(">genre"), (genre)=>
+      alias = @options.genreAlias
+      $.map $root.find(">#{alias}"), (genre)=>
         $genre = $(genre)
         genre = {
-          genre     : $genre.attr("id")
-          genreName : $genre.attr("name")
-          icon      : $genre.attr("icon")
+          "#{alias}"     : $genre.attr("id")
+          "#{alias}Name" : $genre.attr("name")
+          "icon"      : $genre.attr("icon")
         }
         $.map $genre.find(">place"), (place)=>
           $place = $(place)
@@ -71,7 +82,7 @@ do ($=jQuery)->
             res[elem.nodeName] = $(elem).text()
           return _.extend( res, genre )
 
-    parseForObject:(data)->
+    _parseForObject:(data)->
       data
 
   window.MapList = MapList
