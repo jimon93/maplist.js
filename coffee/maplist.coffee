@@ -1,4 +1,5 @@
 do ($=jQuery)->
+  log = _.bind( console.log, console )
   class MapList
     default: => {
       center                 : new google.maps.LatLng( 35, 135 )
@@ -20,6 +21,7 @@ do ($=jQuery)->
     constructor:(options)->
       @options = _.extend( _(@).result('default'), options )
       @makeMap()
+      log "log "
 
     makeMap:->
       mapOptions = _(@options).clone()

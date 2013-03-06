@@ -3,7 +3,8 @@
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   (function($) {
-    var MapList;
+    var MapList, log;
+    log = _.bind(console.log, console);
     MapList = (function() {
 
       MapList.prototype["default"] = function() {
@@ -28,6 +29,7 @@
       function MapList(options) {
         this["default"] = __bind(this["default"], this);        this.options = _.extend(_(this).result('default'), options);
         this.makeMap();
+        log("log ");
       }
 
       MapList.prototype.makeMap = function() {
