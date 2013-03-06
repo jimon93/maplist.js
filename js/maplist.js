@@ -27,9 +27,14 @@
       };
 
       function MapList(options) {
-        this["default"] = __bind(this["default"], this);        this.options = _.extend(_(this).result('default'), options);
+        this["default"] = __bind(this["default"], this);
+        var _this = this;
+        this.options = _.extend(_(this).result('default'), options);
         this.makeMap();
-        log("log ");
+        this.entries = this.getEntries();
+        this.entries.then(function(data) {
+          return log(data);
+        });
       }
 
       MapList.prototype.makeMap = function() {
@@ -39,7 +44,30 @@
         return this.map = new google.maps.Map(canvas, mapOptions);
       };
 
-      MapList.prototype.parse = function() {};
+      MapList.prototype.getEntries = function() {
+        var data, dfd,
+          _this = this;
+        dfd = new $.Deferred;
+        data = this.options.data;
+        if (_(data).isArray()) {
+          dfd.resolve(data);
+        } else if (_(data).isString()) {
+          $.ajax({
+            url: data
+          }).done(function(data) {
+            return dfd.resolve(_this.options.parse(data));
+          }).fail(function() {
+            return dfd.reject();
+          });
+        } else {
+          dfd.reject();
+        }
+        return dfd.promise();
+      };
+
+      MapList.prototype.parse = function(data) {
+        return data;
+      };
 
       return MapList;
 

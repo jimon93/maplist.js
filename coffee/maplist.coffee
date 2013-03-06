@@ -21,13 +21,34 @@ do ($=jQuery)->
     constructor:(options)->
       @options = _.extend( _(@).result('default'), options )
       @makeMap()
-      log "log "
+      @entries = @getEntries()
+
+      @entries.then (data)=>
+        log data
 
     makeMap:->
       mapOptions = _(@options).clone()
       canvas = $(@options.mapSelector).get(0)
       @map = new google.maps.Map( canvas, mapOptions )
 
-    parse:->
+    getEntries:->
+      dfd = new $.Deferred
+      data = @options.data
+
+      if _(data).isArray()
+        dfd.resolve( data )
+      else if _(data).isString()
+        $.ajax({url:data}).done( (data)=>
+          dfd.resolve( @options.parse( data ) )
+        ).fail(=>
+          dfd.reject()
+        )
+      else
+        dfd.reject()
+
+      dfd.promise()
+
+    parse:(data)->
+      data
 
   window.MapList = MapList
