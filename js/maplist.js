@@ -29,6 +29,7 @@
       function MapList(options) {
         this["default"] = __bind(this["default"], this);
         var _this = this;
+        _.bindAll(this);
         this.options = _.extend(_(this).result('default'), options);
         this.makeMap();
         this.entries = this.getEntries();
@@ -49,9 +50,9 @@
           _this = this;
         dfd = new $.Deferred;
         data = this.options.data;
-        if (_(data).isArray()) {
+        if (_.isArray(data)) {
           dfd.resolve(data);
-        } else if (_(data).isString()) {
+        } else if (_.isString(data)) {
           $.ajax({
             url: data
           }).done(function(data) {
@@ -66,6 +67,40 @@
       };
 
       MapList.prototype.parse = function(data) {
+        if ($.isXMLDoc(data)) {
+          return this.parseForXML(data);
+        } else if (_.isObject(data)) {
+          return this.parseForObject(data);
+        } else {
+          return data;
+        }
+      };
+
+      MapList.prototype.parseForXML = function(data) {
+        var $root,
+          _this = this;
+        $root = $(">*:first", data);
+        return $.map($root.find(">genre"), function(genre) {
+          var $genre;
+          $genre = $(genre);
+          genre = {
+            genre: $genre.attr("id"),
+            genreName: $genre.attr("name"),
+            icon: $genre.attr("icon")
+          };
+          return $.map($genre.find(">place"), function(place) {
+            var $place, res;
+            $place = $(place);
+            res = {};
+            $place.children().each(function(idx, elem) {
+              return res[elem.nodeName] = $(elem).text();
+            });
+            return _.extend(res, genre);
+          });
+        });
+      };
+
+      MapList.prototype.parseForObject = function(data) {
         return data;
       };
 
