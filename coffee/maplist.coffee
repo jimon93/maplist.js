@@ -1,8 +1,8 @@
 do ($=jQuery)->
   class MapList
     default: => {
-      center                 : new google.maps.LatLng( 135, 35 )
-      zoom                   : 8
+      center                 : new google.maps.LatLng( 35, 135 )
+      zoom                   : 4
       mapTypeId              : google.maps.MapTypeId.ROADMAP
       data                   : []
       mapSelector            : '#map_canvas'
@@ -19,6 +19,12 @@ do ($=jQuery)->
 
     constructor:(options)->
       @options = _.extend( _(@).result('default'), options )
+      @makeMap()
+
+    makeMap:->
+      mapOptions = _(@options).clone()
+      canvas = $(@options.mapSelector).get(0)
+      @map = new google.maps.Map( canvas, mapOptions )
 
     parse:->
 

@@ -8,8 +8,8 @@
 
       MapList.prototype["default"] = function() {
         return {
-          center: new google.maps.LatLng(135, 35),
-          zoom: 8,
+          center: new google.maps.LatLng(35, 135),
+          zoom: 4,
           mapTypeId: google.maps.MapTypeId.ROADMAP,
           data: [],
           mapSelector: '#map_canvas',
@@ -27,7 +27,15 @@
 
       function MapList(options) {
         this["default"] = __bind(this["default"], this);        this.options = _.extend(_(this).result('default'), options);
+        this.makeMap();
       }
+
+      MapList.prototype.makeMap = function() {
+        var canvas, mapOptions;
+        mapOptions = _(this.options).clone();
+        canvas = $(this.options.mapSelector).get(0);
+        return this.map = new google.maps.Map(canvas, mapOptions);
+      };
 
       MapList.prototype.parse = function() {};
 
