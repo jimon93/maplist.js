@@ -23,15 +23,24 @@ do ($=jQuery)->
       @options = _.extend( _(@).result('default'), options )
       @makeMap()
       @entries = @getEntries()
-
       @entries.then =>
         @build( @options.firstGenre )
 
-      @entries.then (data)=> log data
-
     build:(genreId)->
+      @entries.then (entries)=>
+        @usingEntries = @filterdEntries(genreId,entries)
+        for entry in @usingEntries
+          info     = entry.__info     ? entry.__info     = @makeInfo( entry )
+          marker   = entry.__marker   ? entry.__marker   = @makeMarker( entry, info )
+          listElem = entry.__listElem ? entry.__listElem = @makeListElem( entry, info, marker )
+
+          log marker
+          marker.setMap(@map)
+
+
 
     clear:->
+      #marker.setMap(null)
 
     rebuild:(genreId)->
       @clear()
@@ -59,6 +68,19 @@ do ($=jQuery)->
         dfd.reject()
       dfd.promise()
 
+    filterdEntries:(genreId, entries)->
+      entries
+
+    makeInfo:->
+      null
+
+    makeMarker:(entry, info)->
+      log entry
+      position = new google.maps.LatLng( entry.lat, entry.lng )
+      marker = new google.maps.Marker { position, icon: entry.icon }
+
+    makeListElem:->
+
     parse:(data)->
       if $.isXMLDoc(data)
         @_parseForXML( data )
@@ -80,7 +102,8 @@ do ($=jQuery)->
           res = {} # reduceでやりたい
           $place.children().each (idx,elem)=>
             res[elem.nodeName] = $(elem).text()
-          return _.extend( res, genre )
+          position = { lat: $place.attr('latitude'), lng: $place.attr('longitude') }
+          return _.extend( genre, position, res )
 
     _parseForObject:(data)->
       data

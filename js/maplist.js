@@ -36,12 +36,26 @@
         this.entries.then(function() {
           return _this.build(_this.options.firstGenre);
         });
-        this.entries.then(function(data) {
-          return log(data);
-        });
       }
 
-      MapList.prototype.build = function(genreId) {};
+      MapList.prototype.build = function(genreId) {
+        var _this = this;
+        return this.entries.then(function(entries) {
+          var entry, info, listElem, marker, _i, _len, _ref, _ref1, _ref2, _ref3, _results;
+          _this.usingEntries = _this.filterdEntries(genreId, entries);
+          _ref = _this.usingEntries;
+          _results = [];
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            entry = _ref[_i];
+            info = (_ref1 = entry.__info) != null ? _ref1 : entry.__info = _this.makeInfo(entry);
+            marker = (_ref2 = entry.__marker) != null ? _ref2 : entry.__marker = _this.makeMarker(entry, info);
+            listElem = (_ref3 = entry.__listElem) != null ? _ref3 : entry.__listElem = _this.makeListElem(entry, info, marker);
+            log(marker);
+            _results.push(marker.setMap(_this.map));
+          }
+          return _results;
+        });
+      };
 
       MapList.prototype.clear = function() {};
 
@@ -78,6 +92,26 @@
         return dfd.promise();
       };
 
+      MapList.prototype.filterdEntries = function(genreId, entries) {
+        return entries;
+      };
+
+      MapList.prototype.makeInfo = function() {
+        return null;
+      };
+
+      MapList.prototype.makeMarker = function(entry, info) {
+        var marker, position;
+        log(entry);
+        position = new google.maps.LatLng(entry.lat, entry.lng);
+        return marker = new google.maps.Marker({
+          position: position,
+          icon: entry.icon
+        });
+      };
+
+      MapList.prototype.makeListElem = function() {};
+
       MapList.prototype.parse = function(data) {
         if ($.isXMLDoc(data)) {
           return this._parseForXML(data);
@@ -102,13 +136,17 @@
           genre["" + alias] = $genre.attr("id");
           genre["" + alias + "Name"] = $genre.attr("name");
           return $.map($genre.find(">place"), function(place) {
-            var $place, res;
+            var $place, position, res;
             $place = $(place);
             res = {};
             $place.children().each(function(idx, elem) {
               return res[elem.nodeName] = $(elem).text();
             });
-            return _.extend(res, genre);
+            position = {
+              lat: $place.attr('latitude'),
+              lng: $place.attr('longitude')
+            };
+            return _.extend(genre, position, res);
           });
         });
       };
