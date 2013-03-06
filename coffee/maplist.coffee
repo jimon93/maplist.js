@@ -7,12 +7,12 @@ do ($=jQuery)->
       mapTypeId              : google.maps.MapTypeId.ROADMAP
       data                   : []
       mapSelector            : '#map_canvas'
-      listSelector           : ''
-      listTemplate           : ''
-      infoTemplate           : ''
-      listToMarkerSelector   : ''
+      listSelector           : '#list'
+      listTemplate           : null
+      infoTemplate           : null
+      listToMarkerSelector   : '.open-info'
       genreAlias             : 'genre'
-      genreContainerSelector : ''
+      genreContainerSelector : '#genre'
       genreSelector          : ''
       firstGenre             : '__all__'
       parse                  : @parse
@@ -32,6 +32,7 @@ do ($=jQuery)->
         for entry in @usingEntries
           [info,marker,listElem] = @getEntryData(entry)
           marker.setMap(@map)
+          log entry
 
     clear:->
       #marker.setMap(null)
@@ -63,23 +64,36 @@ do ($=jQuery)->
       dfd.promise()
 
     filterdEntries:(genreId, entries)->
-      entries
+      if genreId == "__all__"
+        entries
+      else
+        alias = @options.genreAlias
+        (entry for entry in entries when entry[alias] is genreId)
 
     getEntryData:(entry)->
       info     = entry.__info     ? entry.__info     = @makeInfo( entry )
       marker   = entry.__marker   ? entry.__marker   = @makeMarker( entry, info )
-      listElem = entry.__listElem ? entry.__listElem = @makeListElem( entry, info, marker )
+      listElem = entry.__listElem ? entry.__listElem = @makeListElem( entry )
       return [info,marker,listElem]
 
+    makeInfo:(entry)->
+      $tmpl = @options.infoTemplate
+      if $tmpl?
+        content = $( $tmpl.tmpl(entry) ).html()
+        info new google.maps.InfoWindow {content}
+        google.maps.event.addListener info, 'closeclick', =>
+          @openInfo = null
+        return info
 
-
-    makeInfo:->
-      null
-
-    makeMarker:(entry, info)->
-      log "makeMarker"
+    makeMarker:(entry,info)->
       position = new google.maps.LatLng( entry.lat, entry.lng )
       marker = new google.maps.Marker { position, icon: entry.icon }
+      if info
+        google.maps.event.addListener marker, 'click', =>
+          @openInfo.close() if @openInfo?
+          info.open(@map, marker)
+          @openInfo = info
+      return marker
 
     makeListElem:->
 

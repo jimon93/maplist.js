@@ -14,12 +14,12 @@
           mapTypeId: google.maps.MapTypeId.ROADMAP,
           data: [],
           mapSelector: '#map_canvas',
-          listSelector: '',
-          listTemplate: '',
-          infoTemplate: '',
-          listToMarkerSelector: '',
+          listSelector: '#list',
+          listTemplate: null,
+          infoTemplate: null,
+          listToMarkerSelector: '.open-info',
           genreAlias: 'genre',
-          genreContainerSelector: '',
+          genreContainerSelector: '#genre',
           genreSelector: '',
           firstGenre: '__all__',
           parse: this.parse
@@ -48,7 +48,8 @@
           for (_i = 0, _len = _ref.length; _i < _len; _i++) {
             entry = _ref[_i];
             _ref1 = _this.getEntryData(entry), info = _ref1[0], marker = _ref1[1], listElem = _ref1[2];
-            _results.push(marker.setMap(_this.map));
+            marker.setMap(_this.map);
+            _results.push(log(entry));
           }
           return _results;
         });
@@ -90,29 +91,64 @@
       };
 
       MapList.prototype.filterdEntries = function(genreId, entries) {
-        return entries;
+        var alias, entry, _i, _len, _results;
+        if (genreId === "__all__") {
+          return entries;
+        } else {
+          alias = this.options.genreAlias;
+          _results = [];
+          for (_i = 0, _len = entries.length; _i < _len; _i++) {
+            entry = entries[_i];
+            if (entry[alias] === genreId) {
+              _results.push(entry);
+            }
+          }
+          return _results;
+        }
       };
 
       MapList.prototype.getEntryData = function(entry) {
         var info, listElem, marker, _ref, _ref1, _ref2;
         info = (_ref = entry.__info) != null ? _ref : entry.__info = this.makeInfo(entry);
         marker = (_ref1 = entry.__marker) != null ? _ref1 : entry.__marker = this.makeMarker(entry, info);
-        listElem = (_ref2 = entry.__listElem) != null ? _ref2 : entry.__listElem = this.makeListElem(entry, info, marker);
+        listElem = (_ref2 = entry.__listElem) != null ? _ref2 : entry.__listElem = this.makeListElem(entry);
         return [info, marker, listElem];
       };
 
-      MapList.prototype.makeInfo = function() {
-        return null;
+      MapList.prototype.makeInfo = function(entry) {
+        var $tmpl, content,
+          _this = this;
+        $tmpl = this.options.infoTemplate;
+        if ($tmpl != null) {
+          content = $($tmpl.tmpl(entry)).html();
+          info(new google.maps.InfoWindow({
+            content: content
+          }));
+          google.maps.event.addListener(info, 'closeclick', function() {
+            return _this.openInfo = null;
+          });
+          return info;
+        }
       };
 
       MapList.prototype.makeMarker = function(entry, info) {
-        var marker, position;
-        log("makeMarker");
+        var marker, position,
+          _this = this;
         position = new google.maps.LatLng(entry.lat, entry.lng);
-        return marker = new google.maps.Marker({
+        marker = new google.maps.Marker({
           position: position,
           icon: entry.icon
         });
+        if (info) {
+          google.maps.event.addListener(marker, 'click', function() {
+            if (_this.openInfo != null) {
+              _this.openInfo.close();
+            }
+            info.open(_this.map, marker);
+            return _this.openInfo = info;
+          });
+        }
+        return marker;
       };
 
       MapList.prototype.makeListElem = function() {};
