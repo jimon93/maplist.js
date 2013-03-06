@@ -116,14 +116,14 @@
       };
 
       MapList.prototype.makeInfo = function(entry) {
-        var $tmpl, content,
+        var $tmpl, content, info,
           _this = this;
         $tmpl = this.options.infoTemplate;
         if ($tmpl != null) {
           content = $($tmpl.tmpl(entry)).html();
-          info(new google.maps.InfoWindow({
+          info = new google.maps.InfoWindow({
             content: content
-          }));
+          });
           google.maps.event.addListener(info, 'closeclick', function() {
             return _this.openInfo = null;
           });

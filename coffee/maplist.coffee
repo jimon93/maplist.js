@@ -80,7 +80,7 @@ do ($=jQuery)->
       $tmpl = @options.infoTemplate
       if $tmpl?
         content = $( $tmpl.tmpl(entry) ).html()
-        info new google.maps.InfoWindow {content}
+        info = new google.maps.InfoWindow {content}
         google.maps.event.addListener info, 'closeclick', =>
           @openInfo = null
         return info
