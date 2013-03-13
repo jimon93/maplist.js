@@ -15,24 +15,21 @@ do ($=jQuery)->
       genreContainerSelector : '#genre'
       genreSelector          : ''
       firstGenre             : '__all__'
-      parse                  : @parse
     }
 
     constructor:(options)->
       _.bindAll(@)
-      @options = _.extend( {}, _(@).result('default'), options )
+      @options = _.extend( {}, _(@).result('default'), options)
       @makeMap()
-      @entries = @getEntries()
+      @entries = new Data(_.clone @options)
       @entries.then =>
         @build( @options.firstGenre )
 
     build:(genreId)->
-      @entries.then (entries)=>
-        @usingEntries = @filterdEntries(genreId,entries)
+      @entries.filterdThen genreId, (@usingEntries)=>
         for entry in @usingEntries
           [info,marker,listElem] = @getEntryData(entry)
           marker.setMap(@map)
-          log entry
 
     clear:->
       #marker.setMap(null)
@@ -47,28 +44,6 @@ do ($=jQuery)->
       mapOptions = _(@options).clone()
       canvas = $(@options.mapSelector).get(0)
       @map = new google.maps.Map( canvas, mapOptions )
-
-    getEntries:->
-      dfd = new $.Deferred
-      data = @options.data
-      if _.isArray(data)
-        dfd.resolve( data )
-      else if _.isString(data)
-        $.ajax({url:data}).done( (data)=>
-          dfd.resolve( @options.parse( data ) )
-        ).fail(=>
-          dfd.reject()
-        )
-      else
-        dfd.reject()
-      dfd.promise()
-
-    filterdEntries:(genreId, entries)->
-      if genreId == "__all__"
-        entries
-      else
-        alias = @options.genreAlias
-        (entry for entry in entries when entry[alias] is genreId)
 
     getEntryData:(entry)->
       info     = entry.__info     ? entry.__info     = @makeInfo( entry )
@@ -97,6 +72,52 @@ do ($=jQuery)->
 
     makeListElem:->
 
+  class Data #{{{
+    constructor:(@options)->
+      _.bindAll(@)
+      parser = new Parser(_.clone @options)
+      @options = _.extend( {parse:parser.parse}, @options)
+      @entries = @_makeEntries()
+
+    then:(done,fail)->
+      @entries.then(done,fail)
+
+    filterdThen:(genreId,done,fail)->
+      @entries.then(
+        (entries)=>done(@_filterdEntries genreId, entries)
+        (e)=>fail(e)
+      )
+
+    # private #{{{
+    #--------------------------------------------------
+    _makeEntries:->
+      dfd = new $.Deferred
+      data = @options.data
+      if _.isArray(data)
+        dfd.resolve( data )
+      else if _.isString(data)
+        $.ajax({url:data}).done( (data)=>
+          dfd.resolve( @options.parse( data ) )
+        ).fail(=>
+          dfd.reject()
+        )
+      else
+        dfd.reject()
+      dfd.promise()
+
+    _filterdEntries:(genreId, entries)->
+      if genreId == "__all__"
+        entries
+      else
+        alias = @options.genreAlias
+        (entry for entry in entries when entry[alias] is genreId)
+
+    #}}}
+  #}}}
+  class Parser #{{{
+    constructor:(@options)->
+      _.bindAll(@)
+
     parse:(data)->
       if $.isXMLDoc(data)
         @_parseForXML( data )
@@ -123,5 +144,5 @@ do ($=jQuery)->
 
     _parseForObject:(data)->
       data
-
+  #}}}
   window.MapList = MapList

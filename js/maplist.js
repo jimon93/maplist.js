@@ -3,7 +3,7 @@
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   (function($) {
-    var MapList, log;
+    var Data, MapList, Parser, log;
     log = _.bind(console.log, console);
     MapList = (function() {
 
@@ -21,8 +21,7 @@
           genreAlias: 'genre',
           genreContainerSelector: '#genre',
           genreSelector: '',
-          firstGenre: '__all__',
-          parse: this.parse
+          firstGenre: '__all__'
         };
       };
 
@@ -32,7 +31,7 @@
         _.bindAll(this);
         this.options = _.extend({}, _(this).result('default'), options);
         this.makeMap();
-        this.entries = this.getEntries();
+        this.entries = new Data(_.clone(this.options));
         this.entries.then(function() {
           return _this.build(_this.options.firstGenre);
         });
@@ -40,16 +39,15 @@
 
       MapList.prototype.build = function(genreId) {
         var _this = this;
-        return this.entries.then(function(entries) {
+        return this.entries.filterdThen(genreId, function(usingEntries) {
           var entry, info, listElem, marker, _i, _len, _ref, _ref1, _results;
-          _this.usingEntries = _this.filterdEntries(genreId, entries);
+          _this.usingEntries = usingEntries;
           _ref = _this.usingEntries;
           _results = [];
           for (_i = 0, _len = _ref.length; _i < _len; _i++) {
             entry = _ref[_i];
             _ref1 = _this.getEntryData(entry), info = _ref1[0], marker = _ref1[1], listElem = _ref1[2];
-            marker.setMap(_this.map);
-            _results.push(log(entry));
+            _results.push(marker.setMap(_this.map));
           }
           return _results;
         });
@@ -67,44 +65,6 @@
         mapOptions = _(this.options).clone();
         canvas = $(this.options.mapSelector).get(0);
         return this.map = new google.maps.Map(canvas, mapOptions);
-      };
-
-      MapList.prototype.getEntries = function() {
-        var data, dfd,
-          _this = this;
-        dfd = new $.Deferred;
-        data = this.options.data;
-        if (_.isArray(data)) {
-          dfd.resolve(data);
-        } else if (_.isString(data)) {
-          $.ajax({
-            url: data
-          }).done(function(data) {
-            return dfd.resolve(_this.options.parse(data));
-          }).fail(function() {
-            return dfd.reject();
-          });
-        } else {
-          dfd.reject();
-        }
-        return dfd.promise();
-      };
-
-      MapList.prototype.filterdEntries = function(genreId, entries) {
-        var alias, entry, _i, _len, _results;
-        if (genreId === "__all__") {
-          return entries;
-        } else {
-          alias = this.options.genreAlias;
-          _results = [];
-          for (_i = 0, _len = entries.length; _i < _len; _i++) {
-            entry = entries[_i];
-            if (entry[alias] === genreId) {
-              _results.push(entry);
-            }
-          }
-          return _results;
-        }
       };
 
       MapList.prototype.getEntryData = function(entry) {
@@ -153,7 +113,84 @@
 
       MapList.prototype.makeListElem = function() {};
 
-      MapList.prototype.parse = function(data) {
+      return MapList;
+
+    })();
+    Data = (function() {
+
+      function Data(options) {
+        var parser;
+        this.options = options;
+        _.bindAll(this);
+        parser = new Parser(_.clone(this.options));
+        this.options = _.extend({
+          parse: parser.parse
+        }, this.options);
+        this.entries = this._makeEntries();
+      }
+
+      Data.prototype.then = function(done, fail) {
+        return this.entries.then(done, fail);
+      };
+
+      Data.prototype.filterdThen = function(genreId, done, fail) {
+        var _this = this;
+        return this.entries.then(function(entries) {
+          return done(_this._filterdEntries(genreId, entries));
+        }, function(e) {
+          return fail(e);
+        });
+      };
+
+      Data.prototype._makeEntries = function() {
+        var data, dfd,
+          _this = this;
+        dfd = new $.Deferred;
+        data = this.options.data;
+        if (_.isArray(data)) {
+          dfd.resolve(data);
+        } else if (_.isString(data)) {
+          $.ajax({
+            url: data
+          }).done(function(data) {
+            return dfd.resolve(_this.options.parse(data));
+          }).fail(function() {
+            return dfd.reject();
+          });
+        } else {
+          dfd.reject();
+        }
+        return dfd.promise();
+      };
+
+      Data.prototype._filterdEntries = function(genreId, entries) {
+        var alias, entry, _i, _len, _results;
+        if (genreId === "__all__") {
+          return entries;
+        } else {
+          alias = this.options.genreAlias;
+          _results = [];
+          for (_i = 0, _len = entries.length; _i < _len; _i++) {
+            entry = entries[_i];
+            if (entry[alias] === genreId) {
+              _results.push(entry);
+            }
+          }
+          return _results;
+        }
+      };
+
+      return Data;
+
+    })();
+    Parser = (function() {
+
+      function Parser(options) {
+        this.options = options;
+        _.bindAll(this);
+      }
+
+      Parser.prototype.parse = function(data) {
         if ($.isXMLDoc(data)) {
           return this._parseForXML(data);
         } else if (_.isObject(data)) {
@@ -163,7 +200,7 @@
         }
       };
 
-      MapList.prototype._parseForXML = function(data) {
+      Parser.prototype._parseForXML = function(data) {
         var $root, alias,
           _this = this;
         $root = $(">*:first", data);
@@ -192,11 +229,11 @@
         });
       };
 
-      MapList.prototype._parseForObject = function(data) {
+      Parser.prototype._parseForObject = function(data) {
         return data;
       };
 
-      return MapList;
+      return Parser;
 
     })();
     return window.MapList = MapList;
