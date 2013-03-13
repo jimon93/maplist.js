@@ -71,16 +71,16 @@
         var info, listElem, marker, _ref, _ref1, _ref2;
         info = (_ref = entry.__info) != null ? _ref : entry.__info = this.makeInfo(entry);
         marker = (_ref1 = entry.__marker) != null ? _ref1 : entry.__marker = this.makeMarker(entry, info);
-        listElem = (_ref2 = entry.__listElem) != null ? _ref2 : entry.__listElem = this.makeListElem(entry);
+        listElem = (_ref2 = entry.__listElem) != null ? _ref2 : entry.__listElem = this.makeListElem(entry, marker, info);
         return [info, marker, listElem];
       };
 
       MapList.prototype.makeInfo = function(entry) {
-        var $tmpl, content, info,
+        var content, info,
           _this = this;
-        $tmpl = this.options.infoTemplate;
-        if ($tmpl != null) {
-          content = $($tmpl.tmpl(entry)).html();
+        content = this.makeHTML(this.options.infoTemplate, entry);
+        if (content != null) {
+          content = $(content).html();
           info = new google.maps.InfoWindow({
             content: content
           });
@@ -88,30 +88,64 @@
             return _this.openInfo = null;
           });
           return info;
+        } else {
+          return null;
         }
       };
 
       MapList.prototype.makeMarker = function(entry, info) {
-        var marker, position,
-          _this = this;
+        var marker, position;
         position = new google.maps.LatLng(entry.lat, entry.lng);
         marker = new google.maps.Marker({
           position: position,
           icon: entry.icon
         });
         if (info) {
-          google.maps.event.addListener(marker, 'click', function() {
-            if (_this.openInfo != null) {
-              _this.openInfo.close();
-            }
-            info.open(_this.map, marker);
-            return _this.openInfo = info;
-          });
+          google.maps.event.addListener(marker, 'click', this.openInfoFunc(marker, info));
         }
         return marker;
       };
 
-      MapList.prototype.makeListElem = function() {};
+      MapList.prototype.makeListElem = function(entry, marker, info) {
+        var $content, content;
+        content = this.makeHTML(this.options.listTemplate, entry);
+        if (content != null) {
+          $content = $(content);
+          if (this.options.listToMarkerSelector != null) {
+            $content.on("click", this.options.listToMarkerSelector, this.openInfoFunc(marker, info));
+          }
+          return $content.appendTo($(this.options.listSelector));
+        }
+      };
+
+      MapList.prototype.openInfoFunc = function(marker, info) {
+        var _this = this;
+        return function(e) {
+          log("openInfo", _this, _this.openInfo);
+          if (_this.openInfo != null) {
+            _this.openInfo.close();
+          }
+          info.open(_this.map, marker);
+          _this.openInfo = info;
+          return _this.toMapScroll();
+        };
+      };
+
+      MapList.prototype.makeHTML = function(template, entry) {
+        if (template != null) {
+          return $.tmpl(template, entry);
+        } else {
+          return null;
+        }
+      };
+
+      MapList.prototype.toMapScroll = function() {
+        var top;
+        top = $(this.options.mapSelector).offset().top;
+        return $('html,body').animate({
+          scrollTop: top
+        }, 'fast');
+      };
 
       return MapList;
 

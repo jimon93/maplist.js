@@ -48,29 +48,48 @@ do ($=jQuery)->
     getEntryData:(entry)->
       info     = entry.__info     ? entry.__info     = @makeInfo( entry )
       marker   = entry.__marker   ? entry.__marker   = @makeMarker( entry, info )
-      listElem = entry.__listElem ? entry.__listElem = @makeListElem( entry )
+      listElem = entry.__listElem ? entry.__listElem = @makeListElem( entry, marker, info )
       return [info,marker,listElem]
 
     makeInfo:(entry)->
-      $tmpl = @options.infoTemplate
-      if $tmpl?
-        content = $( $tmpl.tmpl(entry) ).html()
+      content = @makeHTML @options.infoTemplate, entry
+      if content?
+        content = $( content ).html()
         info = new google.maps.InfoWindow {content}
         google.maps.event.addListener info, 'closeclick', =>
           @openInfo = null
         return info
+      else
+        return null
 
     makeMarker:(entry,info)->
       position = new google.maps.LatLng( entry.lat, entry.lng )
       marker = new google.maps.Marker { position, icon: entry.icon }
-      if info
-        google.maps.event.addListener marker, 'click', =>
-          @openInfo.close() if @openInfo?
-          info.open(@map, marker)
-          @openInfo = info
+      google.maps.event.addListener( marker, 'click', @openInfoFunc(marker,info) ) if info
       return marker
 
-    makeListElem:->
+    makeListElem:(entry,marker,info)->
+      content = @makeHTML @options.listTemplate, entry
+      if content?
+        $content = $(content)
+        if @options.listToMarkerSelector?
+          $content.on( "click", @options.listToMarkerSelector, @openInfoFunc(marker,info) )
+        $content.appendTo $(@options.listSelector)
+
+    openInfoFunc:(marker,info)->
+      (e)=>
+        log "openInfo",@,@openInfo
+        @openInfo.close() if @openInfo?
+        info.open(@map, marker)
+        @openInfo = info
+        @toMapScroll()
+
+    makeHTML:(template, entry)->
+      if template? then $.tmpl( template, entry ) else null
+
+    toMapScroll:->
+      top = $(@options.mapSelector).offset().top
+      $('html,body').animate({ scrollTop: top }, 'fast');
 
   class Data #{{{
     constructor:(@options)->
