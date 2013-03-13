@@ -3,11 +3,11 @@
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   (function($) {
-    var Data, MapList, Parser, log;
+    var Data, Facade, MapList, Parser, log;
     log = _.bind(console.log, console);
-    MapList = (function() {
+    Facade = (function() {
 
-      MapList.prototype["default"] = function() {
+      Facade.prototype["default"] = function() {
         return {
           center: new google.maps.LatLng(35, 135),
           zoom: 4,
@@ -25,129 +25,37 @@
         };
       };
 
-      function MapList(options) {
+      function Facade(options) {
         this["default"] = __bind(this["default"], this);
         var _this = this;
         _.bindAll(this);
         this.options = _.extend({}, _(this).result('default'), options);
-        this.makeMap();
         this.entries = new Data(_.clone(this.options));
+        this.maplist = new MapList(_.clone(this.options));
         this.entries.then(function() {
           return _this.build(_this.options.firstGenre);
         });
+        $(this.options.genreContainerSelector).on("click", this.options.genreSelector, this.changeGenre);
       }
 
-      MapList.prototype.build = function(genreId) {
+      Facade.prototype.changeGenre = function(e) {};
+
+      Facade.prototype.build = function(genreId) {
         var _this = this;
         return this.entries.filterdThen(genreId, function(usingEntries) {
-          var entry, info, listElem, marker, _i, _len, _ref, _ref1, _results;
           _this.usingEntries = usingEntries;
-          _ref = _this.usingEntries;
-          _results = [];
-          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-            entry = _ref[_i];
-            _ref1 = _this.getEntryData(entry), info = _ref1[0], marker = _ref1[1], listElem = _ref1[2];
-            _results.push(marker.setMap(_this.map));
-          }
-          return _results;
+          return _this.maplist.build(_this.usingEntries);
         });
       };
 
-      MapList.prototype.clear = function() {};
+      Facade.prototype.clear = function() {};
 
-      MapList.prototype.rebuild = function(genreId) {
+      Facade.prototype.rebuild = function(genreId) {
         this.clear();
         return this.build(genreId);
       };
 
-      MapList.prototype.makeMap = function() {
-        var canvas, mapOptions;
-        mapOptions = _(this.options).clone();
-        canvas = $(this.options.mapSelector).get(0);
-        return this.map = new google.maps.Map(canvas, mapOptions);
-      };
-
-      MapList.prototype.getEntryData = function(entry) {
-        var info, listElem, marker, _ref, _ref1, _ref2;
-        info = (_ref = entry.__info) != null ? _ref : entry.__info = this.makeInfo(entry);
-        marker = (_ref1 = entry.__marker) != null ? _ref1 : entry.__marker = this.makeMarker(entry, info);
-        listElem = (_ref2 = entry.__listElem) != null ? _ref2 : entry.__listElem = this.makeListElem(entry, marker, info);
-        return [info, marker, listElem];
-      };
-
-      MapList.prototype.makeInfo = function(entry) {
-        var content, info,
-          _this = this;
-        content = this.makeHTML(this.options.infoTemplate, entry);
-        if (content != null) {
-          content = $(content).html();
-          info = new google.maps.InfoWindow({
-            content: content
-          });
-          google.maps.event.addListener(info, 'closeclick', function() {
-            return _this.openInfo = null;
-          });
-          return info;
-        } else {
-          return null;
-        }
-      };
-
-      MapList.prototype.makeMarker = function(entry, info) {
-        var marker, position;
-        position = new google.maps.LatLng(entry.lat, entry.lng);
-        marker = new google.maps.Marker({
-          position: position,
-          icon: entry.icon
-        });
-        if (info) {
-          google.maps.event.addListener(marker, 'click', this.openInfoFunc(marker, info));
-        }
-        return marker;
-      };
-
-      MapList.prototype.makeListElem = function(entry, marker, info) {
-        var $content, content;
-        content = this.makeHTML(this.options.listTemplate, entry);
-        if (content != null) {
-          $content = $(content);
-          if (this.options.listToMarkerSelector != null) {
-            $content.on("click", this.options.listToMarkerSelector, this.openInfoFunc(marker, info));
-          }
-          return $content.appendTo($(this.options.listSelector));
-        }
-      };
-
-      MapList.prototype.openInfoFunc = function(marker, info) {
-        var _this = this;
-        return function(e) {
-          log("openInfo", _this, _this.openInfo);
-          if (_this.openInfo != null) {
-            _this.openInfo.close();
-          }
-          info.open(_this.map, marker);
-          _this.openInfo = info;
-          return _this.toMapScroll();
-        };
-      };
-
-      MapList.prototype.makeHTML = function(template, entry) {
-        if (template != null) {
-          return $.tmpl(template, entry);
-        } else {
-          return null;
-        }
-      };
-
-      MapList.prototype.toMapScroll = function() {
-        var top;
-        top = $(this.options.mapSelector).offset().top;
-        return $('html,body').animate({
-          scrollTop: top
-        }, 'fast');
-      };
-
-      return MapList;
+      return Facade;
 
     })();
     Data = (function() {
@@ -270,7 +178,115 @@
       return Parser;
 
     })();
-    return window.MapList = MapList;
+    MapList = (function() {
+
+      function MapList(options) {
+        var canvas, mapOptions;
+        this.options = options;
+        _.bindAll(this);
+        mapOptions = _(this.options).clone();
+        canvas = $(this.options.mapSelector).get(0);
+        this.map = new google.maps.Map(canvas, mapOptions);
+      }
+
+      MapList.prototype.build = function(entries) {
+        var entry, info, listElem, marker, _i, _len, _ref, _results;
+        _results = [];
+        for (_i = 0, _len = entries.length; _i < _len; _i++) {
+          entry = entries[_i];
+          _ref = this.getEntryData(entry), info = _ref[0], marker = _ref[1], listElem = _ref[2];
+          marker.setMap(this.map);
+          _results.push(listElem.appendTo($(this.options.listSelector)));
+        }
+        return _results;
+      };
+
+      MapList.prototype.getEntryData = function(entry) {
+        var info, listElem, marker, _ref, _ref1, _ref2;
+        info = (_ref = entry.__info) != null ? _ref : entry.__info = this.makeInfo(entry);
+        marker = (_ref1 = entry.__marker) != null ? _ref1 : entry.__marker = this.makeMarker(entry, info);
+        listElem = (_ref2 = entry.__listElem) != null ? _ref2 : entry.__listElem = this.makeListElem(entry, marker, info);
+        return [info, marker, listElem];
+      };
+
+      MapList.prototype.makeInfo = function(entry) {
+        var content, info,
+          _this = this;
+        content = this.makeHTML(this.options.infoTemplate, entry);
+        if (content != null) {
+          content = $(content).html();
+          info = new google.maps.InfoWindow({
+            content: content
+          });
+          google.maps.event.addListener(info, 'closeclick', function() {
+            return _this.openInfo = null;
+          });
+          return info;
+        } else {
+          return null;
+        }
+      };
+
+      MapList.prototype.makeMarker = function(entry, info) {
+        var marker, position;
+        position = new google.maps.LatLng(entry.lat, entry.lng);
+        marker = new google.maps.Marker({
+          position: position,
+          icon: entry.icon
+        });
+        if (info) {
+          google.maps.event.addListener(marker, 'click', this.openInfoFunc(marker, info));
+        }
+        return marker;
+      };
+
+      MapList.prototype.makeListElem = function(entry, marker, info) {
+        var $content, content;
+        content = this.makeHTML(this.options.listTemplate, entry);
+        if (content != null) {
+          $content = $(content);
+          if (this.options.listToMarkerSelector != null) {
+            $content.on("click", this.options.listToMarkerSelector, this.openInfoFunc(marker, info));
+          }
+          $content.data(this.options.genreAlias, entry[this.options.genreAlias]);
+          return $content;
+        } else {
+          return null;
+        }
+      };
+
+      MapList.prototype.openInfoFunc = function(marker, info) {
+        var _this = this;
+        return function(e) {
+          if (_this.openInfo != null) {
+            _this.openInfo.close();
+          }
+          info.open(_this.map, marker);
+          _this.openInfo = info;
+          return _this.toMapScroll();
+        };
+      };
+
+      MapList.prototype.makeHTML = function(template, entry) {
+        if (template != null) {
+          return $.tmpl(template, entry);
+        } else {
+          return null;
+        }
+      };
+
+      MapList.prototype.toMapScroll = function() {
+        var top;
+        top = $(this.options.mapSelector).offset().top;
+        return $('html,body').animate({
+          scrollTop: top
+        }, 'fast');
+      };
+
+      return MapList;
+
+    })();
+    return window.MapList = Facade;
   })(jQuery);
 
 }).call(this);

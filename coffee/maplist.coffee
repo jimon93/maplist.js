@@ -1,6 +1,6 @@
 do ($=jQuery)->
   log = _.bind( console.log, console )
-  class MapList
+  class Facade
     default: => {
       center                 : new google.maps.LatLng( 35, 135 )
       zoom                   : 4
@@ -20,16 +20,19 @@ do ($=jQuery)->
     constructor:(options)->
       _.bindAll(@)
       @options = _.extend( {}, _(@).result('default'), options)
-      @makeMap()
       @entries = new Data(_.clone @options)
+      @maplist = new MapList(_.clone @options)
       @entries.then =>
         @build( @options.firstGenre )
 
+      # event
+      $(@options.genreContainerSelector).on "click", @options.genreSelector, @changeGenre
+
+    changeGenre:(e)->
+
     build:(genreId)->
       @entries.filterdThen genreId, (@usingEntries)=>
-        for entry in @usingEntries
-          [info,marker,listElem] = @getEntryData(entry)
-          marker.setMap(@map)
+        @maplist.build(@usingEntries)
 
     clear:->
       #marker.setMap(null)
@@ -40,57 +43,6 @@ do ($=jQuery)->
 
     # private
     #--------------------------------------------------
-    makeMap:->
-      mapOptions = _(@options).clone()
-      canvas = $(@options.mapSelector).get(0)
-      @map = new google.maps.Map( canvas, mapOptions )
-
-    getEntryData:(entry)->
-      info     = entry.__info     ? entry.__info     = @makeInfo( entry )
-      marker   = entry.__marker   ? entry.__marker   = @makeMarker( entry, info )
-      listElem = entry.__listElem ? entry.__listElem = @makeListElem( entry, marker, info )
-      return [info,marker,listElem]
-
-    makeInfo:(entry)->
-      content = @makeHTML @options.infoTemplate, entry
-      if content?
-        content = $( content ).html()
-        info = new google.maps.InfoWindow {content}
-        google.maps.event.addListener info, 'closeclick', =>
-          @openInfo = null
-        return info
-      else
-        return null
-
-    makeMarker:(entry,info)->
-      position = new google.maps.LatLng( entry.lat, entry.lng )
-      marker = new google.maps.Marker { position, icon: entry.icon }
-      google.maps.event.addListener( marker, 'click', @openInfoFunc(marker,info) ) if info
-      return marker
-
-    makeListElem:(entry,marker,info)->
-      content = @makeHTML @options.listTemplate, entry
-      if content?
-        $content = $(content)
-        if @options.listToMarkerSelector?
-          $content.on( "click", @options.listToMarkerSelector, @openInfoFunc(marker,info) )
-        $content.appendTo $(@options.listSelector)
-
-    openInfoFunc:(marker,info)->
-      (e)=>
-        log "openInfo",@,@openInfo
-        @openInfo.close() if @openInfo?
-        info.open(@map, marker)
-        @openInfo = info
-        @toMapScroll()
-
-    makeHTML:(template, entry)->
-      if template? then $.tmpl( template, entry ) else null
-
-    toMapScroll:->
-      top = $(@options.mapSelector).offset().top
-      $('html,body').animate({ scrollTop: top }, 'fast');
-
   class Data #{{{
     constructor:(@options)->
       _.bindAll(@)
@@ -164,4 +116,65 @@ do ($=jQuery)->
     _parseForObject:(data)->
       data
   #}}}
-  window.MapList = MapList
+  class MapList
+    constructor:(@options)->
+      _.bindAll(@)
+      mapOptions = _(@options).clone()
+      canvas = $(@options.mapSelector).get(0)
+      @map = new google.maps.Map( canvas, mapOptions )
+
+    build:(entries)->
+      for entry in entries
+        [info,marker,listElem] = @getEntryData(entry)
+        marker.setMap(@map)
+        listElem.appendTo $(@options.listSelector)
+
+    getEntryData:(entry)->
+      info     = entry.__info     ? entry.__info     = @makeInfo( entry )
+      marker   = entry.__marker   ? entry.__marker   = @makeMarker( entry, info )
+      listElem = entry.__listElem ? entry.__listElem = @makeListElem( entry, marker, info )
+      return [info,marker,listElem]
+
+    makeInfo:(entry)->
+      content = @makeHTML @options.infoTemplate, entry
+      if content?
+        content = $( content ).html()
+        info = new google.maps.InfoWindow {content}
+        google.maps.event.addListener info, 'closeclick', =>
+          @openInfo = null
+        return info
+      else
+        return null
+
+    makeMarker:(entry,info)->
+      position = new google.maps.LatLng( entry.lat, entry.lng )
+      marker = new google.maps.Marker { position, icon: entry.icon }
+      google.maps.event.addListener( marker, 'click', @openInfoFunc(marker,info) ) if info
+      return marker
+
+    makeListElem:(entry,marker,info)->
+      content = @makeHTML @options.listTemplate, entry
+      if content?
+        $content = $(content)
+        if @options.listToMarkerSelector?
+          $content.on( "click", @options.listToMarkerSelector, @openInfoFunc(marker,info) )
+        $content.data @options.genreAlias, entry[@options.genreAlias]
+        return $content
+      else
+        return null
+
+    openInfoFunc:(marker,info)->
+      (e)=>
+        @openInfo.close() if @openInfo?
+        info.open(@map, marker)
+        @openInfo = info
+        @toMapScroll()
+
+    makeHTML:(template, entry)->
+      if template? then $.tmpl( template, entry ) else null
+
+    toMapScroll:->
+      top = $(@options.mapSelector).offset().top
+      $('html,body').animate({ scrollTop: top }, 'fast');
+
+  window.MapList = Facade
