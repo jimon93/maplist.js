@@ -1,4 +1,4 @@
-do ($=jQuery)->
+do ($=jQuery,global=this)->
   log = _.bind( console.log, console )
   class Facade
     default: => {
@@ -13,9 +13,15 @@ do ($=jQuery)->
       listToMarkerSelector   : '.open-info'
       genreAlias             : 'genre'
       genreContainerSelector : '#genre'
-      genreSelector          : ''
+      genreSelector          : 'a'
+      genreDataName          : "target-genre"
       firstGenre             : '__all__'
+      beforeBuild            : null
+      afterBuild             : null
+      beforeClear            : null
+      afterClear             : null
     }
+    usingEntries : []
 
     constructor:(options)->
       _.bindAll(@)
@@ -26,20 +32,28 @@ do ($=jQuery)->
         @build( @options.firstGenre )
 
       # event
-      $(@options.genreContainerSelector).on "click", @options.genreSelector, @changeGenre
-
-    changeGenre:(e)->
+      $(@options.genreContainerSelector).on "click", @options.genreSelector, @_selectGenre
 
     build:(genreId)->
+      @options.beforeBuild?()
       @entries.filterdThen genreId, (@usingEntries)=>
         @maplist.build(@usingEntries)
+        @options.afterBuild?()
 
     clear:->
-      #marker.setMap(null)
+      @options.beforeClear?()
+      @maplist.clear(@usingEntries)
+      @options.afterClear?()
 
     rebuild:(genreId)->
       @clear()
       @build(genreId)
+
+    _selectGenre:(e)->
+      $target = $(e.currentTarget)
+      genreId = $target.data( @options.genreDataName )
+      @rebuild genreId
+      return false
 
     # private
     #--------------------------------------------------
@@ -116,7 +130,7 @@ do ($=jQuery)->
     _parseForObject:(data)->
       data
   #}}}
-  class MapList
+  class MapList #{{{
     constructor:(@options)->
       _.bindAll(@)
       mapOptions = _(@options).clone()
@@ -128,6 +142,12 @@ do ($=jQuery)->
         [info,marker,listElem] = @getEntryData(entry)
         marker.setMap(@map)
         listElem.appendTo $(@options.listSelector)
+
+    clear:(entries)->
+      for entry in entries
+        [info,marker,listElem] = @getEntryData(entry)
+        marker.setMap(null)
+        listElem.detach()
 
     getEntryData:(entry)->
       info     = entry.__info     ? entry.__info     = @makeInfo( entry )
@@ -156,9 +176,9 @@ do ($=jQuery)->
       content = @makeHTML @options.listTemplate, entry
       if content?
         $content = $(content)
+        $content.data( @options.genreAlias, entry[@options.genreAlias] )
         if @options.listToMarkerSelector?
           $content.on( "click", @options.listToMarkerSelector, @openInfoFunc(marker,info) )
-        $content.data @options.genreAlias, entry[@options.genreAlias]
         return $content
       else
         return null
@@ -177,4 +197,5 @@ do ($=jQuery)->
       top = $(@options.mapSelector).offset().top
       $('html,body').animate({ scrollTop: top }, 'fast');
 
-  window.MapList = Facade
+  #}}}
+  global.MapList = Facade

@@ -2,7 +2,7 @@
 (function() {
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  (function($) {
+  (function($, global) {
     var Data, Facade, MapList, Parser, log;
     log = _.bind(console.log, console);
     Facade = (function() {
@@ -20,10 +20,17 @@
           listToMarkerSelector: '.open-info',
           genreAlias: 'genre',
           genreContainerSelector: '#genre',
-          genreSelector: '',
-          firstGenre: '__all__'
+          genreSelector: 'a',
+          genreDataName: "target-genre",
+          firstGenre: '__all__',
+          beforeBuild: null,
+          afterBuild: null,
+          beforeClear: null,
+          afterClear: null
         };
       };
+
+      Facade.prototype.usingEntries = [];
 
       function Facade(options) {
         this["default"] = __bind(this["default"], this);
@@ -35,24 +42,43 @@
         this.entries.then(function() {
           return _this.build(_this.options.firstGenre);
         });
-        $(this.options.genreContainerSelector).on("click", this.options.genreSelector, this.changeGenre);
+        $(this.options.genreContainerSelector).on("click", this.options.genreSelector, this._selectGenre);
       }
 
-      Facade.prototype.changeGenre = function(e) {};
-
       Facade.prototype.build = function(genreId) {
-        var _this = this;
+        var _base,
+          _this = this;
+        if (typeof (_base = this.options).beforeBuild === "function") {
+          _base.beforeBuild();
+        }
         return this.entries.filterdThen(genreId, function(usingEntries) {
+          var _base1;
           _this.usingEntries = usingEntries;
-          return _this.maplist.build(_this.usingEntries);
+          _this.maplist.build(_this.usingEntries);
+          return typeof (_base1 = _this.options).afterBuild === "function" ? _base1.afterBuild() : void 0;
         });
       };
 
-      Facade.prototype.clear = function() {};
+      Facade.prototype.clear = function() {
+        var _base, _base1;
+        if (typeof (_base = this.options).beforeClear === "function") {
+          _base.beforeClear();
+        }
+        this.maplist.clear(this.usingEntries);
+        return typeof (_base1 = this.options).afterClear === "function" ? _base1.afterClear() : void 0;
+      };
 
       Facade.prototype.rebuild = function(genreId) {
         this.clear();
         return this.build(genreId);
+      };
+
+      Facade.prototype._selectGenre = function(e) {
+        var $target, genreId;
+        $target = $(e.currentTarget);
+        genreId = $target.data(this.options.genreDataName);
+        this.rebuild(genreId);
+        return false;
       };
 
       return Facade;
@@ -201,6 +227,18 @@
         return _results;
       };
 
+      MapList.prototype.clear = function(entries) {
+        var entry, info, listElem, marker, _i, _len, _ref, _results;
+        _results = [];
+        for (_i = 0, _len = entries.length; _i < _len; _i++) {
+          entry = entries[_i];
+          _ref = this.getEntryData(entry), info = _ref[0], marker = _ref[1], listElem = _ref[2];
+          marker.setMap(null);
+          _results.push(listElem.detach());
+        }
+        return _results;
+      };
+
       MapList.prototype.getEntryData = function(entry) {
         var info, listElem, marker, _ref, _ref1, _ref2;
         info = (_ref = entry.__info) != null ? _ref : entry.__info = this.makeInfo(entry);
@@ -245,10 +283,10 @@
         content = this.makeHTML(this.options.listTemplate, entry);
         if (content != null) {
           $content = $(content);
+          $content.data(this.options.genreAlias, entry[this.options.genreAlias]);
           if (this.options.listToMarkerSelector != null) {
             $content.on("click", this.options.listToMarkerSelector, this.openInfoFunc(marker, info));
           }
-          $content.data(this.options.genreAlias, entry[this.options.genreAlias]);
           return $content;
         } else {
           return null;
@@ -286,7 +324,7 @@
       return MapList;
 
     })();
-    return window.MapList = Facade;
-  })(jQuery);
+    return global.MapList = Facade;
+  })(jQuery, this);
 
 }).call(this);
