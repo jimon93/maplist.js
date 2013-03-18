@@ -38,7 +38,7 @@ infowindow を作ったり，
 
 3. Map用の要素に幅と高さの指定を忘れない
 
-        <div id="map_canvas"" style="width:900px;height600px;"></div>
+        <div id="map_canvas"" style="width:900px;height:600px;"></div>
 
 4. スクリプトを実行する
 
