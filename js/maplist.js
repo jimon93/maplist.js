@@ -9,7 +9,9 @@
 
       Facade.prototype["default"] = function() {
         return {
-          center: new google.maps.LatLng(35, 135),
+          lat: 35,
+          lng: 135,
+          center: null,
           zoom: 4,
           mapTypeId: google.maps.MapTypeId.ROADMAP,
           data: [],
@@ -36,7 +38,7 @@
         this["default"] = __bind(this["default"], this);
         var _this = this;
         _.bindAll(this);
-        this.options = _.extend({}, _(this).result('default'), options);
+        this.options = this._makeOptions(options);
         this.entries = new Data(_.clone(this.options));
         this.maplist = new MapList(_.clone(this.options));
         this.entries.then(function() {
@@ -79,6 +81,14 @@
         genreId = $target.data(this.options.genreDataName);
         this.rebuild(genreId);
         return false;
+      };
+
+      Facade.prototype._makeOptions = function(options) {
+        options = _.extend({}, _(this).result('default'), options);
+        if (options.center == null) {
+          options.center = new google.maps.LatLng(options.lat, options.lng);
+        }
+        return options;
       };
 
       return Facade;

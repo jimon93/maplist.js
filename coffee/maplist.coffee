@@ -2,7 +2,9 @@ do ($=jQuery,global=this)->
   log = _.bind( console.log, console )
   class Facade
     default: => {
-      center                 : new google.maps.LatLng( 35, 135 )
+      lat                    : 35
+      lng                    : 135
+      center                 : null #new google.maps.LatLng( 35, 135 )
       zoom                   : 4
       mapTypeId              : google.maps.MapTypeId.ROADMAP
       data                   : []
@@ -25,7 +27,7 @@ do ($=jQuery,global=this)->
 
     constructor:(options)->
       _.bindAll(@)
-      @options = _.extend( {}, _(@).result('default'), options)
+      @options = @_makeOptions(options)
       @entries = new Data(_.clone @options)
       @maplist = new MapList(_.clone @options)
       @entries.then =>
@@ -54,6 +56,12 @@ do ($=jQuery,global=this)->
       genreId = $target.data( @options.genreDataName )
       @rebuild genreId
       return false
+
+    _makeOptions:(options)->
+      options = _.extend( {}, _(@).result('default'), options)
+      unless options.center?
+        options.center = new google.maps.LatLng( options.lat, options.lng )
+      return options
 
     # private
     #--------------------------------------------------
