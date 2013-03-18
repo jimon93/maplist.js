@@ -1,23 +1,75 @@
-    default: => {
-      center                 : null #new google.maps.LatLng( 35, 135 )
-      lat                    : 35
-      lng                    : 135
-      zoom                   : 4
-      mapTypeId              : google.maps.MapTypeId.ROADMAP
-      data                   : []
-      mapSelector            : '#map_canvas'
-      listSelector           : '#list'
-      listTemplate           : null
-      infoTemplate           : null
-      listToMarkerSelector   : '.open-info'
-      genreAlias             : 'genre'
-      genreContainerSelector : '#genre'
-      genreSelector          : 'a'
-      genreDataName          : "target-genre"
-      firstGenre             : '__all__'
-      beforeBuild            : null
-      afterBuild             : null
-      beforeClear            : null
-      afterClear             : null
-    }
+<!DOCTYPE html>
+<html>
 
+<head>
+<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false"></script>
+<script type="text/javascript" src="../js/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="../js/jquery.tmpl.min.js"></script>
+<script type="text/javascript" src="../js/underscore-min.js"></script>
+<script type="text/javascript" src="../js/maplist.js"></script>
+</head>
+
+<body>
+
+<script type="text/javascript">
+$(function(){
+  var entries = [ {
+    lat: 36.115135,
+    lng: 137.953,
+    title: "うどん",
+    genre: "kitune",
+    genreName: "きつね",
+    message: "あかいきつね"
+  },{
+    lat: 36.115135,
+    lng: 137.955,
+    title: "そば",
+    genre: "tanuki",
+    genreName: "たぬき",
+    message: "みどりのたぬき"
+  },{
+    lat: 36.115136,
+    lng: 137.954,
+    title: "肉うどん",
+    genre: "kitune",
+    genreName: "きつね",
+    message: "お肉がお得感！"
+  } ];
+  var maplist = new MapList({
+    center: new google.maps.LatLng(36.115135,137.953949),
+    zoom: 15,
+    data: entries,
+    listTemplate: $("#tmpl-list-elem"),
+    infoTemplate: $("#tmpl-info-window")
+  });
+});
+</script>
+<script id="tmpl-info-window" type="text/template">
+<div id="info-window">
+  <h3> ${title} </h3>
+  <p>[ ${genreName} ] </p>
+  <p> ${message} </p>
+</div>
+</script>
+<script id="tmpl-list-elem" type="text/template">
+<li>
+<a class='open-info'>${title}</a>
+<span>[ ${genreName} ] </span>
+</tr>
+</script>
+
+<h4>Genre</h4>
+<ul id="genre">
+  <li><a href="tanuki" data-target-genre="tanuki">たぬき</a></li>
+  <li><a href="kitune" data-target-genre="kitune">きつね</a></li>
+  <li><a href="all" data-target-genre="__all__">すべて</a></li>
+</ul>
+
+<div id="map_canvas" style="width:400px;height:400px;"></div>
+
+<h4>List</h4>
+<ul id="list">
+</ul>
+
+</body>
+</html>
