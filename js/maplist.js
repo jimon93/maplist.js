@@ -243,6 +243,9 @@
         for (_i = 0, _len = entries.length; _i < _len; _i++) {
           entry = entries[_i];
           _ref = this.getEntryData(entry), info = _ref[0], marker = _ref[1], listElem = _ref[2];
+          if (this.openInfo != null) {
+            this.openInfo.close();
+          }
           marker.setMap(null);
           _results.push(listElem.detach());
         }

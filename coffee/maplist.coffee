@@ -154,6 +154,7 @@ do ($=jQuery,global=this)->
     clear:(entries)->
       for entry in entries
         [info,marker,listElem] = @getEntryData(entry)
+        @openInfo.close() if @openInfo?
         marker.setMap(null)
         listElem.detach()
 
