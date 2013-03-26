@@ -23,6 +23,7 @@ do ($=jQuery,global=this)->
       beforeClear            : null
       afterClear             : null
       doFit                  : true
+      fitZoomReset           : false
     }
     usingEntries : []
 
@@ -153,7 +154,12 @@ do ($=jQuery,global=this)->
         marker.setMap(@map)
         bounds.extend( marker.getPosition() ) if @options.doFit
         listElem?.appendTo $(@options.listSelector)
-      @map.fitBounds( bounds ) if @options.doFit
+      if @options.doFit
+        unless @options.fitZoomReset
+          @map.fitBounds( bounds )
+        else
+          @map.setCenter( bounds.getCenter() )
+          @map.setZoom( @options.zoom )
 
     clear:(entries)->
       for entry in entries

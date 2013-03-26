@@ -29,7 +29,8 @@
           afterBuild: null,
           beforeClear: null,
           afterClear: null,
-          doFit: true
+          doFit: true,
+          fitZoomReset: false
         };
       };
 
@@ -243,7 +244,12 @@
           }
         }
         if (this.options.doFit) {
-          return this.map.fitBounds(bounds);
+          if (!this.options.fitZoomReset) {
+            return this.map.fitBounds(bounds);
+          } else {
+            this.map.setCenter(bounds.getCenter());
+            return this.map.setZoom(this.options.zoom);
+          }
         }
       };
 
