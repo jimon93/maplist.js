@@ -181,7 +181,7 @@ do ($=jQuery,global=this)->
 
     makeMarker:(entry,info)->
       position = new google.maps.LatLng( entry.lat, entry.lng )
-      marker = new google.maps.Marker { position, icon: entry.icon }
+      marker = new google.maps.Marker { position, icon: entry.icon, shadow: entry.shadow }
       google.maps.event.addListener( marker, 'click', @openInfoFunc(marker,info) ) if info
       return marker
 

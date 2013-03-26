@@ -293,7 +293,8 @@
         position = new google.maps.LatLng(entry.lat, entry.lng);
         marker = new google.maps.Marker({
           position: position,
-          icon: entry.icon
+          icon: entry.icon,
+          shadow: entry.shadow
         });
         if (info) {
           google.maps.event.addListener(marker, 'click', this.openInfoFunc(marker, info));
