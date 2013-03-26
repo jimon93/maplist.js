@@ -28,7 +28,8 @@
           beforeBuild: null,
           afterBuild: null,
           beforeClear: null,
-          afterClear: null
+          afterClear: null,
+          doFit: true
         };
       };
 
@@ -226,15 +227,24 @@
       }
 
       MapList.prototype.build = function(entries) {
-        var entry, info, listElem, marker, _i, _len, _ref, _results;
-        _results = [];
+        var bounds, entry, info, listElem, marker, _i, _len, _ref;
+        if (this.options.doFit) {
+          bounds = new google.maps.LatLngBounds;
+        }
         for (_i = 0, _len = entries.length; _i < _len; _i++) {
           entry = entries[_i];
           _ref = this.getEntryData(entry), info = _ref[0], marker = _ref[1], listElem = _ref[2];
           marker.setMap(this.map);
-          _results.push(listElem.appendTo($(this.options.listSelector)));
+          if (this.options.doFit) {
+            bounds.extend(marker.getPosition());
+          }
+          if (listElem != null) {
+            listElem.appendTo($(this.options.listSelector));
+          }
         }
-        return _results;
+        if (this.options.doFit) {
+          return this.map.fitBounds(bounds);
+        }
       };
 
       MapList.prototype.clear = function(entries) {
@@ -247,7 +257,7 @@
             this.openInfo.close();
           }
           marker.setMap(null);
-          _results.push(listElem.detach());
+          _results.push(listElem != null ? listElem.detach() : void 0);
         }
         return _results;
       };

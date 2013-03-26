@@ -22,6 +22,7 @@ do ($=jQuery,global=this)->
       afterBuild             : null
       beforeClear            : null
       afterClear             : null
+      doFit                  : true
     }
     usingEntries : []
 
@@ -146,17 +147,20 @@ do ($=jQuery,global=this)->
       @map = new google.maps.Map( canvas, mapOptions )
 
     build:(entries)->
+      bounds = new google.maps.LatLngBounds if @options.doFit
       for entry in entries
         [info,marker,listElem] = @getEntryData(entry)
         marker.setMap(@map)
-        listElem.appendTo $(@options.listSelector)
+        bounds.extend( marker.getPosition() ) if @options.doFit
+        listElem?.appendTo $(@options.listSelector)
+      @map.fitBounds( bounds ) if @options.doFit
 
     clear:(entries)->
       for entry in entries
         [info,marker,listElem] = @getEntryData(entry)
         @openInfo.close() if @openInfo?
         marker.setMap(null)
-        listElem.detach()
+        listElem?.detach()
 
     getEntryData:(entry)->
       info     = entry.__info     ? entry.__info     = @makeInfo( entry )
