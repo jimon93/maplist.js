@@ -23,6 +23,8 @@ do ($=jQuery,global=this)->
       afterBuild             : null
       beforeClear            : null
       afterClear             : null
+      genreChange            : null
+      genreChanged           : null
       doFit                  : true
       fitZoomReset           : false
     }
@@ -34,7 +36,7 @@ do ($=jQuery,global=this)->
       @entries = new Data(_.clone @options)
       @maplist = new MapList(_.clone @options)
       @entries.then =>
-        @build( @options.firstGenre )
+        @_selectGenre( null, @options.firstGenre )
 
       # event
       $(@options.genreContainerSelector).on "click", @options.genreSelector, @_selectGenre
@@ -57,10 +59,13 @@ do ($=jQuery,global=this)->
     getMap:->
       return @maplist.map
 
-    _selectGenre:(e)->
-      $target = $(e.currentTarget)
-      genreId = $target.data( @options.genreDataName )
+    _selectGenre:(e, genreId)->
+      @options.genreChange?(genreId)
+      unless genreId?
+        $target = $(e.currentTarget)
+        genreId = $target.data( @options.genreDataName )
       @rebuild genreId
+      @options.genreChanged?(genreId)
       return false
 
     _makeOptions:(options)->

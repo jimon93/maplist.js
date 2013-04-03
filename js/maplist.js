@@ -30,6 +30,8 @@
           afterBuild: null,
           beforeClear: null,
           afterClear: null,
+          genreChange: null,
+          genreChanged: null,
           doFit: true,
           fitZoomReset: false
         };
@@ -45,7 +47,7 @@
         this.entries = new Data(_.clone(this.options));
         this.maplist = new MapList(_.clone(this.options));
         this.entries.then(function() {
-          return _this.build(_this.options.firstGenre);
+          return _this._selectGenre(null, _this.options.firstGenre);
         });
         $(this.options.genreContainerSelector).on("click", this.options.genreSelector, this._selectGenre);
       }
@@ -82,11 +84,19 @@
         return this.maplist.map;
       };
 
-      Facade.prototype._selectGenre = function(e) {
-        var $target, genreId;
-        $target = $(e.currentTarget);
-        genreId = $target.data(this.options.genreDataName);
+      Facade.prototype._selectGenre = function(e, genreId) {
+        var $target, _base, _base1;
+        if (typeof (_base = this.options).genreChange === "function") {
+          _base.genreChange(genreId);
+        }
+        if (genreId == null) {
+          $target = $(e.currentTarget);
+          genreId = $target.data(this.options.genreDataName);
+        }
         this.rebuild(genreId);
+        if (typeof (_base1 = this.options).genreChanged === "function") {
+          _base1.genreChanged(genreId);
+        }
         return false;
       };
 

@@ -269,6 +269,31 @@ genreが切り替わります．
 
 `null`の場合，何もしません．
 
+### infoOpened
+初期値 `null`
+
+infoWindowを開いたあとに実行される関数です．
+callback関数は第一引数に`marker`，第二引数に`info`が渡されます．
+
+`null`の場合，何もしません．
+
+### genreChange
+初期値 `null`
+
+Genreが変更される前に実行される関数です．
+callback関数は第一引数に変更後の`genreId`が渡されます．
+
+`null`の場合，何もしません．
+
+
+### genreChanged
+初期値 `null`
+
+Genreが変更された後実行される関数です．
+callback関数は第一引数に`genreId`が渡されます．
+
+`null`の場合，何もしません．
+
 ### doFit
 初期値 `true`
 
