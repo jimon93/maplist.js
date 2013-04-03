@@ -23,8 +23,6 @@ do ($=jQuery,global=this)->
       afterBuild             : null
       beforeClear            : null
       afterClear             : null
-      genreChange            : null
-      genreChanged           : null
       doFit                  : true
       fitZoomReset           : false
     }
@@ -42,10 +40,10 @@ do ($=jQuery,global=this)->
       $(@options.genreContainerSelector).on "click", @options.genreSelector, @_selectGenre
 
     build:(genreId)->
-      @options.beforeBuild?()
+      @options.beforeBuild?(genreId)
       @entries.filterdThen genreId, (@usingEntries)=>
         @maplist.build(@usingEntries)
-        @options.afterBuild?()
+        @options.afterBuild?(genreId, @usingEntries)
 
     clear:->
       @options.beforeClear?()
@@ -60,12 +58,10 @@ do ($=jQuery,global=this)->
       return @maplist.map
 
     _selectGenre:(e, genreId)->
-      @options.genreChange?(genreId)
       unless genreId?
         $target = $(e.currentTarget)
         genreId = $target.data( @options.genreDataName )
       @rebuild genreId
-      @options.genreChanged?(genreId)
       return false
 
     _makeOptions:(options)->

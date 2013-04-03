@@ -30,8 +30,6 @@
           afterBuild: null,
           beforeClear: null,
           afterClear: null,
-          genreChange: null,
-          genreChanged: null,
           doFit: true,
           fitZoomReset: false
         };
@@ -56,13 +54,13 @@
         var _base,
           _this = this;
         if (typeof (_base = this.options).beforeBuild === "function") {
-          _base.beforeBuild();
+          _base.beforeBuild(genreId);
         }
         return this.entries.filterdThen(genreId, function(usingEntries) {
           var _base1;
           _this.usingEntries = usingEntries;
           _this.maplist.build(_this.usingEntries);
-          return typeof (_base1 = _this.options).afterBuild === "function" ? _base1.afterBuild() : void 0;
+          return typeof (_base1 = _this.options).afterBuild === "function" ? _base1.afterBuild(genreId, _this.usingEntries) : void 0;
         });
       };
 
@@ -85,18 +83,12 @@
       };
 
       Facade.prototype._selectGenre = function(e, genreId) {
-        var $target, _base, _base1;
-        if (typeof (_base = this.options).genreChange === "function") {
-          _base.genreChange(genreId);
-        }
+        var $target;
         if (genreId == null) {
           $target = $(e.currentTarget);
           genreId = $target.data(this.options.genreDataName);
         }
         this.rebuild(genreId);
-        if (typeof (_base1 = this.options).genreChanged === "function") {
-          _base1.genreChanged(genreId);
-        }
         return false;
       };
 

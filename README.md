@@ -245,6 +245,7 @@ genreが切り替わります．
 初期値 `null`
 
 指定されたgenreのentriesのもろもろを構築する前に実行される関数です．
+callback関数は第一引数に`genreId`が渡されます．
 
 `null`の場合，何もしません．
 
@@ -252,6 +253,7 @@ genreが切り替わります．
 初期値 `null`
 
 指定されたgenreのentriesのもろもろを構築した後に実行される関数です．
+callback関数は第一引数に`genreId`，第二引数に`entries`が渡されます．
 
 `null`の場合，何もしません．
 
@@ -274,23 +276,6 @@ genreが切り替わります．
 
 infoWindowを開いたあとに実行される関数です．
 callback関数は第一引数に`marker`，第二引数に`info`が渡されます．
-
-`null`の場合，何もしません．
-
-### genreChange
-初期値 `null`
-
-Genreが変更される前に実行される関数です．
-callback関数は第一引数に変更後の`genreId`が渡されます．
-
-`null`の場合，何もしません．
-
-
-### genreChanged
-初期値 `null`
-
-Genreが変更された後実行される関数です．
-callback関数は第一引数に`genreId`が渡されます．
 
 `null`の場合，何もしません．
 
