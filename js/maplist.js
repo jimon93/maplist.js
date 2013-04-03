@@ -77,6 +77,10 @@
         return this.build(genreId);
       };
 
+      Facade.prototype.getMap = function() {
+        return this.maplist.map;
+      };
+
       Facade.prototype._selectGenre = function(e) {
         var $target, genreId;
         $target = $(e.currentTarget);

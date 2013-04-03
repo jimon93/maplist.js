@@ -53,6 +53,9 @@ do ($=jQuery,global=this)->
       @clear()
       @build(genreId)
 
+    getMap:->
+      return @maplist.map
+
     _selectGenre:(e)->
       $target = $(e.currentTarget)
       genreId = $target.data( @options.genreDataName )
