@@ -18,6 +18,7 @@ do ($=jQuery,global=this)->
       genreSelector          : 'a'
       genreDataName          : "target-genre"
       firstGenre             : '__all__'
+      infoOpened             : null
       beforeBuild            : null
       afterBuild             : null
       beforeClear            : null
@@ -211,6 +212,7 @@ do ($=jQuery,global=this)->
         info.open(@map, marker)
         @openInfo = info
         @toMapScroll()
+        @options.infoOpened?(marker,info)
 
     makeHTML:(template, entry)->
       if template? then $.tmpl( template, entry ) else null

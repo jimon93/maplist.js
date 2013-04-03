@@ -25,6 +25,7 @@
           genreSelector: 'a',
           genreDataName: "target-genre",
           firstGenre: '__all__',
+          infoOpened: null,
           beforeBuild: null,
           afterBuild: null,
           beforeClear: null,
@@ -330,12 +331,14 @@
       MapList.prototype.openInfoFunc = function(marker, info) {
         var _this = this;
         return function(e) {
+          var _base;
           if (_this.openInfo != null) {
             _this.openInfo.close();
           }
           info.open(_this.map, marker);
           _this.openInfo = info;
-          return _this.toMapScroll();
+          _this.toMapScroll();
+          return typeof (_base = _this.options).infoOpened === "function" ? _base.infoOpened(marker, info) : void 0;
         };
       };
 
