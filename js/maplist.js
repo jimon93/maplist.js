@@ -16,7 +16,7 @@ MIT License
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   (function($, global) {
-    var Data, Facade, MapList, Parser, log;
+    var Entries, Facade, MapList, Parser, log;
 
     log = _.bind(console.log, console);
     Facade = (function() {
@@ -57,7 +57,7 @@ MIT License
 
         _.bindAll(this);
         this.options = this._makeOptions(options);
-        this.entries = new Data(_.clone(this.options));
+        this.entries = new Entries(_.clone(this.options));
         this.maplist = new MapList(_.clone(this.options));
         this.entries.then(function() {
           return _this.rebuild(_this.options.firstGenre);
@@ -122,8 +122,8 @@ MIT License
       return Facade;
 
     })();
-    Data = (function() {
-      function Data(options) {
+    Entries = (function() {
+      function Entries(options) {
         var parser;
 
         this.options = options;
@@ -135,11 +135,11 @@ MIT License
         this.entries = this._makeEntries();
       }
 
-      Data.prototype.then = function(done, fail) {
+      Entries.prototype.then = function(done, fail) {
         return this.entries.then(done, fail);
       };
 
-      Data.prototype.filterdThen = function(genreId, done, fail) {
+      Entries.prototype.filterdThen = function(genreId, done, fail) {
         var _this = this;
 
         return this.entries.then(function(entries) {
@@ -149,7 +149,7 @@ MIT License
         });
       };
 
-      Data.prototype._makeEntries = function() {
+      Entries.prototype._makeEntries = function() {
         var data, dfd,
           _this = this;
 
@@ -171,7 +171,7 @@ MIT License
         return dfd.promise();
       };
 
-      Data.prototype._filterdEntries = function(genreId, entries) {
+      Entries.prototype._filterdEntries = function(genreId, entries) {
         var alias, entry, _i, _len, _results;
 
         if (genreId === "__all__") {
@@ -189,7 +189,7 @@ MIT License
         }
       };
 
-      return Data;
+      return Entries;
 
     })();
     Parser = (function() {
@@ -286,8 +286,9 @@ MIT License
       };
 
       MapList.prototype.clear = function(entries) {
-        var entry, info, listElem, marker, _i, _len, _ref;
+        var entry, info, listElem, marker, _i, _len, _ref, _results;
 
+        _results = [];
         for (_i = 0, _len = entries.length; _i < _len; _i++) {
           entry = entries[_i];
           _ref = this.getEntryData(entry), info = _ref[0], marker = _ref[1], listElem = _ref[2];
@@ -295,11 +296,9 @@ MIT License
             this.openInfo.close();
           }
           marker.setMap(null);
-          if (listElem != null) {
-            listElem.detach();
-          }
+          _results.push(listElem != null ? listElem.detach() : void 0);
         }
-        return $(this.options.listSelector).html('');
+        return _results;
       };
 
       MapList.prototype.getEntryData = function(entry) {

@@ -43,7 +43,7 @@ do ($=jQuery,global=this)->
     constructor:(options)->
       _.bindAll(@)
       @options = @_makeOptions(options)
-      @entries = new Data(_.clone @options)
+      @entries = new Entries(_.clone @options)
       @maplist = new MapList(_.clone @options)
       @entries.then =>
         @rebuild( @options.firstGenre )
@@ -84,7 +84,7 @@ do ($=jQuery,global=this)->
 
     # private
     #--------------------------------------------------
-  class Data #{{{
+  class Entries #{{{
     constructor:(@options)->
       _.bindAll(@)
       parser = new Parser(_.clone @options)
@@ -184,7 +184,6 @@ do ($=jQuery,global=this)->
         @openInfo.close() if @openInfo?
         marker.setMap(null)
         listElem?.detach()
-      $(@options.listSelector).html('')
 
     getEntryData:(entry)->
       info     = entry.__info     ? entry.__info     = @makeInfo( entry )
