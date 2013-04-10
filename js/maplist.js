@@ -236,8 +236,13 @@ MIT License
           genre["" + alias] = $genre.attr("id");
           genre["" + alias + "Name"] = $genre.attr("name");
           return $.map($genre.find(">place"), function(place) {
-            var $place, position, res;
+            var $place, lat, lng, position, res;
 
+            lat = $place.attr('latitude');
+            lng = $place.attr('longitude');
+            if (!(lat && lng)) {
+              return null;
+            }
             $place = $(place);
             res = {};
             $place.children().each(function(idx, elem) {
