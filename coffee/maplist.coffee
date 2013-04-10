@@ -1,3 +1,14 @@
+###
+MapList JavaScript Library v1.0.0
+http://github.com/jimon93/maplist.js
+
+Require Library
+  jquery.js
+  jquery.tmpl.js
+  underscore.js
+
+MIT License
+###
 do ($=jQuery,global=this)->
   log = _.bind( console.log, console )
   class Facade
@@ -25,6 +36,7 @@ do ($=jQuery,global=this)->
       afterClear             : null
       doFit                  : true
       fitZoomReset           : false
+      toMapScroll            : true
     }
     usingEntries : []
 
@@ -34,7 +46,7 @@ do ($=jQuery,global=this)->
       @entries = new Data(_.clone @options)
       @maplist = new MapList(_.clone @options)
       @entries.then =>
-        @_selectGenre( null, @options.firstGenre )
+        @rebuild( @options.firstGenre )
 
       # event
       $(@options.genreContainerSelector).on "click", @options.genreSelector, @_selectGenre
@@ -172,6 +184,7 @@ do ($=jQuery,global=this)->
         @openInfo.close() if @openInfo?
         marker.setMap(null)
         listElem?.detach()
+      $(@options.listSelector).html('')
 
     getEntryData:(entry)->
       info     = entry.__info     ? entry.__info     = @makeInfo( entry )
@@ -212,7 +225,7 @@ do ($=jQuery,global=this)->
         @openInfo.close() if @openInfo?
         info.open(@map, marker)
         @openInfo = info
-        @toMapScroll()
+        @toMapScroll() if @options.toMapScroll
         @options.infoOpened?(marker,info)
 
     makeHTML:(template, entry)->
