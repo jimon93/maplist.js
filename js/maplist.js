@@ -45,7 +45,8 @@ MIT License
           afterClear: null,
           doFit: true,
           fitZoomReset: false,
-          toMapScroll: true
+          toMapScroll: true,
+          templateEngine: $.tmpl || _.template
         };
       };
 
@@ -379,11 +380,13 @@ MIT License
       };
 
       MapList.prototype.makeHTML = function(template, entry) {
-        if (template != null) {
-          return $.tmpl(template, entry);
-        } else {
+        var res;
+
+        if (template == null) {
           return null;
         }
+        res = this.options.templateEngine(template, entry);
+        return $(res);
       };
 
       MapList.prototype.toMapScroll = function() {

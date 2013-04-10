@@ -37,6 +37,7 @@ do ($=jQuery,global=this)->
       doFit                  : true
       fitZoomReset           : false
       toMapScroll            : true
+      templateEngine         : $.tmpl || _.template
     }
     usingEntries : []
 
@@ -228,7 +229,9 @@ do ($=jQuery,global=this)->
         @options.infoOpened?(marker,info)
 
     makeHTML:(template, entry)->
-      if template? then $.tmpl( template, entry ) else null
+      return null unless template?
+      res = @options.templateEngine( template, entry )
+      return $(res)
 
     toMapScroll:->
       top = $(@options.mapSelector).offset().top
