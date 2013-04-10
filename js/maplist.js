@@ -16,7 +16,7 @@ MIT License
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   (function($, global) {
-    var Entries, Facade, MapList, Parser, log;
+    var Entries, Entry, Facade, MapList, Parser, log;
 
     log = _.bind(console.log, console);
     Facade = (function() {
@@ -193,6 +193,17 @@ MIT License
       return Entries;
 
     })();
+    Entry = (function() {
+      function Entry(attributes) {
+        this.attributes = attributes;
+        _.bindAll(this);
+      }
+
+      Entry.prototype.isHit = function(obj) {};
+
+      return Entry;
+
+    })();
     Parser = (function() {
       function Parser(options) {
         this.options = options;
@@ -213,7 +224,7 @@ MIT License
         var $root, alias,
           _this = this;
 
-        $root = $(">*:first", data);
+        $root = $(">*:eq(0)", data);
         alias = this.options.genreAlias;
         return $.map($root.find(">" + alias), function(genre) {
           var $genre;

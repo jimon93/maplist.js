@@ -127,6 +127,13 @@ do ($=jQuery,global=this)->
 
     #}}}
   #}}}
+  class Entry #{{{
+    constructor:(@attributes)->
+      _.bindAll(@)
+
+    isHit:(obj)->
+
+  #}}}
   class Parser #{{{
     constructor:(@options)->
       _.bindAll(@)
@@ -140,7 +147,7 @@ do ($=jQuery,global=this)->
         data
 
     _parseForXML:(data)->
-      $root = $(">*:first", data)
+      $root = $(">*:eq(0)", data)
       alias = @options.genreAlias
       $.map $root.find(">#{alias}"), (genre)=>
         $genre = $(genre)
