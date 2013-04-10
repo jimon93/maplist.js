@@ -155,10 +155,10 @@ do ($=jQuery,global=this)->
         genre["#{alias}"] = $genre.attr("id")
         genre["#{alias}Name"] = $genre.attr("name")
         $.map $genre.find(">place"), (place)=>
+          $place = $(place)
           lat = $place.attr('latitude')
           lng = $place.attr('longitude')
           return null unless lat and lng
-          $place = $(place)
           res = {} # reduceでやりたい
           $place.children().each (idx,elem)=>
             res[elem.nodeName] = $(elem).text()

@@ -238,12 +238,12 @@ MIT License
           return $.map($genre.find(">place"), function(place) {
             var $place, lat, lng, position, res;
 
+            $place = $(place);
             lat = $place.attr('latitude');
             lng = $place.attr('longitude');
             if (!(lat && lng)) {
               return null;
             }
-            $place = $(place);
             res = {};
             $place.children().each(function(idx, elem) {
               return res[elem.nodeName] = $(elem).text();
