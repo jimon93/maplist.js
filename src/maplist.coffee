@@ -277,3 +277,6 @@ do ($=jQuery,global=this)->
       $('html,body').animate({ scrollTop: top }, 'fast')
 
   global.MapList = Facade
+
+if exports?
+  exports.MapList = MapList

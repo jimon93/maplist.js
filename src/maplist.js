@@ -409,4 +409,8 @@ MIT License
     return global.MapList = Facade;
   })(jQuery, this);
 
+  if (typeof exports !== "undefined" && exports !== null) {
+    exports.MapList = MapList;
+  }
+
 }).call(this);
