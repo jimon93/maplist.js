@@ -36,26 +36,23 @@ $(function(){
     message: "お肉がお得感！"
   } ];
   var maplist = new MapList({
-    lat: 36.115135,
-    lng: 137.953949,
-    zoom: 15,
     data: entries,
-    listTemplate: $("#tmpl-list-elem"),
-    infoTemplate: $("#tmpl-info-window")
+    listTemplate: $("#tmpl-list-elem").html(),
+    infoTemplate: $("#tmpl-info-window").html()
   });
 });
 </script>
 <script id="tmpl-info-window" type="text/template">
 <div id="info-window">
-  <h3> ${title} </h3>
-  <p>[ ${genreName} ] </p>
-  <p> ${message} </p>
+  <h3> <%- title %> </h3>
+  <p>[ <%- genreName %> ] </p>
+  <p> <%- message %> </p>
 </div>
 </script>
 <script id="tmpl-list-elem" type="text/template">
 <li>
-<a href="#" class='open-info'>${title}</a>
-<span>[ ${genreName} ] </span>
+<a href="#" class='open-info'> <%- title %> </a>
+<span>[ <%- genreName %> ] </span>
 </li>
 </script>
 
