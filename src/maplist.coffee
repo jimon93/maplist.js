@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.0.0
+MapList JavaScript Library v1.0.1
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -97,8 +97,8 @@ do ($=jQuery,global=this)->
     getMap:->
       return @maplist.map
 
-  # private
-  #--------------------------------------------------
+    # private
+    #--------------------------------------------------
     # ジャンルをクリックされた時のためのコールバック関数
     _selectGenre:(e, genreId)->
       unless genreId?
@@ -162,14 +162,20 @@ do ($=jQuery,global=this)->
 
     # 引数のデータを適した形のデータに変換して返す
     parse:(data)->
-      if $.isXMLDoc(data)
-        @_parseForXML( data )
+      if typeof data == "Entries"
+        data  
+      else if $.isXMLDoc(data)
+        Parser.XMLParser.execute(data)
       else if _.isObject(data)
-        @_parseForObject( data )
+        Parser.ObjectParser.execute(data)
       else
         data
 
-    _parseForXML:(data)->
+  class Parser.XMLParser
+    constructor: (@options)->
+      _.bindAll(@)
+
+    execute: (data)->
       $root = $(">*:eq(0)", data)
       alias = @options.genreAlias
       $.map $root.find(">#{alias}"), (genre)=>
@@ -188,7 +194,8 @@ do ($=jQuery,global=this)->
           position = { lat: $place.attr('latitude'), lng: $place.attr('longitude') }
           return _.extend( {}, genre, position, res )
 
-    _parseForObject:(data)->
+  class Parser.ObjectParser
+    execute: (data)->
       data
 
   class MapList
@@ -277,6 +284,6 @@ do ($=jQuery,global=this)->
       $('html,body').animate({ scrollTop: top }, 'fast')
 
   global.MapList = Facade
-
-if exports?
-  exports.MapList = MapList
+  Facade.Entries = Entries
+  Facade.Parser = Parser
+  Facade.MapList = MapList
