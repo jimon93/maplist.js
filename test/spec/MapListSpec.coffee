@@ -1,4 +1,49 @@
 describe "MapList", ->
+  describe ".Entries", ->
+    Entries = undefined
+    ans = undefined
+    beforeEach ->
+      Entries = MapList.Entries
+      ans = [
+        {
+          genre: "fruits"
+          genreName: "フルーツ"
+          name: "A"
+          longname: "Apple"
+          lat: "123"
+          lng: "321"
+          icon: "/apple.png"
+        }
+        {
+          genre: "fruits"
+          genreName: "フルーツ"
+          name: "B"
+          longname: "Banana"
+          lat: "111"
+          lng: "222"
+          icon: "/fruits.png"
+        }
+      ]
+
+    ###
+    it "@getSource ( array )", ->
+      source = Entries.getSource([1..100])
+      source.then (data)->
+        expect(data).toEqual([1..100])
+
+    it "@getSource ( url:json )", ->
+      source = Entries.getSource("entries.json")
+      source.then (data)->
+        console.log data
+        expect(data).toEqual(ans)
+
+    it "@getSource ( url:xml )", ->
+      source = Entries.getSource("entries.xml")
+      source.then (data)->
+        console.log data
+        expect(data).toEqual(ans)
+    ###
+
   describe ".Parser", ->
     Parser = undefined
 
@@ -38,42 +83,86 @@ describe "MapList", ->
 
     describe ".defaultParser", ->
 
-    describe ".XMLParser", ->
-      parser = undefined
-      dom = undefined
-      beforeEach ->
-        parser = new Parser.XMLParser
-        dom = """
+      it "arguments is array", ->
+        data = [1..100]
+        expect(Parser.defaultParser(data)).toEqual(data)
+
+      it "arguments is xml", ->
+        xml = $.parseXML """
+        <?xml version="1.0" encoding="UTF-8"?>
         <places>
           <genre id="fruits" name="フルーツ" icon="/fruits.png">
-          <place latitude="123" longitude="321" icon="/apple.png">
-            <name>A</name>
-            <longName>Apple</longName>
-          </place>
-          <place latitude="111" longitude="222">
-            <name>B</name>
-            <longName>Banana</longName>
-          </place>
+            <place latitude="123" longitude="321" icon="/apple.png">
+              <name>A</name>
+              <longName>Apple</longName>
+            </place>
+            <place latitude="111" longitude="222">
+              <name>B</name>
+              <longName>Banana</longName>
+            </place>
+          </genre>
+        </places>
+        """
+        ans = [
+          {
+            genre: "fruits"
+            genreName: "フルーツ"
+            name: "A"
+            longname: "Apple"
+            lat: "123"
+            lng: "321"
+            icon: "/apple.png"
+          }
+          {
+            genre: "fruits"
+            genreName: "フルーツ"
+            name: "B"
+            longname: "Banana"
+            lat: "111"
+            lng: "222"
+            icon: "/fruits.png"
+          }
+        ]
+        expect(Parser.defaultParser(xml)).toEqual(ans)
+
+    describe ".XMLParser", ->
+      parser = undefined
+      xml = undefined
+      beforeEach ->
+        parser = new Parser.XMLParser
+        xml = $.parseXML """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <places>
+          <genre id="fruits" name="フルーツ" icon="/fruits.png">
+            <place latitude="123" longitude="321" icon="/apple.png">
+              <name>A</name>
+              <longName>Apple</longName>
+            </place>
+            <place latitude="111" longitude="222">
+              <name>B</name>
+              <longName>Banana</longName>
+            </place>
+          </genre>
         </places>
         """
 
       it ".getAttribute", ->
-        $place = $("place",dom).eq(0)
+        $place = $("place",xml).eq(0)
         ans = {latitude: "123", longitude: "321", icon: "/apple.png"}
         expect(parser.getAttribute($place)).toEqual(ans)
 
       it ".getContent", ->
-        $place = $("place",dom).eq(0)
+        $place = $("place",xml).eq(0)
         ans = {name: "A", longname: "Apple"}
         expect(parser.getContent($place)).toEqual(ans)
 
       it ".getGenre", ->
-        $place = $("place",dom).eq(0)
+        $place = $("place",xml).eq(0)
         ans = {genre: "fruits", genreName: "フルーツ", icon: "/fruits.png"}
         expect(parser.getGenre($place)).toEqual(ans)
 
       it ".makePlace", ->
-        $place = $("place",dom).eq(0)
+        $place = $("place",xml).eq(0)
         ans = {
           genre: "fruits"
           genreName: "フルーツ"
@@ -106,7 +195,7 @@ describe "MapList", ->
             icon: "/fruits.png"
           }
         ]
-        expect(parser.execute(dom)).toEqual(ans)
+        expect(parser.execute(xml)).toEqual(ans)
 
     describe ".ObjectParser", ->
       parser = undefined

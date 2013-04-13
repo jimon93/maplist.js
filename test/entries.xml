@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<places>
+  <genre id="fruits" name="フルーツ" icon="/fruits.png">
+    <place latitude="123" longitude="321" icon="/apple.png">
+      <name>A</name>
+      <longName>Apple</longName>
+    </place>
+    <place latitude="111" longitude="222">
+      <name>B</name>
+      <longName>Banana</longName>
+    </place>
+  </genre>
+</places>
+

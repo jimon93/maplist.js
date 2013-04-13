@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.1.2
+MapList JavaScript Library v1.1.3
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -107,45 +107,28 @@ do ($=jQuery,global=this)->
 
   # Entryのコレクション
   class Entries
-    constructor:(@options)->
+    constructor:(source)->
       _.bindAll(@)
-      parser = new Parser(_.clone @options)
-      @options = _.extend( {parse:parser.parse}, @options)
-      @entries = @_makeEntries()
+      #@list = ( new Entry(entryFactor) for entryFactor in source )
+      @list = ( entryFactor for entryFactor in source )
 
-    then:(done,fail)->
-      @entries.then(done,fail)
-
-    # entryを検索した上で then
-    filterdThen:(genreId,done,fail)->
-      @entries.then(
-        (entries)=>done(@_filterdEntries genreId, entries)
-        (e)=>fail(e)
-      )
-
-    # private
-    #--------------------------------------------------
-    _makeEntries:->
+    @getSource: (data, parser = new Parser)->
       dfd = new $.Deferred
-      data = @options.data
       if _.isArray(data)
-        dfd.resolve( data )
+        dfd.resolve(data)
       else if _.isString(data)
-        $.ajax({url:data}).done( (data)=>
-          dfd.resolve( @options.parse( data ) )
-        ).fail(=>
-          dfd.reject()
+        $.ajax({url:data}).then(
+         (data)=> dfd.resolve( parser.execute(data) )
+         ()=> dfd.reject()
         )
       else
         dfd.reject()
       dfd.promise()
 
-    _filterdEntries:(genreId, entries)->
-      if genreId == "__all__"
-        entries
-      else
-        alias = @options.genreAlias
-        (entry for entry in entries when entry[alias] is genreId)
+    get:->
+      @list
+
+  class Entry
 
   class Parser
     constructor:( @parser )->
@@ -166,12 +149,13 @@ do ($=jQuery,global=this)->
       else if data instanceof Entry
         [data]
       else if $.isXMLDoc(data)
-        Parser.XMLParser.execute(data)
+        parser = new Parser.XMLParser
+        parser.execute(data)
       else if _.isObject(data)
-        Parser.ObjectParser.execute(data)
+        parser = new Parser.ObjectParser
+        parser.execute(data)
       else
         throw "Illegal Argument Error"
-
 
   class Parser.XMLParser
     default: ->{
