@@ -4,7 +4,7 @@
     return describe(".Parser", function() {
       var Parser;
 
-      Parser = null;
+      Parser = void 0;
       beforeEach(function() {
         return Parser = MapList.Parser;
       });
@@ -21,7 +21,7 @@
         parser = new Parser;
         return expect(parser.parser).toBe(Parser.defaultParser);
       });
-      return describe(".execute", function() {
+      describe(".execute", function() {
         it("parserに関数を渡した場合，executeでその関数を使う", function() {
           var data, identity, parser;
 
@@ -57,6 +57,78 @@
           return expect(function() {
             return parser.execute(data);
           }).toThrow("parser is function or on object with the execute method");
+        });
+      });
+      describe(".defaultParser", function() {});
+      describe(".XMLParser", function() {
+        var dom, parser;
+
+        parser = void 0;
+        dom = void 0;
+        beforeEach(function() {
+          parser = new Parser.XMLParser;
+          return dom = "<places>\n  <genre id=\"fruits\" name=\"フルーツ\" icon=\"/fruits.png\">\n  <place latitude=\"123\" longitude=\"321\" icon=\"/apple.png\">\n    <name>A</name>\n    <longName>Apple</longName>\n  </place>\n  <place latitude=\"111\" longitude=\"222\">\n    <name>B</name>\n    <longName>Banana</longName>\n  </place>\n</places>";
+        });
+        it(".getAttribute", function() {
+          var $place, ans;
+
+          $place = $("place", dom).eq(0);
+          ans = {
+            latitude: "123",
+            longitude: "321",
+            icon: "/apple.png"
+          };
+          return expect(parser.getAttribute($place)).toEqual(ans);
+        });
+        it(".getContent", function() {
+          var $place, ans;
+
+          $place = $("place", dom).eq(0);
+          ans = {
+            name: "A",
+            longname: "Apple"
+          };
+          return expect(parser.getContent($place)).toEqual(ans);
+        });
+        it(".getGenre", function() {
+          var $place, ans;
+
+          $place = $("place", dom).eq(0);
+          ans = {
+            genre: "fruits",
+            genreName: "フルーツ",
+            icon: "/fruits.png"
+          };
+          return expect(parser.getGenre($place)).toEqual(ans);
+        });
+        return it(".makePlace", function() {
+          var $place, ans;
+
+          $place = $("place", dom).eq(0);
+          ans = {
+            genre: "fruits",
+            genreName: "フルーツ",
+            name: "A",
+            longname: "Apple",
+            lat: "123",
+            lng: "321",
+            icon: "/apple.png"
+          };
+          return expect(parser.makePlace($place)).toEqual(ans);
+        });
+      });
+      return describe(".ObjectParser", function() {
+        var parser;
+
+        parser = void 0;
+        beforeEach(function() {
+          return parser = new Parser.ObjectParser;
+        });
+        return it(".execute", function() {
+          var data;
+
+          data = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+          return expect(parser.execute(data)).toBe(data);
         });
       });
     });

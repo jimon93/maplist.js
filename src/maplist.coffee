@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.1.0
+MapList JavaScript Library v1.1.1
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -174,17 +174,60 @@ do ($=jQuery,global=this)->
 
 
   class Parser.XMLParser
-    constructor: (@options)->
+    default: ->{
+      place: "place"
+      genre: "genre"
+    }
+
+    constructor: (options)->
       _.bindAll(@)
+      @options = _.extend( {}, _(@).result('default'), options)
 
     execute: (data)->
       $root = $(">*", data).eq(0)
+      ( makePlace( $(place) ) for place in $(@options.place).get() )
+
+    makePlace:($place)->
+      res = _.extend( {}, @getGenre($place), @getContent($place), @getAttribute($place) )
+      if not res.lat? and res.latitude?
+        res.lat = res.latitude
+        delete res.latitude
+      if not res.lng? and res.longitude?
+        res.lng = res.longitude
+        delete res.longitude
+      return res
+
+    getGenre:($place)->
+      $genre = $place.closest(@options.genre)
+      res = {}
+      if $genre.size() == 1
+        res.genre = $genre.attr("id")
+        res.genreName = $genre.attr("name")
+        for attr in $genre.get(0).attributes when not _(["id","name"]).include(attr.name)
+          res[attr.name] = attr.value
+      return res
+
+    getContent:($place)->
+      res = {}
+      for elem in $place.children().get()
+        res[elem.nodeName.toLowerCase()] = $(elem).text()
+      return res
+
+    getAttribute:($place)->
+      res = {}
+      for attr in $place.get(0).attributes when attr != "id" and attr != "name"
+        res[attr.name] = attr.value
+      return res
+
+
+
+
+
+
+    ###
       alias = @options.genreAlias
       $.map $root.find(">#{alias}"), (genre)=>
         $genre = $(genre)
-        genre = { "icon" : $genre.attr("icon") }
-        genre["#{alias}"] = $genre.attr("id")
-        genre["#{alias}Name"] = $genre.attr("name")
         $.map $genre.find(">place"), (place)=>
           $place = $(place)
           lat = $place.attr('latitude')
@@ -195,7 +238,7 @@ do ($=jQuery,global=this)->
             res[elem.nodeName] = $(elem).text()
           position = { lat: $place.attr('latitude'), lng: $place.attr('longitude') }
           return _.extend( {}, genre, position, res )
-
+    ###
   class Parser.ObjectParser
     execute: (data)->
       data
