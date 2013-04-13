@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.1.1
+MapList JavaScript Library v1.1.2
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -188,24 +188,22 @@ do ($=jQuery,global=this)->
       ( @makePlace( $(place) ) for place in $root.find(@options.place).get() )
 
     makePlace:($place)->
-      res = _.extend( {}, @getGenre($place), @getContent($place), @getAttribute($place) )
-      if not res.lat? and res.latitude?
-        res.lat = res.latitude
-        delete res.latitude
-      if not res.lng? and res.longitude?
-        res.lng = res.longitude
-        delete res.longitude
-      return res
+      _({}).chain()
+        .extend( @getGenre($place), @getContent($place), @getAttribute($place) )
+        .tap( (obj)->
+          obj.lat = obj.latitude  if not obj.lat? and obj.latitude?
+          obj.lng = obj.longitude if not obj.lng? and obj.longitude?
+        ).omit("latitude","longitude").value()
 
     getGenre:($place)->
       $genre = $place.closest(@options.genre)
-      res = {}
       if $genre.size() == 1
-        res.genre = $genre.attr("id")
-        res.genreName = $genre.attr("name")
-        for attr in $genre.get(0).attributes when not _(["id","name"]).include(attr.name)
-          res[attr.name] = attr.value
-      return res
+        _(@getAttribute($genre)).chain().tap((obj)->
+          obj.genre = obj.id
+          obj.genreName = obj.name
+        ).omit("id","name").value()
+      else
+        {}
 
     getContent:($place)->
       res = {}
