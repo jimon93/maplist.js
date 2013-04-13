@@ -185,7 +185,7 @@ do ($=jQuery,global=this)->
 
     execute: (data)->
       $root = $(">*", data).eq(0)
-      ( makePlace( $(place) ) for place in $(@options.place).get() )
+      ( @makePlace( $(place) ) for place in $root.find(@options.place).get() )
 
     makePlace:($place)->
       res = _.extend( {}, @getGenre($place), @getContent($place), @getAttribute($place) )
@@ -219,26 +219,6 @@ do ($=jQuery,global=this)->
         res[attr.name] = attr.value
       return res
 
-
-
-
-
-
-    ###
-      alias = @options.genreAlias
-      $.map $root.find(">#{alias}"), (genre)=>
-        $genre = $(genre)
-        $.map $genre.find(">place"), (place)=>
-          $place = $(place)
-          lat = $place.attr('latitude')
-          lng = $place.attr('longitude')
-          return null unless lat and lng
-          res = {} # reduceでやりたい
-          $place.children().each (idx,elem)=>
-            res[elem.nodeName] = $(elem).text()
-          position = { lat: $place.attr('latitude'), lng: $place.attr('longitude') }
-          return _.extend( {}, genre, position, res )
-    ###
   class Parser.ObjectParser
     execute: (data)->
       data

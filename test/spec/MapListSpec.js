@@ -101,7 +101,7 @@
           };
           return expect(parser.getGenre($place)).toEqual(ans);
         });
-        return it(".makePlace", function() {
+        it(".makePlace", function() {
           var $place, ans;
 
           $place = $("place", dom).eq(0);
@@ -115,6 +115,30 @@
             icon: "/apple.png"
           };
           return expect(parser.makePlace($place)).toEqual(ans);
+        });
+        return it(".execute", function() {
+          var ans;
+
+          ans = [
+            {
+              genre: "fruits",
+              genreName: "フルーツ",
+              name: "A",
+              longname: "Apple",
+              lat: "123",
+              lng: "321",
+              icon: "/apple.png"
+            }, {
+              genre: "fruits",
+              genreName: "フルーツ",
+              name: "B",
+              longname: "Banana",
+              lat: "111",
+              lng: "222",
+              icon: "/fruits.png"
+            }
+          ];
+          return expect(parser.execute(dom)).toEqual(ans);
         });
       });
       return describe(".ObjectParser", function() {

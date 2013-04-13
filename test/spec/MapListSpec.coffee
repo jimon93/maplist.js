@@ -85,6 +85,29 @@ describe "MapList", ->
         }
         expect(parser.makePlace($place)).toEqual(ans)
 
+      it ".execute", ->
+        ans = [
+          {
+            genre: "fruits"
+            genreName: "フルーツ"
+            name: "A"
+            longname: "Apple"
+            lat: "123"
+            lng: "321"
+            icon: "/apple.png"
+          }
+          {
+            genre: "fruits"
+            genreName: "フルーツ"
+            name: "B"
+            longname: "Banana"
+            lat: "111"
+            lng: "222"
+            icon: "/fruits.png"
+          }
+        ]
+        expect(parser.execute(dom)).toEqual(ans)
+
     describe ".ObjectParser", ->
       parser = undefined
       beforeEach ->

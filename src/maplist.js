@@ -244,11 +244,11 @@ MIT License
         var $root, place, _i, _len, _ref, _results;
 
         $root = $(">*", data).eq(0);
-        _ref = $(this.options.place).get();
+        _ref = $root.find(this.options.place).get();
         _results = [];
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           place = _ref[_i];
-          _results.push(makePlace($(place)));
+          _results.push(this.makePlace($(place)));
         }
         return _results;
       };
@@ -312,23 +312,6 @@ MIT License
         }
         return res;
       };
-
-      /*
-        alias = @options.genreAlias
-        $.map $root.find(">#{alias}"), (genre)=>
-          $genre = $(genre)
-          $.map $genre.find(">place"), (place)=>
-            $place = $(place)
-            lat = $place.attr('latitude')
-            lng = $place.attr('longitude')
-            return null unless lat and lng
-            res = {} # reduceでやりたい
-            $place.children().each (idx,elem)=>
-              res[elem.nodeName] = $(elem).text()
-            position = { lat: $place.attr('latitude'), lng: $place.attr('longitude') }
-            return _.extend( {}, genre, position, res )
-      */
-
 
       return XMLParser;
 
