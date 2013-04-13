@@ -2,16 +2,61 @@
 (function() {
   describe("MapList", function() {
     return describe(".Parser", function() {
-      return describe(".ObjectParser", function() {
-        return it("execute", function() {
-          var data, parser;
+      var Parser;
 
-          parser = new MapList.Parser.ObjectParser;
-          data = {
-            ans: 42,
-            foo: "FOO"
+      Parser = null;
+      beforeEach(function() {
+        return Parser = MapList.Parser;
+      });
+      it("第1引数(parser)を渡すと，@parserにその値が格納される", function() {
+        var obj, parser;
+
+        obj = {};
+        parser = new Parser(obj);
+        return expect(parser.parser).toBe(obj);
+      });
+      it("parserがない場合，デフォルトのものを使う", function() {
+        var parser;
+
+        parser = new Parser;
+        return expect(parser.parser).toBe(Parser.defaultParser);
+      });
+      return describe(".execute", function() {
+        it("parserに関数を渡した場合，executeでその関数を使う", function() {
+          var data, identity, parser;
+
+          identity = function(val) {
+            return _(val).map(function(v) {
+              return v - 1;
+            });
           };
-          return expect(parser.execute(data)).toBe(data);
+          parser = new Parser(identity);
+          data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+          return expect(parser.execute(data)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+        });
+        it("parserにObjectを渡した場合，Objectのexecuteメソッドを使う", function() {
+          var data, myPerser, parser;
+
+          myPerser = {
+            execute: function(val) {
+              return _(val).map(function(v) {
+                return v - 1;
+              });
+            }
+          };
+          parser = new Parser(myPerser);
+          data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+          return expect(parser.execute(data)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+        });
+        return it("上記2つ以外のparserの場合, Errorを投げる", function() {
+          var data, myPerser, parser;
+
+          myPerser = {};
+          parser = new Parser(myPerser);
+          data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+          return expect(function() {
+            return parser.execute(data);
+          }).toThrow("parser is function or on object with the execute method");
         });
       });
     });

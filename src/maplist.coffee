@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.0.1
+MapList JavaScript Library v1.1.0
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -12,6 +12,31 @@ MIT License
 do ($=jQuery,global=this)->
   log = _.bind( console.log, console )
   class Facade
+    # 地図とリストを構築する
+    build:(genreId)->
+      @options.beforeBuild?(genreId)
+      @entries.filterdThen genreId, (@usingEntries)=>
+        @maplist.build(@usingEntries)
+        @options.afterBuild?(genreId, @usingEntries)
+
+    # 地図とリストを初期化する
+    clear:->
+      @options.beforeClear?()
+      @maplist.clear(@usingEntries)
+      @options.afterClear?()
+
+    # 地図とリストを初期化して，構築する
+    rebuild:(genreId)->
+      @clear()
+      @build(genreId)
+
+    # map objectを取得
+    getMap:->
+      return @maplist.map
+
+  class Factory
+    _.extend @::, Facade::
+
     default: => {
       # 緯度
       lat                    : 35
@@ -72,40 +97,6 @@ do ($=jQuery,global=this)->
       @entries.then =>
         @rebuild( @options.firstGenre )
 
-      # event
-      $(@options.genreContainerSelector).on( "click", @options.genreSelector, @_selectGenre )
-
-    # 地図とリストを構築する
-    build:(genreId)->
-      @options.beforeBuild?(genreId)
-      @entries.filterdThen genreId, (@usingEntries)=>
-        @maplist.build(@usingEntries)
-        @options.afterBuild?(genreId, @usingEntries)
-
-    # 地図とリストを初期化する
-    clear:->
-      @options.beforeClear?()
-      @maplist.clear(@usingEntries)
-      @options.afterClear?()
-
-    # 地図とリストを初期化して，構築する
-    rebuild:(genreId)->
-      @clear()
-      @build(genreId)
-
-    # map objectを取得
-    getMap:->
-      return @maplist.map
-
-    # private
-    #--------------------------------------------------
-    # ジャンルをクリックされた時のためのコールバック関数
-    _selectGenre:(e, genreId)->
-      unless genreId?
-        $target = $(e.currentTarget)
-        genreId = $target.data( @options.genreDataName )
-      @rebuild genreId
-      return false
 
     # オプションを作ります
     _makeOptions:(options)->
@@ -157,26 +148,37 @@ do ($=jQuery,global=this)->
         (entry for entry in entries when entry[alias] is genreId)
 
   class Parser
-    constructor:(@options)->
+    constructor:( @parser )->
       _.bindAll(@)
+      @parser = Parser.defaultParser unless @parser?
 
-    # 引数のデータを適した形のデータに変換して返す
-    parse:(data)->
-      if typeof data == "Entries"
-        data  
+    execute:(data)->
+      if _.isFunction(@parser)
+        @parser(data)
+      else if @parser.execute?
+        @parser.execute(data)
+      else
+        throw "parser is function or on object with the execute method"
+
+    @defaultParser:(data)->
+      if data instanceof Entries
+        data
+      else if data instanceof Entry
+        [data]
       else if $.isXMLDoc(data)
         Parser.XMLParser.execute(data)
       else if _.isObject(data)
         Parser.ObjectParser.execute(data)
       else
-        data
+        throw "Illegal Argument Error"
+
 
   class Parser.XMLParser
     constructor: (@options)->
       _.bindAll(@)
 
     execute: (data)->
-      $root = $(">*:eq(0)", data)
+      $root = $(">*", data).eq(0)
       alias = @options.genreAlias
       $.map $root.find(">#{alias}"), (genre)=>
         $genre = $(genre)
@@ -197,6 +199,47 @@ do ($=jQuery,global=this)->
   class Parser.ObjectParser
     execute: (data)->
       data
+
+  class Map
+
+  class Html
+    constructor:(@templateEngine, @template, @entry)->
+
+    makeHTML:->
+      return null unless @templateEngine? or @template?
+      res = @templateEngine( @template, @entry )
+      res = res.html() if res.html?
+      return res
+
+  class InfoWindow extends Html
+    constructor: ->
+      super
+      content = @makeHTML()
+      if content?
+        @info = new google.maps.InfoWindow {content}
+        google.maps.event.addListener @info, 'closeclick', =>
+          InfoWindow.openedInfo = null
+      else
+        @info = null
+
+  class Marker
+
+  class List
+
+  class Genres
+    constructor:->
+      # event
+      $(@options.genreContainerSelector).on( "click", @options.genreSelector, @_selectGenre )
+    # private
+    #--------------------------------------------------
+    # ジャンルをクリックされた時のためのコールバック関数
+    _selectGenre:(e, genreId)->
+      unless genreId?
+        $target = $(e.currentTarget)
+        genreId = $target.data( @options.genreDataName )
+      @rebuild genreId
+      return false
+
 
   class MapList
     constructor:(@options)->
@@ -283,7 +326,7 @@ do ($=jQuery,global=this)->
       top = $(@options.mapSelector).offset().top
       $('html,body').animate({ scrollTop: top }, 'fast')
 
-  global.MapList = Facade
-  Facade.Entries = Entries
-  Facade.Parser = Parser
-  Facade.MapList = MapList
+  global.MapList = Factory
+  Factory.Entries = Entries
+  Factory.Parser = Parser
+  Factory.MapList = MapList
