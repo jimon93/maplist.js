@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.1.3
+MapList JavaScript Library v1.2.0
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -11,32 +11,7 @@ MIT License
 ###
 do ($=jQuery,global=this)->
   log = _.bind( console.log, console )
-  class Facade
-    # 地図とリストを構築する
-    build:(genreId)->
-      @options.beforeBuild?(genreId)
-      @entries.filterdThen genreId, (@usingEntries)=>
-        @maplist.build(@usingEntries)
-        @options.afterBuild?(genreId, @usingEntries)
-
-    # 地図とリストを初期化する
-    clear:->
-      @options.beforeClear?()
-      @maplist.clear(@usingEntries)
-      @options.afterClear?()
-
-    # 地図とリストを初期化して，構築する
-    rebuild:(genreId)->
-      @clear()
-      @build(genreId)
-
-    # map objectを取得
-    getMap:->
-      return @maplist.map
-
-  class Factory
-    _.extend @::, Facade::
-
+  class App
     default: => {
       # 緯度
       lat                    : 35
@@ -44,7 +19,7 @@ do ($=jQuery,global=this)->
       lng                    : 135
       # 緯度経度
       # 上の属性より優先される
-      center                 : null #new google.maps.LatLng( 35, 135 )
+      #center                 : null #new google.maps.LatLng( 35, 135 )
       # デフォルトのZoom
       zoom                   : 4
       # デフォルトのマップタイプ
@@ -60,11 +35,11 @@ do ($=jQuery,global=this)->
       # InfoWindowを構築する為のテンプレート
       infoTemplate           : null
       # リストからマーカーを開くDOM要素のセレクター
-      listToMarkerSelector   : '.open-info'
+      openInfoSelector       : '.open-info'
       # genreの別名
       genreAlias             : 'genre'
       # genreを保持するDOMのテンプレート
-      genreContainerSelector : '#genre'
+      genresSelector         : '#genre'
       genreSelector          : 'a'
       genreDataName          : "target-genre"
       # デフォルトで表示するgenre
@@ -91,44 +66,44 @@ do ($=jQuery,global=this)->
 
     constructor:(options)->
       _.bindAll(@)
-      @options = @_makeOptions(options)
-      @entries = new Entries(_.clone @options)
-      @maplist = new MapList(_.clone @options)
-      @entries.then =>
-        @rebuild( @options.firstGenre )
+      @options = @makeOptions(options)
+      @map = new Map(@options)
+      source = Entries.getSource(@options.data, @options.parser)
+      $.when( @map, source ).then (@map,source)=>
+        @entries = new Entries(source, @map, @options)
+        @list = new List(@options)
+      #   @maplist = new MapList()
+        @rebuild( @options.firstGenre, @entries )
 
-
-    # オプションを作ります
-    _makeOptions:(options)->
-      options = _.extend( {}, _(@).result('default'), options)
+    makeOptions:(options)->
+      options = _.extend( {}, _(@).result('default'), _.clone options)
       unless options.center?
         options.center = new google.maps.LatLng( options.lat, options.lng )
       return options
 
-  # Entryのコレクション
-  class Entries
-    constructor:(source)->
-      _.bindAll(@)
-      #@list = ( new Entry(entryFactor) for entryFactor in source )
-      @list = ( entryFactor for entryFactor in source )
+    # 地図とリストを構築する
+    build:(genreId)->
+      @options.beforeBuild?(genreId)
+      @usingEntries = _(@entries.list).filter( (entry)=> entry.isSelect(genreId) )
+      @map.build(@usingEntries)
+      @list.build(@usingEntries)
+      @options.afterBuild?(genreId, @usingEntries)
 
-    @getSource: (data, parser = new Parser)->
-      dfd = new $.Deferred
-      if _.isArray(data)
-        dfd.resolve(data)
-      else if _.isString(data)
-        $.ajax({url:data}).then(
-         (data)=> dfd.resolve( parser.execute(data) )
-         ()=> dfd.reject()
-        )
-      else
-        dfd.reject()
-      dfd.promise()
+    # 地図とリストを初期化する
+    clear:->
+      @options.beforeClear?()
+      @map.clear(@usingEntries)
+      @list.clear(@usingEntries)
+      @options.afterClear?()
 
-    get:->
-      @list
+    # 地図とリストを初期化して，構築する
+    rebuild:(genreId)->
+      @clear()
+      @build(genreId)
 
-  class Entry
+    # map objectを取得
+    getMap:->
+      return @maplist.map
 
   class Parser
     constructor:( @parser )->
@@ -144,11 +119,7 @@ do ($=jQuery,global=this)->
         throw "parser is function or on object with the execute method"
 
     @defaultParser:(data)->
-      if data instanceof Entries
-        data
-      else if data instanceof Entry
-        [data]
-      else if $.isXMLDoc(data)
+      if $.isXMLDoc(data)
         parser = new Parser.XMLParser
         parser.execute(data)
       else if _.isObject(data)
@@ -205,63 +176,89 @@ do ($=jQuery,global=this)->
     execute: (data)->
       data
 
-  class Map
+  class Entries
+    constructor:(source, @maplist, @options)->
+      _.bindAll(@)
+      options = {
+        infoHtmlFactory : new HtmlFactory(@options.templateEngine, @options.infoTemplate)
+        listHtmlFactory : new HtmlFactory(@options.templateEngine, @options.listTemplate)
+      }
+      @list = ( new Entry(entryFactor, @maplist, options) for entryFactor in source )
 
-  class Html
-    constructor:(@templateEngine, @template, @entry)->
+    gets:->
+      @list
 
-    makeHTML:->
+    @getSource: (data, parser)->
+      parser = new Parser(parser)
+      dfd = new $.Deferred
+      if _.isArray(data)
+        dfd.resolve(data)
+      else if _.isString(data)
+        $.ajax({url:data}).then(
+         (data)=> dfd.resolve( parser.execute(data) )
+         ()=> dfd.reject()
+        )
+      else
+        dfd.reject()
+      dfd.promise()
+
+  class Entry
+    constructor:(@attributes, @maplist, options)->
+      _.bindAll(@)
+      @info   = @makeInfo(options.infoHtmlFactory)
+      @marker = @makeMarker()
+      @list   = @makeList(options.listHtmlFactory)
+
+    openInfo:->
+      @maplist.openInfo(@info, @marker)
+
+    makeInfo:(infoHtmlFactory)->
+      content = infoHtmlFactory.make( @attributes )
+      if content?
+        info = new google.maps.InfoWindow {content}
+        google.maps.event.addListener( info, 'closeclick', @openInfo )
+        return info
+
+    makeMarker:->
+      position = new google.maps.LatLng( @attributes.lat, @attributes.lng )
+      marker = new google.maps.Marker { position, icon: @attributes.icon, shadow: @attributes.shadow }
+      google.maps.event.addListener( marker, 'click', @openInfo ) if @info?
+      return marker
+
+    makeList:(listHtmlFactory)->
+      content = listHtmlFactory.make( @attributes )
+      if content?
+        $content = $(content).addClass(".__entryElem")
+        $content.find(".open-info").data("entry",@)
+        return $content
+
+    isSelect:(genreId)->
+      switch genreId
+        when "__all__" then true
+        else genreId == @attributes.genre
+
+  class HtmlFactory
+    constructor:(@templateEngine, @template)->
+
+    make:(object)->
       return null unless @templateEngine? or @template?
-      res = @templateEngine( @template, @entry )
+      res = @templateEngine( @template, object )
       res = res.html() if res.html?
       return res
 
-  class InfoWindow extends Html
-    constructor: ->
-      super
-      content = @makeHTML()
-      if content?
-        @info = new google.maps.InfoWindow {content}
-        google.maps.event.addListener @info, 'closeclick', =>
-          InfoWindow.openedInfo = null
-      else
-        @info = null
-
-  class Marker
-
-  class List
-
-  class Genres
-    constructor:->
-      # event
-      $(@options.genreContainerSelector).on( "click", @options.genreSelector, @_selectGenre )
-    # private
-    #--------------------------------------------------
-    # ジャンルをクリックされた時のためのコールバック関数
-    _selectGenre:(e, genreId)->
-      unless genreId?
-        $target = $(e.currentTarget)
-        genreId = $target.data( @options.genreDataName )
-      @rebuild genreId
-      return false
-
-
-  class MapList
+  class Map # info and marker
     constructor:(@options)->
       _.bindAll(@)
-      mapOptions = _(@options).clone()
       canvas = $(@options.mapSelector).get(0)
-      @map = new google.maps.Map( canvas, mapOptions )
+      @map = new google.maps.Map( canvas, @options )
 
     # 構築
     # マーカー，インフォ，リストを構築
     build:(entries)->
       bounds = new google.maps.LatLngBounds if @options.doFit
       for entry in entries
-        [info,marker,listElem] = @getEntryData(entry)
-        marker.setMap(@map)
-        bounds.extend( marker.getPosition() ) if @options.doFit
-        listElem?.appendTo $(@options.listSelector)
+        entry.marker.setMap(@map)
+        bounds.extend( entry.marker.getPosition() ) if @options.doFit
       if @options.doFit
         unless @options.fitZoomReset
           @map.fitBounds( bounds )
@@ -272,66 +269,55 @@ do ($=jQuery,global=this)->
     # マーカー, インフォ, リストを消す
     clear:(entries)->
       for entry in entries
-        [info,marker,listElem] = @getEntryData(entry)
-        @openInfo.close() if @openInfo?
-        marker.setMap(null)
-        listElem?.detach()
+        @closeOpenedInfo()
+        entry.marker.setMap(null)
 
-    # entryからinfo,marker,listを作成して返す
-    getEntryData:(entry)->
-      info     = entry.__info     ? entry.__info     = @makeInfo( entry )
-      marker   = entry.__marker   ? entry.__marker   = @makeMarker( entry, info )
-      listElem = entry.__listElem ? entry.__listElem = @makeListElem( entry, marker, info )
-      return [info,marker,listElem]
+    openInfo:(info,marker)->
+      @closeOpenedInfo()
+      info.open(@map,marker)
+      @openedInfo = info
+      @options.infoOpened?(marker,info)
 
-    makeInfo:(entry)->
-      content = @makeHTML @options.infoTemplate, entry
-      if content?
-        content = $( content ).html()
-        info = new google.maps.InfoWindow {content}
-        google.maps.event.addListener info, 'closeclick', =>
-          @openInfo = null
-        return info
-      else
-        return null
+    closeOpenedInfo:->
+      if @openedInfo?
+        @openedInfo.close()
+        @openedInfo = null
 
-    makeMarker:(entry,info)->
-      position = new google.maps.LatLng( entry.lat, entry.lng )
-      marker = new google.maps.Marker { position, icon: entry.icon, shadow: entry.shadow }
-      google.maps.event.addListener( marker, 'click', @openInfoFunc(marker,info) ) if info
-      return marker
+  class List
+    constructor:(@options)->
+      @$el = $(@options.listSelector)
+      @$el.on( "click", @options.openInfoSelector, @openInfo )
 
-    makeListElem:(entry,marker,info)->
-      content = @makeHTML @options.listTemplate, entry
-      if content?
-        $content = $(content)
-        $content.data( @options.genreAlias, entry[@options.genreAlias] )
-        if @options.listToMarkerSelector?
-          $content.on( "click", @options.listToMarkerSelector, @openInfoFunc(marker,info) )
-        return $content
-      else
-        return null
+    build:(entries)->
+      for entry in entries
+        entry.list?.appendTo(@$el)
 
-    # infoを開く関数を返す関数
-    openInfoFunc:(marker,info)->
-      (e)=>
-        @openInfo.close() if @openInfo?
-        info.open(@map, marker)
-        @openInfo = info
-        @toMapScroll() if @options.toMapScroll
-        @options.infoOpened?(marker,info)
+    clear:(entries)->
+      for entry in entries
+        entry.list?.detach()
 
-    makeHTML:(template, entry)->
-      return null unless template?
-      res = @options.templateEngine( template, entry )
-      return $(res)
+    openInfo:(e)->
+      $target = $(e.currentTarget)
+      #$list = $target.closest(".__entryElem")
+      #log $list.data("entry")
+      #$list.data("entry").openInfo()
+      $target.data("entry").openInfo()
+      return false
 
-    # map上部へスクロール
-    toMapScroll:->
-      top = $(@options.mapSelector).offset().top
-      $('html,body').animate({ scrollTop: top }, 'fast')
+  class Genres
+    constructor:(options, @app)->
+      # event
+      @$el = $(options.genresSelector)
+      @$el.on( "click", options.genreSelector, @selectGenre )
 
-  global.MapList = Factory
-  Factory.Entries = Entries
-  Factory.Parser = Parser
-  Factory.MapList = MapList
+    # ジャンルをクリックされた時のためのコールバック関数
+    selectGenre:(e, genreId)->
+      unless genreId?
+        $target = $(e.currentTarget)
+        genreId = $target.data( @options.genreDataName )
+      @app.rebuild(genreId)
+      return false
+
+  global.MapList = App
+  App.Entries = Entries
+  App.Parser = Parser
