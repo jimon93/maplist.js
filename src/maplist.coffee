@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.2.5
+MapList JavaScript Library v1.2.6
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -36,10 +36,9 @@ do ($=jQuery,global=this)->
       afterClear       : null
       doFit            : true
       fitZoomReset     : false
-      toMapScroll      : true
       templateEngine   : $.tmpl || _.template
-    } #}}}
-
+    }
+    #}}}
     constructor:(options)->
       _.bindAll(@)
       @options = @makeOptions(options)
@@ -199,6 +198,7 @@ do ($=jQuery,global=this)->
         $(content).addClass("__list").data("entry",@)
 
     isSelect:(genreId)->
+      false unless @get('lat')? or @get('lng')
       switch genreId
         when "__all__" then true
         else genreId == @attributes.genre
