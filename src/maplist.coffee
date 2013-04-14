@@ -61,8 +61,6 @@ do ($=jQuery,global=this)->
       # jquery.tmplがある場合,そちらを利用する
       templateEngine         : $.tmpl || _.template
     } #}}}
-    # 表示中のentryを保持する
-    usingEntries : []
 
     constructor:(options)->
       _.bindAll(@)
@@ -72,6 +70,7 @@ do ($=jQuery,global=this)->
       @listView = new ListView(@options)
       $.when( @map, source ).then (map,models)=>
         @entries = new Entries(models, @options)
+        @delegateEvents()
         @rebuild( @options.firstGenre )
 
     makeOptions:(options)->
@@ -85,20 +84,25 @@ do ($=jQuery,global=this)->
       }
       _.extend( options, templates )
 
+    delegateEvents:->
+      @entries.on "select", (entries)=>
+        @mapView .build(entries)
+        @listView.build(entries)
+
+      @entries.on "unselect", (entries)=>
+        @mapView .clear(entries)
+        @listView.clear(entries)
+
     # 地図とリストを構築する
     build:(genreId)->
       @options.beforeBuild?(genreId)
-      @usingEntries = @entries.filter( (entry)=> entry.isSelect(genreId) )
-      # 今後 build はeventから感知
-      @mapView.build(@usingEntries)
-      @listView.build(@usingEntries)
-      @options.afterBuild?(genreId, @usingEntries)
+      @entries.select(genreId)
+      @options.afterBuild?(genreId, @entries.selected())
 
     # 地図とリストを初期化する
     clear:->
       @options.beforeClear?()
-      @mapView.clear(@usingEntries)
-      @listView.clear(@usingEntries)
+      @entries.unselect()
       @options.afterClear?()
 
     # 地図とリストを初期化して，構築する
@@ -108,7 +112,8 @@ do ($=jQuery,global=this)->
 
     # map objectを取得
     getMap:->
-      return @maplist.map
+      return @mapView.map
+
 
   class Parser #{{{
     constructor:( @parser )->
@@ -222,8 +227,21 @@ do ($=jQuery,global=this)->
   class Entries extends Backbone.Collection #{{{
     model: Entry
 
-    #initialize:(source, options)->
-    #  _.bindAll(@)
+    initialize:(source, options)->
+      _.bindAll(@)
+      @selectedList = []
+
+    select: ( prop )->
+      iterator = (entry) => entry.isSelect(prop)
+      @selectedList = _(super iterator).tap (entries)=>
+        @trigger("select", entries)
+
+    unselect: ->
+      @trigger("unselect", @selected())
+      @filterdList = []
+
+    selected: ->
+      @selectedList
 
     # 長くてださい
     @getSource: (data, parser)->

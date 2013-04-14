@@ -51,8 +51,6 @@ MIT License
         };
       };
 
-      App.prototype.usingEntries = [];
-
       function App(options) {
         this["default"] = __bind(this["default"], this);
         var source,
@@ -65,6 +63,7 @@ MIT License
         this.listView = new ListView(this.options);
         $.when(this.map, source).then(function(map, models) {
           _this.entries = new Entries(models, _this.options);
+          _this.delegateEvents();
           return _this.rebuild(_this.options.firstGenre);
         });
       }
@@ -83,19 +82,27 @@ MIT License
         return _.extend(options, templates);
       };
 
+      App.prototype.delegateEvents = function() {
+        var _this = this;
+
+        this.entries.on("select", function(entries) {
+          _this.mapView.build(entries);
+          return _this.listView.build(entries);
+        });
+        return this.entries.on("unselect", function(entries) {
+          _this.mapView.clear(entries);
+          return _this.listView.clear(entries);
+        });
+      };
+
       App.prototype.build = function(genreId) {
-        var _base, _base1,
-          _this = this;
+        var _base, _base1;
 
         if (typeof (_base = this.options).beforeBuild === "function") {
           _base.beforeBuild(genreId);
         }
-        this.usingEntries = this.entries.filter(function(entry) {
-          return entry.isSelect(genreId);
-        });
-        this.mapView.build(this.usingEntries);
-        this.listView.build(this.usingEntries);
-        return typeof (_base1 = this.options).afterBuild === "function" ? _base1.afterBuild(genreId, this.usingEntries) : void 0;
+        this.entries.select(genreId);
+        return typeof (_base1 = this.options).afterBuild === "function" ? _base1.afterBuild(genreId, this.entries.selected()) : void 0;
       };
 
       App.prototype.clear = function() {
@@ -104,8 +111,7 @@ MIT License
         if (typeof (_base = this.options).beforeClear === "function") {
           _base.beforeClear();
         }
-        this.mapView.clear(this.usingEntries);
-        this.listView.clear(this.usingEntries);
+        this.entries.unselect();
         return typeof (_base1 = this.options).afterClear === "function" ? _base1.afterClear() : void 0;
       };
 
@@ -115,7 +121,7 @@ MIT License
       };
 
       App.prototype.getMap = function() {
-        return this.maplist.map;
+        return this.mapView.map;
       };
 
       return App;
@@ -326,6 +332,32 @@ MIT License
       }
 
       Entries.prototype.model = Entry;
+
+      Entries.prototype.initialize = function(source, options) {
+        _.bindAll(this);
+        return this.selectedList = [];
+      };
+
+      Entries.prototype.select = function(prop) {
+        var iterator,
+          _this = this;
+
+        iterator = function(entry) {
+          return entry.isSelect(prop);
+        };
+        return this.selectedList = _(Entries.__super__.select.call(this, iterator)).tap(function(entries) {
+          return _this.trigger("select", entries);
+        });
+      };
+
+      Entries.prototype.unselect = function() {
+        this.trigger("unselect", this.selected());
+        return this.filterdList = [];
+      };
+
+      Entries.prototype.selected = function() {
+        return this.selectedList;
+      };
 
       Entries.getSource = function(data, parser) {
         var dfd,
