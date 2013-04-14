@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.2.2
+MapList JavaScript Library v1.2.3
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -13,53 +13,31 @@ do ($=jQuery,global=this)->
   log = _.bind( console.log, console )
   class App
     default: => { #{{{
-      # 緯度
-      lat                    : 35
-      # 経度
-      lng                    : 135
-      # 緯度経度
-      # 上の属性より優先される
-      #center                 : null #new google.maps.LatLng( 35, 135 )
-      # デフォルトのZoom
-      zoom                   : 4
-      # デフォルトのマップタイプ
-      mapTypeId              : google.maps.MapTypeId.ROADMAP
-      # entry data
-      data                   : []
-      # 地図を表示するDOM要素のセレクター
-      mapSelector            : '#map_canvas'
-      # リストを表示するDOM要素のセレクター
-      listSelector           : '#list'
-      # リストを構築する為のテンプレート
-      listTemplate           : null
-      # InfoWindowを構築する為のテンプレート
-      infoTemplate           : null
-      # リストからマーカーを開くDOM要素のセレクター
-      openInfoSelector       : '.open-info'
-      # genreの別名
-      genreAlias             : 'genre'
-      # genreを保持するDOMのテンプレート
-      genresSelector         : '#genre'
-      genreSelector          : 'a'
-      genreDataName          : "target-genre"
-      # デフォルトで表示するgenre
-      firstGenre             : '__all__'
-      # 以下コールバック
-      infoOpened             : null
-      beforeBuild            : null
-      afterBuild             : null
-      beforeClear            : null
-      afterClear             : null
-      # 構築後,表示しているマーカーが全て映るように地図を動かす
-      doFit                  : true
-      # FitするときZoomも変更する
-      fitZoomReset           : false
-      # infoを開いた時, 地図の全てが映るように動かす
-      toMapScroll            : true
-      # 使用するテンプレートエンジン
-      # デフォルトでは_.templateを
-      # jquery.tmplがある場合,そちらを利用する
-      templateEngine         : $.tmpl || _.template
+      lat              : 35
+      lng              : 135
+      #center          : null #new google.maps.LatLng( 35, 135 )
+      zoom             : 4
+      mapTypeId        : google.maps.MapTypeId.ROADMAP
+      data             : []
+      mapSelector      : '#map_canvas'
+      listSelector     : '#list'
+      listTemplate     : null
+      infoTemplate     : null
+      openInfoSelector : '.open-info'
+      genreAlias       : 'genre'
+      genresSelector   : '#genre'
+      genreSelector    : 'a'
+      genreDataName    : "target-genre"
+      firstGenre       : '__all__'
+      infoOpened       : null
+      beforeBuild      : null
+      afterBuild       : null
+      beforeClear      : null
+      afterClear       : null
+      doFit            : true
+      fitZoomReset     : false
+      toMapScroll      : true
+      templateEngine   : $.tmpl || _.template
     } #}}}
 
     constructor:(options)->
@@ -214,10 +192,7 @@ do ($=jQuery,global=this)->
     makeList:(listHtmlFactory)->
       content = listHtmlFactory.make( @toJSON() )
       if content?
-        $content = $(content).addClass(".__entryElem")
-        # require fix
-        $content.find(".open-info").data("entry",@)
-        return $content
+        $(content).addClass("__listitem").data("entry",@)
 
     isSelect:(genreId)->
       switch genreId
@@ -319,7 +294,7 @@ do ($=jQuery,global=this)->
 
     openInfo:(e)->
       $target = $(e.currentTarget)
-      $target.data("entry").openInfo()
+      $target.closest(".__listitem").data("entry").openInfo()
       return false
   #}}}
   class Genres
