@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.2.1
+MapList JavaScript Library v1.2.2
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -93,6 +93,9 @@ do ($=jQuery,global=this)->
         @mapView .clear(entries)
         @listView.clear(entries)
 
+      @entries.on "openinfo", (entry)=>
+        @mapView.openInfo(entry.info, entry.marker)
+
     # 地図とリストを構築する
     build:(genreId)->
       @options.beforeBuild?(genreId)
@@ -113,7 +116,6 @@ do ($=jQuery,global=this)->
     # map objectを取得
     getMap:->
       return @mapView.map
-
 
   class Parser #{{{
     constructor:( @parser )->
@@ -193,10 +195,8 @@ do ($=jQuery,global=this)->
       @marker = @makeMarker()
       @list   = @makeList(options.listHtmlFactory)
 
-
     openInfo:->
-      @trigger('oepnInfo')
-      #@maplist.openInfo(@info, @marker)
+      @trigger('openinfo', @)
 
     makeInfo:(infoHtmlFactory)->
       content = infoHtmlFactory.make( @toJSON() )
