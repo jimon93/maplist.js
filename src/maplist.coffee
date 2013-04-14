@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.2.0
+MapList JavaScript Library v1.2.1
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -177,13 +177,14 @@ do ($=jQuery,global=this)->
       data
 
   class Entries
+    model: Entry
     constructor:(source, @maplist, @options)->
       _.bindAll(@)
       options = {
         infoHtmlFactory : new HtmlFactory(@options.templateEngine, @options.infoTemplate)
         listHtmlFactory : new HtmlFactory(@options.templateEngine, @options.listTemplate)
       }
-      @list = ( new Entry(entryFactor, @maplist, options) for entryFactor in source )
+      @list = ( new Entry(entryFactor, options) for entryFactor in source )
 
     gets:->
       @list
@@ -202,33 +203,36 @@ do ($=jQuery,global=this)->
         dfd.reject()
       dfd.promise()
 
-  class Entry
-    constructor:(@attributes, @maplist, options)->
+  class Entry extends Backbone.Model
+    initialize: (attributes, options)->
       _.bindAll(@)
+      log @options
       @info   = @makeInfo(options.infoHtmlFactory)
       @marker = @makeMarker()
       @list   = @makeList(options.listHtmlFactory)
 
     openInfo:->
-      @maplist.openInfo(@info, @marker)
+      @trigger('oepnInfo')
+      #@maplist.openInfo(@info, @marker)
 
     makeInfo:(infoHtmlFactory)->
-      content = infoHtmlFactory.make( @attributes )
+      content = infoHtmlFactory.make( @toJSON() )
       if content?
         info = new google.maps.InfoWindow {content}
         google.maps.event.addListener( info, 'closeclick', @openInfo )
         return info
 
     makeMarker:->
-      position = new google.maps.LatLng( @attributes.lat, @attributes.lng )
-      marker = new google.maps.Marker { position, icon: @attributes.icon, shadow: @attributes.shadow }
+      position = new google.maps.LatLng( @get('lat'), @get('lng') )
+      marker = new google.maps.Marker { position, icon: @get('icon'), shadow: @get('shadow') }
       google.maps.event.addListener( marker, 'click', @openInfo ) if @info?
       return marker
 
     makeList:(listHtmlFactory)->
-      content = listHtmlFactory.make( @attributes )
+      content = listHtmlFactory.make( @toJSON() )
       if content?
         $content = $(content).addClass(".__entryElem")
+        # require fix
         $content.find(".open-info").data("entry",@)
         return $content
 
