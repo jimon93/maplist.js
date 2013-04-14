@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.2.3
+MapList JavaScript Library v1.2.4
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -44,23 +44,24 @@ do ($=jQuery,global=this)->
       _.bindAll(@)
       @options = @makeOptions(options)
       @mapView = new MapView(@options)
+      @listView = new ListContainerView(@options)
+      @genresView = new GenresView(@options)
       source = Entries.getSource(@options.data, @options.parser)
-      @listView = new ListView(@options)
       $.when( @map, source ).then (map,models)=>
         @entries = new Entries(models, @options)
         @delegateEvents()
         @rebuild( @options.firstGenre )
 
     makeOptions:(options)->
+      options = _.extend( {}, _(@).result('default'), options )
       center = {
         center : new google.maps.LatLng( options.lat, options.lng )
       }
-      options = _.extend( {}, _(@).result('default'), center, _.clone options )
       templates = {
         infoHtmlFactory : new HtmlFactory(options.templateEngine, options.infoTemplate)
         listHtmlFactory : new HtmlFactory(options.templateEngine, options.listTemplate)
       }
-      _.extend( options, templates )
+      _.extend( center, options, templates )
 
     delegateEvents:->
       @entries.on "select", (entries)=>
@@ -73,6 +74,9 @@ do ($=jQuery,global=this)->
 
       @entries.on "openinfo", (entry)=>
         @mapView.openInfo(entry.info, entry.marker)
+
+      @genresView.on "change:genre", (genreId)=>
+        @rebuild(genreId)
 
     # 地図とリストを構築する
     build:(genreId)->
@@ -192,7 +196,7 @@ do ($=jQuery,global=this)->
     makeList:(listHtmlFactory)->
       content = listHtmlFactory.make( @toJSON() )
       if content?
-        $(content).addClass("__listitem").data("entry",@)
+        $(content).addClass("__list").data("entry",@)
 
     isSelect:(genreId)->
       switch genreId
@@ -279,7 +283,7 @@ do ($=jQuery,global=this)->
         @openedInfo.close()
         @openedInfo = null
   #}}}
-  class ListView extends Backbone.View #{{{
+  class ListContainerView extends Backbone.View #{{{
     initialize:->
       @$el = $(@options.listSelector)
       @$el.on( "click", @options.openInfoSelector, @openInfo )
@@ -294,21 +298,22 @@ do ($=jQuery,global=this)->
 
     openInfo:(e)->
       $target = $(e.currentTarget)
-      $target.closest(".__listitem").data("entry").openInfo()
+      $target.closest(".__list").data("entry").openInfo()
       return false
   #}}}
-  class Genres
-    constructor:(options, @app)->
+  class GenresView extends Backbone.View
+    initialize:->
       # event
-      @$el = $(options.genresSelector)
-      @$el.on( "click", options.genreSelector, @selectGenre )
+      _.bindAll(@)
+      @$el = $(@options.genresSelector)
+      @$el.on( "click", @options.genreSelector, @selectGenre )
 
     # ジャンルをクリックされた時のためのコールバック関数
     selectGenre:(e, genreId)->
       unless genreId?
         $target = $(e.currentTarget)
         genreId = $target.data( @options.genreDataName )
-      @app.rebuild(genreId)
+      @trigger("change:genre",genreId)
       return false
 
   global.MapList = App
