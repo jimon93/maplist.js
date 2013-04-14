@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.2.4
+MapList JavaScript Library v1.2.5
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -11,7 +11,7 @@ MIT License
 ###
 do ($=jQuery,global=this)->
   log = _.bind( console.log, console )
-  class App
+  class App #{{{
     default: => { #{{{
       lat              : 35
       lng              : 135
@@ -44,7 +44,7 @@ do ($=jQuery,global=this)->
       _.bindAll(@)
       @options = @makeOptions(options)
       @mapView = new MapView(@options)
-      @listView = new ListContainerView(@options)
+      @listView = new ListView(@options)
       @genresView = new GenresView(@options)
       source = Entries.getSource(@options.data, @options.parser)
       $.when( @map, source ).then (map,models)=>
@@ -98,7 +98,7 @@ do ($=jQuery,global=this)->
     # map objectを取得
     getMap:->
       return @mapView.map
-
+  #}}}
   class Parser #{{{
     constructor:( @parser )->
       _.bindAll(@)
@@ -283,7 +283,7 @@ do ($=jQuery,global=this)->
         @openedInfo.close()
         @openedInfo = null
   #}}}
-  class ListContainerView extends Backbone.View #{{{
+  class ListView extends Backbone.View #{{{
     initialize:->
       @$el = $(@options.listSelector)
       @$el.on( "click", @options.openInfoSelector, @openInfo )
@@ -301,21 +301,27 @@ do ($=jQuery,global=this)->
       $target.closest(".__list").data("entry").openInfo()
       return false
   #}}}
-  class GenresView extends Backbone.View
+  class GenresView extends Backbone.View #{{{
     initialize:->
       # event
       _.bindAll(@)
       @$el = $(@options.genresSelector)
       @$el.on( "click", @options.genreSelector, @selectGenre )
 
-    # ジャンルをクリックされた時のためのコールバック関数
     selectGenre:(e, genreId)->
       unless genreId?
         $target = $(e.currentTarget)
         genreId = $target.data( @options.genreDataName )
       @trigger("change:genre",genreId)
       return false
+  #}}}
 
-  global.MapList = App
-  App.Entries = Entries
-  App.Parser = Parser
+  global.MapList = _.extend App, {
+    Parser
+    Entry
+    Entries
+    HtmlFactory
+    MapView
+    ListView
+    GenresView
+  }
