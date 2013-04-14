@@ -69,17 +69,21 @@ do ($=jQuery,global=this)->
       @options = @makeOptions(options)
       @map = new Map(@options)
       source = Entries.getSource(@options.data, @options.parser)
-      $.when( @map, source ).then (@map,source)=>
-        @entries = new Entries(source, @map, @options)
-        @list = new List(@options)
-      #   @maplist = new MapList()
-        @rebuild( @options.firstGenre, @entries )
+      $.when( @map, source ).then (map,models)=>
+        @entries = new Entries(models, @options)
+        #@list = new List(@options)
+        #@rebuild( @options.firstGenre, @entries )
 
     makeOptions:(options)->
-      options = _.extend( {}, _(@).result('default'), _.clone options)
-      unless options.center?
-        options.center = new google.maps.LatLng( options.lat, options.lng )
-      return options
+      center = {
+        center : new google.maps.LatLng( options.lat, options.lng )
+      }
+      options = _.extend( {}, _(@).result('default'), center, _.clone options )
+      templates = {
+        infoHtmlFactory : new HtmlFactory(options.templateEngine, options.infoTemplate)
+        listHtmlFactory : new HtmlFactory(options.templateEngine, options.listTemplate)
+      }
+      _.extend( options, templates )
 
     # 地図とリストを構築する
     build:(genreId)->
@@ -105,7 +109,7 @@ do ($=jQuery,global=this)->
     getMap:->
       return @maplist.map
 
-  class Parser
+  class Parser #{{{
     constructor:( @parser )->
       _.bindAll(@)
       @parser = Parser.defaultParser unless @parser?
@@ -175,41 +179,14 @@ do ($=jQuery,global=this)->
   class Parser.ObjectParser
     execute: (data)->
       data
-
-  class Entries
-    model: Entry
-    constructor:(source, @maplist, @options)->
-      _.bindAll(@)
-      options = {
-        infoHtmlFactory : new HtmlFactory(@options.templateEngine, @options.infoTemplate)
-        listHtmlFactory : new HtmlFactory(@options.templateEngine, @options.listTemplate)
-      }
-      @list = ( new Entry(entryFactor, options) for entryFactor in source )
-
-    gets:->
-      @list
-
-    @getSource: (data, parser)->
-      parser = new Parser(parser)
-      dfd = new $.Deferred
-      if _.isArray(data)
-        dfd.resolve(data)
-      else if _.isString(data)
-        $.ajax({url:data}).then(
-         (data)=> dfd.resolve( parser.execute(data) )
-         ()=> dfd.reject()
-        )
-      else
-        dfd.reject()
-      dfd.promise()
-
-  class Entry extends Backbone.Model
+  #}}}
+  class Entry extends Backbone.Model #{{{
     initialize: (attributes, options)->
       _.bindAll(@)
-      log @options
       @info   = @makeInfo(options.infoHtmlFactory)
       @marker = @makeMarker()
       @list   = @makeList(options.listHtmlFactory)
+
 
     openInfo:->
       @trigger('oepnInfo')
@@ -240,6 +217,27 @@ do ($=jQuery,global=this)->
       switch genreId
         when "__all__" then true
         else genreId == @attributes.genre
+  #}}}
+  class Entries extends Backbone.Collection
+    model: Entry
+
+    #initialize:(source, options)->
+    #  _.bindAll(@)
+
+    # 長くてださい
+    @getSource: (data, parser)->
+      parser = new Parser(parser)
+      dfd = new $.Deferred
+      if _.isArray(data)
+        dfd.resolve(data)
+      else if _.isString(data)
+        $.ajax({url:data}).then(
+         (data)=> dfd.resolve( parser.execute(data) )
+         ()=> dfd.reject()
+        )
+      else
+        dfd.reject()
+      dfd.promise()
 
   class HtmlFactory
     constructor:(@templateEngine, @template)->

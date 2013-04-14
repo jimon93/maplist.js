@@ -18,7 +18,7 @@ MIT License
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   (function($, global) {
-    var App, Entries, Entry, Genres, HtmlFactory, List, Map, Parser, log, _ref;
+    var App, Entries, Entry, Genres, HtmlFactory, List, Map, Parser, log, _ref, _ref1;
 
     log = _.bind(console.log, console);
     App = (function() {
@@ -62,20 +62,23 @@ MIT License
         this.options = this.makeOptions(options);
         this.map = new Map(this.options);
         source = Entries.getSource(this.options.data, this.options.parser);
-        $.when(this.map, source).then(function(map, source) {
-          _this.map = map;
-          _this.entries = new Entries(source, _this.map, _this.options);
-          _this.list = new List(_this.options);
-          return _this.rebuild(_this.options.firstGenre, _this.entries);
+        $.when(this.map, source).then(function(map, models) {
+          return _this.entries = new Entries(models, _this.options);
         });
       }
 
       App.prototype.makeOptions = function(options) {
-        options = _.extend({}, _(this).result('default'), _.clone(options));
-        if (options.center == null) {
-          options.center = new google.maps.LatLng(options.lat, options.lng);
-        }
-        return options;
+        var center, templates;
+
+        center = {
+          center: new google.maps.LatLng(options.lat, options.lng)
+        };
+        options = _.extend({}, _(this).result('default'), center, _.clone(options));
+        templates = {
+          infoHtmlFactory: new HtmlFactory(options.templateEngine, options.infoTemplate),
+          listHtmlFactory: new HtmlFactory(options.templateEngine, options.listTemplate)
+        };
+        return _.extend(options, templates);
       };
 
       App.prototype.build = function(genreId) {
@@ -242,60 +245,6 @@ MIT License
       return ObjectParser;
 
     })();
-    Entries = (function() {
-      Entries.prototype.model = Entry;
-
-      function Entries(source, maplist, options) {
-        var entryFactor;
-
-        this.maplist = maplist;
-        this.options = options;
-        _.bindAll(this);
-        options = {
-          infoHtmlFactory: new HtmlFactory(this.options.templateEngine, this.options.infoTemplate),
-          listHtmlFactory: new HtmlFactory(this.options.templateEngine, this.options.listTemplate)
-        };
-        this.list = (function() {
-          var _i, _len, _results;
-
-          _results = [];
-          for (_i = 0, _len = source.length; _i < _len; _i++) {
-            entryFactor = source[_i];
-            _results.push(new Entry(entryFactor, options));
-          }
-          return _results;
-        })();
-      }
-
-      Entries.prototype.gets = function() {
-        return this.list;
-      };
-
-      Entries.getSource = function(data, parser) {
-        var dfd,
-          _this = this;
-
-        parser = new Parser(parser);
-        dfd = new $.Deferred;
-        if (_.isArray(data)) {
-          dfd.resolve(data);
-        } else if (_.isString(data)) {
-          $.ajax({
-            url: data
-          }).then(function(data) {
-            return dfd.resolve(parser.execute(data));
-          }, function() {
-            return dfd.reject();
-          });
-        } else {
-          dfd.reject();
-        }
-        return dfd.promise();
-      };
-
-      return Entries;
-
-    })();
     Entry = (function(_super) {
       __extends(Entry, _super);
 
@@ -306,7 +255,6 @@ MIT License
 
       Entry.prototype.initialize = function(attributes, options) {
         _.bindAll(this);
-        log(this.options);
         this.info = this.makeInfo(options.infoHtmlFactory);
         this.marker = this.makeMarker();
         return this.list = this.makeList(options.listHtmlFactory);
@@ -367,6 +315,41 @@ MIT License
       return Entry;
 
     })(Backbone.Model);
+    Entries = (function(_super) {
+      __extends(Entries, _super);
+
+      function Entries() {
+        _ref1 = Entries.__super__.constructor.apply(this, arguments);
+        return _ref1;
+      }
+
+      Entries.prototype.model = Entry;
+
+      Entries.getSource = function(data, parser) {
+        var dfd,
+          _this = this;
+
+        parser = new Parser(parser);
+        dfd = new $.Deferred;
+        if (_.isArray(data)) {
+          dfd.resolve(data);
+        } else if (_.isString(data)) {
+          $.ajax({
+            url: data
+          }).then(function(data) {
+            return dfd.resolve(parser.execute(data));
+          }, function() {
+            return dfd.reject();
+          });
+        } else {
+          dfd.reject();
+        }
+        return dfd.promise();
+      };
+
+      return Entries;
+
+    })(Backbone.Collection);
     HtmlFactory = (function() {
       function HtmlFactory(templateEngine, template) {
         this.templateEngine = templateEngine;
@@ -461,23 +444,23 @@ MIT License
       }
 
       List.prototype.build = function(entries) {
-        var entry, _i, _len, _ref1, _results;
+        var entry, _i, _len, _ref2, _results;
 
         _results = [];
         for (_i = 0, _len = entries.length; _i < _len; _i++) {
           entry = entries[_i];
-          _results.push((_ref1 = entry.list) != null ? _ref1.appendTo(this.$el) : void 0);
+          _results.push((_ref2 = entry.list) != null ? _ref2.appendTo(this.$el) : void 0);
         }
         return _results;
       };
 
       List.prototype.clear = function(entries) {
-        var entry, _i, _len, _ref1, _results;
+        var entry, _i, _len, _ref2, _results;
 
         _results = [];
         for (_i = 0, _len = entries.length; _i < _len; _i++) {
           entry = entries[_i];
-          _results.push((_ref1 = entry.list) != null ? _ref1.detach() : void 0);
+          _results.push((_ref2 = entry.list) != null ? _ref2.detach() : void 0);
         }
         return _results;
       };
