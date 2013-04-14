@@ -18,7 +18,7 @@ MIT License
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   (function($, global) {
-    var App, Entries, Entry, Genres, HtmlFactory, List, Map, Parser, log, _ref, _ref1;
+    var App, Entries, Entry, Genres, HtmlFactory, ListView, MapView, Parser, log, _ref, _ref1, _ref2;
 
     log = _.bind(console.log, console);
     App = (function() {
@@ -60,10 +60,12 @@ MIT License
 
         _.bindAll(this);
         this.options = this.makeOptions(options);
-        this.map = new Map(this.options);
+        this.mapView = new MapView(this.options);
         source = Entries.getSource(this.options.data, this.options.parser);
+        this.listView = new ListView(this.options);
         $.when(this.map, source).then(function(map, models) {
-          return _this.entries = new Entries(models, _this.options);
+          _this.entries = new Entries(models, _this.options);
+          return _this.rebuild(_this.options.firstGenre);
         });
       }
 
@@ -88,11 +90,12 @@ MIT License
         if (typeof (_base = this.options).beforeBuild === "function") {
           _base.beforeBuild(genreId);
         }
-        this.usingEntries = _(this.entries.list).filter(function(entry) {
+        this.usingEntries = this.entries.filter(function(entry) {
           return entry.isSelect(genreId);
         });
-        this.map.build(this.usingEntries);
-        this.list.build(this.usingEntries);
+        log(this.usingEntries);
+        this.mapView.build(this.usingEntries);
+        this.listView.build(this.usingEntries);
         return typeof (_base1 = this.options).afterBuild === "function" ? _base1.afterBuild(genreId, this.usingEntries) : void 0;
       };
 
@@ -102,8 +105,8 @@ MIT License
         if (typeof (_base = this.options).beforeClear === "function") {
           _base.beforeClear();
         }
-        this.map.clear(this.usingEntries);
-        this.list.clear(this.usingEntries);
+        this.mapView.clear(this.usingEntries);
+        this.listView.clear(this.usingEntries);
         return typeof (_base1 = this.options).afterClear === "function" ? _base1.afterClear() : void 0;
       };
 
@@ -372,8 +375,8 @@ MIT License
       return HtmlFactory;
 
     })();
-    Map = (function() {
-      function Map(options) {
+    MapView = (function() {
+      function MapView(options) {
         var canvas;
 
         this.options = options;
@@ -382,7 +385,7 @@ MIT License
         this.map = new google.maps.Map(canvas, this.options);
       }
 
-      Map.prototype.build = function(entries) {
+      MapView.prototype.build = function(entries) {
         var bounds, entry, _i, _len;
 
         if (this.options.doFit) {
@@ -405,7 +408,7 @@ MIT License
         }
       };
 
-      Map.prototype.clear = function(entries) {
+      MapView.prototype.clear = function(entries) {
         var entry, _i, _len, _results;
 
         _results = [];
@@ -417,7 +420,7 @@ MIT License
         return _results;
       };
 
-      Map.prototype.openInfo = function(info, marker) {
+      MapView.prototype.openInfo = function(info, marker) {
         var _base;
 
         this.closeOpenedInfo();
@@ -426,46 +429,52 @@ MIT License
         return typeof (_base = this.options).infoOpened === "function" ? _base.infoOpened(marker, info) : void 0;
       };
 
-      Map.prototype.closeOpenedInfo = function() {
+      MapView.prototype.closeOpenedInfo = function() {
         if (this.openedInfo != null) {
           this.openedInfo.close();
           return this.openedInfo = null;
         }
       };
 
-      return Map;
+      return MapView;
 
     })();
-    List = (function() {
-      function List(options) {
-        this.options = options;
-        this.$el = $(this.options.listSelector);
-        this.$el.on("click", this.options.openInfoSelector, this.openInfo);
+    ListView = (function(_super) {
+      __extends(ListView, _super);
+
+      function ListView() {
+        _ref2 = ListView.__super__.constructor.apply(this, arguments);
+        return _ref2;
       }
 
-      List.prototype.build = function(entries) {
-        var entry, _i, _len, _ref2, _results;
+      ListView.prototype.initialize = function() {
+        this.$el = $(this.options.listSelector);
+        return this.$el.on("click", this.options.openInfoSelector, this.openInfo);
+      };
+
+      ListView.prototype.build = function(entries) {
+        var entry, _i, _len, _ref3, _results;
 
         _results = [];
         for (_i = 0, _len = entries.length; _i < _len; _i++) {
           entry = entries[_i];
-          _results.push((_ref2 = entry.list) != null ? _ref2.appendTo(this.$el) : void 0);
+          _results.push((_ref3 = entry.list) != null ? _ref3.appendTo(this.$el) : void 0);
         }
         return _results;
       };
 
-      List.prototype.clear = function(entries) {
-        var entry, _i, _len, _ref2, _results;
+      ListView.prototype.clear = function(entries) {
+        var entry, _i, _len, _ref3, _results;
 
         _results = [];
         for (_i = 0, _len = entries.length; _i < _len; _i++) {
           entry = entries[_i];
-          _results.push((_ref2 = entry.list) != null ? _ref2.detach() : void 0);
+          _results.push((_ref3 = entry.list) != null ? _ref3.detach() : void 0);
         }
         return _results;
       };
 
-      List.prototype.openInfo = function(e) {
+      ListView.prototype.openInfo = function(e) {
         var $target;
 
         $target = $(e.currentTarget);
@@ -473,9 +482,9 @@ MIT License
         return false;
       };
 
-      return List;
+      return ListView;
 
-    })();
+    })(Backbone.View);
     Genres = (function() {
       function Genres(options, app) {
         this.app = app;

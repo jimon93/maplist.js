@@ -12,7 +12,7 @@ MIT License
 do ($=jQuery,global=this)->
   log = _.bind( console.log, console )
   class App
-    default: => {
+    default: => { #{{{
       # 緯度
       lat                    : 35
       # 経度
@@ -60,19 +60,19 @@ do ($=jQuery,global=this)->
       # デフォルトでは_.templateを
       # jquery.tmplがある場合,そちらを利用する
       templateEngine         : $.tmpl || _.template
-    }
+    } #}}}
     # 表示中のentryを保持する
     usingEntries : []
 
     constructor:(options)->
       _.bindAll(@)
       @options = @makeOptions(options)
-      @map = new Map(@options)
+      @mapView = new MapView(@options)
       source = Entries.getSource(@options.data, @options.parser)
+      @listView = new ListView(@options)
       $.when( @map, source ).then (map,models)=>
         @entries = new Entries(models, @options)
-        #@list = new List(@options)
-        #@rebuild( @options.firstGenre, @entries )
+        @rebuild( @options.firstGenre )
 
     makeOptions:(options)->
       center = {
@@ -88,16 +88,18 @@ do ($=jQuery,global=this)->
     # 地図とリストを構築する
     build:(genreId)->
       @options.beforeBuild?(genreId)
-      @usingEntries = _(@entries.list).filter( (entry)=> entry.isSelect(genreId) )
-      @map.build(@usingEntries)
-      @list.build(@usingEntries)
+      @usingEntries = @entries.filter( (entry)=> entry.isSelect(genreId) )
+      log @usingEntries
+      # 今後 build はeventから感知
+      @mapView.build(@usingEntries)
+      @listView.build(@usingEntries)
       @options.afterBuild?(genreId, @usingEntries)
 
     # 地図とリストを初期化する
     clear:->
       @options.beforeClear?()
-      @map.clear(@usingEntries)
-      @list.clear(@usingEntries)
+      @mapView.clear(@usingEntries)
+      @listView.clear(@usingEntries)
       @options.afterClear?()
 
     # 地図とリストを初期化して，構築する
@@ -218,7 +220,7 @@ do ($=jQuery,global=this)->
         when "__all__" then true
         else genreId == @attributes.genre
   #}}}
-  class Entries extends Backbone.Collection
+  class Entries extends Backbone.Collection #{{{
     model: Entry
 
     #initialize:(source, options)->
@@ -238,8 +240,8 @@ do ($=jQuery,global=this)->
       else
         dfd.reject()
       dfd.promise()
-
-  class HtmlFactory
+  #}}}
+  class HtmlFactory #{{{
     constructor:(@templateEngine, @template)->
 
     make:(object)->
@@ -247,8 +249,8 @@ do ($=jQuery,global=this)->
       res = @templateEngine( @template, object )
       res = res.html() if res.html?
       return res
-
-  class Map # info and marker
+  #}}}
+  class MapView # info and marker {{{
     constructor:(@options)->
       _.bindAll(@)
       canvas = $(@options.mapSelector).get(0)
@@ -284,9 +286,9 @@ do ($=jQuery,global=this)->
       if @openedInfo?
         @openedInfo.close()
         @openedInfo = null
-
-  class List
-    constructor:(@options)->
+  #}}}
+  class ListView extends Backbone.View #{{{
+    initialize:->
       @$el = $(@options.listSelector)
       @$el.on( "click", @options.openInfoSelector, @openInfo )
 
@@ -300,12 +302,9 @@ do ($=jQuery,global=this)->
 
     openInfo:(e)->
       $target = $(e.currentTarget)
-      #$list = $target.closest(".__entryElem")
-      #log $list.data("entry")
-      #$list.data("entry").openInfo()
       $target.data("entry").openInfo()
       return false
-
+  #}}}
   class Genres
     constructor:(options, @app)->
       # event
