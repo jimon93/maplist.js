@@ -89,7 +89,6 @@ do ($=jQuery,global=this)->
     build:(genreId)->
       @options.beforeBuild?(genreId)
       @usingEntries = @entries.filter( (entry)=> entry.isSelect(genreId) )
-      log @usingEntries
       # 今後 build はeventから感知
       @mapView.build(@usingEntries)
       @listView.build(@usingEntries)
@@ -250,8 +249,8 @@ do ($=jQuery,global=this)->
       res = res.html() if res.html?
       return res
   #}}}
-  class MapView # info and marker {{{
-    constructor:(@options)->
+  class MapView extends Backbone.View # info and marker {{{
+    initialize: ->
       _.bindAll(@)
       canvas = $(@options.mapSelector).get(0)
       @map = new google.maps.Map( canvas, @options )
@@ -272,8 +271,8 @@ do ($=jQuery,global=this)->
 
     # マーカー, インフォ, リストを消す
     clear:(entries)->
+      @closeOpenedInfo()
       for entry in entries
-        @closeOpenedInfo()
         entry.marker.setMap(null)
 
     openInfo:(info,marker)->

@@ -18,7 +18,7 @@ MIT License
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   (function($, global) {
-    var App, Entries, Entry, Genres, HtmlFactory, ListView, MapView, Parser, log, _ref, _ref1, _ref2;
+    var App, Entries, Entry, Genres, HtmlFactory, ListView, MapView, Parser, log, _ref, _ref1, _ref2, _ref3;
 
     log = _.bind(console.log, console);
     App = (function() {
@@ -93,7 +93,6 @@ MIT License
         this.usingEntries = this.entries.filter(function(entry) {
           return entry.isSelect(genreId);
         });
-        log(this.usingEntries);
         this.mapView.build(this.usingEntries);
         this.listView.build(this.usingEntries);
         return typeof (_base1 = this.options).afterBuild === "function" ? _base1.afterBuild(genreId, this.usingEntries) : void 0;
@@ -375,15 +374,21 @@ MIT License
       return HtmlFactory;
 
     })();
-    MapView = (function() {
-      function MapView(options) {
+    MapView = (function(_super) {
+      __extends(MapView, _super);
+
+      function MapView() {
+        _ref2 = MapView.__super__.constructor.apply(this, arguments);
+        return _ref2;
+      }
+
+      MapView.prototype.initialize = function() {
         var canvas;
 
-        this.options = options;
         _.bindAll(this);
         canvas = $(this.options.mapSelector).get(0);
-        this.map = new google.maps.Map(canvas, this.options);
-      }
+        return this.map = new google.maps.Map(canvas, this.options);
+      };
 
       MapView.prototype.build = function(entries) {
         var bounds, entry, _i, _len;
@@ -411,10 +416,10 @@ MIT License
       MapView.prototype.clear = function(entries) {
         var entry, _i, _len, _results;
 
+        this.closeOpenedInfo();
         _results = [];
         for (_i = 0, _len = entries.length; _i < _len; _i++) {
           entry = entries[_i];
-          this.closeOpenedInfo();
           _results.push(entry.marker.setMap(null));
         }
         return _results;
@@ -438,13 +443,13 @@ MIT License
 
       return MapView;
 
-    })();
+    })(Backbone.View);
     ListView = (function(_super) {
       __extends(ListView, _super);
 
       function ListView() {
-        _ref2 = ListView.__super__.constructor.apply(this, arguments);
-        return _ref2;
+        _ref3 = ListView.__super__.constructor.apply(this, arguments);
+        return _ref3;
       }
 
       ListView.prototype.initialize = function() {
@@ -453,23 +458,23 @@ MIT License
       };
 
       ListView.prototype.build = function(entries) {
-        var entry, _i, _len, _ref3, _results;
+        var entry, _i, _len, _ref4, _results;
 
         _results = [];
         for (_i = 0, _len = entries.length; _i < _len; _i++) {
           entry = entries[_i];
-          _results.push((_ref3 = entry.list) != null ? _ref3.appendTo(this.$el) : void 0);
+          _results.push((_ref4 = entry.list) != null ? _ref4.appendTo(this.$el) : void 0);
         }
         return _results;
       };
 
       ListView.prototype.clear = function(entries) {
-        var entry, _i, _len, _ref3, _results;
+        var entry, _i, _len, _ref4, _results;
 
         _results = [];
         for (_i = 0, _len = entries.length; _i < _len; _i++) {
           entry = entries[_i];
-          _results.push((_ref3 = entry.list) != null ? _ref3.detach() : void 0);
+          _results.push((_ref4 = entry.list) != null ? _ref4.detach() : void 0);
         }
         return _results;
       };
