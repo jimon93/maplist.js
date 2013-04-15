@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.2.6
+MapList JavaScript Library v1.2.7
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -24,7 +24,7 @@ do ($=jQuery,global=this)->
       listTemplate     : null
       infoTemplate     : null
       openInfoSelector : '.open-info'
-      genreAlias       : 'genre'
+      #genreAlias       : 'genre'
       genresSelector   : '#genre'
       genreSelector    : 'a'
       genreDataName    : "target-genre"
@@ -198,7 +198,7 @@ do ($=jQuery,global=this)->
         $(content).addClass("__list").data("entry",@)
 
     isSelect:(genreId)->
-      false unless @get('lat')? or @get('lng')
+      false unless @get('lat')? and @get('lng')?
       switch genreId
         when "__all__" then true
         else genreId == @attributes.genre
@@ -241,7 +241,7 @@ do ($=jQuery,global=this)->
     constructor:(@templateEngine, @template)->
 
     make:(object)->
-      return null unless @templateEngine? or @template?
+      return null unless @templateEngine? and @template?
       res = @templateEngine( @template, object )
       res = res.html() if res.html?
       return res

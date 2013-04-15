@@ -25,7 +25,6 @@ describe "MapList", ->
         }
       ]
 
-    ###
     it "@getSource ( array )", ->
       source = Entries.getSource([1..100])
       source.then (data)->
@@ -33,16 +32,21 @@ describe "MapList", ->
 
     it "@getSource ( url:json )", ->
       source = Entries.getSource("entries.json")
-      source.then (data)->
-        console.log data
-        expect(data).toEqual(ans)
+      waitsFor( =>
+        source.state() == "resolved"
+      , "timeout", 1000 )
+      runs =>
+        source.then (data)=>
+          expect(data).toEqual(ans)
 
     it "@getSource ( url:xml )", ->
       source = Entries.getSource("entries.xml")
-      source.then (data)->
-        console.log data
-        expect(data).toEqual(ans)
-    ###
+      waitsFor( =>
+        source.state() == "resolved"
+      , "timeout", 1000 )
+      runs =>
+        source.then (data)->
+          expect(data).toEqual(ans)
 
   describe ".Parser", ->
     Parser = undefined

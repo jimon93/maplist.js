@@ -6,7 +6,7 @@
 
       Entries = void 0;
       ans = void 0;
-      return beforeEach(function() {
+      beforeEach(function() {
         Entries = MapList.Entries;
         return ans = [
           {
@@ -28,25 +28,52 @@
           }
         ];
       });
-      /*
-      it "@getSource ( array )", ->
-        source = Entries.getSource([1..100])
-        source.then (data)->
-          expect(data).toEqual([1..100])
-      
-      it "@getSource ( url:json )", ->
-        source = Entries.getSource("entries.json")
-        source.then (data)->
-          console.log data
-          expect(data).toEqual(ans)
-      
-      it "@getSource ( url:xml )", ->
-        source = Entries.getSource("entries.xml")
-        source.then (data)->
-          console.log data
-          expect(data).toEqual(ans)
-      */
+      it("@getSource ( array )", function() {
+        var source, _i, _results;
 
+        source = Entries.getSource((function() {
+          _results = [];
+          for (_i = 1; _i <= 100; _i++){ _results.push(_i); }
+          return _results;
+        }).apply(this));
+        return source.then(function(data) {
+          var _j, _results1;
+
+          return expect(data).toEqual((function() {
+            _results1 = [];
+            for (_j = 1; _j <= 100; _j++){ _results1.push(_j); }
+            return _results1;
+          }).apply(this));
+        });
+      });
+      it("@getSource ( url:json )", function() {
+        var source,
+          _this = this;
+
+        source = Entries.getSource("entries.json");
+        waitsFor(function() {
+          return source.state() === "resolved";
+        }, "timeout", 1000);
+        return runs(function() {
+          return source.then(function(data) {
+            return expect(data).toEqual(ans);
+          });
+        });
+      });
+      return it("@getSource ( url:xml )", function() {
+        var source,
+          _this = this;
+
+        source = Entries.getSource("entries.xml");
+        waitsFor(function() {
+          return source.state() === "resolved";
+        }, "timeout", 1000);
+        return runs(function() {
+          return source.then(function(data) {
+            return expect(data).toEqual(ans);
+          });
+        });
+      });
     });
     return describe(".Parser", function() {
       var Parser;
