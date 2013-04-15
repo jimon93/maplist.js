@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.2.7
+MapList JavaScript Library v1.2.8
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -147,8 +147,8 @@ do ($=jQuery,global=this)->
       $genre = $place.closest(@options.genre)
       if $genre.size() == 1
         _(@getAttribute($genre)).chain().tap((obj)->
-          obj.genre = obj.id
-          obj.genreName = obj.name
+          obj.genre     = obj.id   if obj.id?
+          obj.genreName = obj.name if obj.name?
         ).omit("id","name").value()
       else
         {}
