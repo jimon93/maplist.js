@@ -52,7 +52,20 @@ describe "MapList", ->
           {"states":"鹿児島県","capitals":"鹿児島市","lat":"31.5610825","lng":"130.5577279","genre":"九州"}
           {"states":"沖縄県","capitals":"那覇市","lat":"26.2124013","lng":"127.6809317","genre":"沖縄"}
         ]
-        xml: $.parseXML "<?xml version='1.0' encoding='UTF-8'?>\n<places><genre id='北海道'><place latitude='43.0646147' longitude='141.3468074'><states>北海道</states><capitals>札幌市</capitals></place></genre><genre id='東北'><place latitude='41.8243077' longitude='140.7399984'><states>青森県</states><capitals>青森市</capitals></place><place latitude='39.7036194' longitude='141.1526839'><states>岩手県</states><capitals>盛岡市</capitals></place><place latitude='38.2688373' longitude='140.8721000'><states>宮城県</states><capitals>仙台市</capitals></place><place latitude='39.7186135' longitude='140.1023643'><states>秋田県</states><capitals>秋田市</capitals></place><place latitude='38.2404355' longitude='140.3636333'><states>山形県</states><capitals>山形市</capitals></place><place latitude='37.7502986' longitude='140.4675514'><states>福島県</states><capitals>福島市</capitals></place></genre><genre id='関東'><place latitude='36.3418112' longitude='140.4467935'><states>茨城県</states><capitals>水戸市</capitals></place><place latitude='36.5657250' longitude='139.8835651'><states>栃木県</states><capitals>宇都宮市</capitals></place><place latitude='36.3906675' longitude='139.0604061'><states>群馬県</states><capitals>前橋市</capitals></place><place latitude='35.8569991' longitude='139.6488487'><states>埼玉県</states><capitals>さいたま市</capitals></place><place latitude='35.6050574' longitude='140.1233063'><states>千葉県</states><capitals>千葉市</capitals></place><place latitude='35.6894875' longitude='139.6917064'><states>東京都</states><capitals>新宿区</capitals></place><place latitude='35.4475073' longitude='139.6423446'><states>神奈川県</states><capitals>横浜市</capitals></place><place latitude='35.6641575' longitude='138.5684486'><states>山梨県</states><capitals>甲府市</capitals></place></genre><genre id='信越'><place latitude='37.9025518' longitude='139.0230946'><states>新潟県</states><capitals>新潟市</capitals></place><place latitude='36.6512986' longitude='138.1809557'><states>長野県</states><capitals>長野市</capitals></place></genre><genre id='北陸'><place latitude='36.6952907' longitude='137.2113383'><states>富山県</states><capitals>富山市</capitals></place><place latitude='36.5946816' longitude='136.6255726'><states>石川県</states><capitals>金沢市</capitals></place><place latitude='36.0651779' longitude='136.2215269'><states>福井県</states><capitals>福井市</capitals></place></genre><genre id='東海'><place latitude='35.3912272' longitude='136.7222906'><states>岐阜県</states><capitals>岐阜市</capitals></place><place latitude='34.9771201' longitude='138.3830845'><states>静岡県</states><capitals>静岡市</capitals></place><place latitude='35.1801883' longitude='136.9065647'><states>愛知県</states><capitals>名古屋市</capitals></place><place latitude='34.7302829' longitude='136.5085883'><states>三重県</states><capitals>津市</capitals></place></genre><genre id='近畿'><place latitude='35.0045306' longitude='135.8685899'><states>滋賀県</states><capitals>大津市</capitals></place><place latitude='35.0212466' longitude='135.7555968'><states>京都府</states><capitals>京都市</capitals></place><place latitude='34.6862971' longitude='135.5196609'><states>大阪府</states><capitals>大阪市</capitals></place><place latitude='34.6912688' longitude='135.1830706'><states>兵庫県</states><capitals>神戸市</capitals></place><place latitude='34.6853345' longitude='135.8327421'><states>奈良県</states><capitals>奈良市</capitals></place><place latitude='34.2259867' longitude='135.1675086'><states>和歌山県</states><capitals>和歌山市</capitals></place></genre><genre id='中国'><place latitude='35.5038906' longitude='134.2377356'><states>鳥取県</states><capitals>鳥取市</capitals></place><place latitude='35.4722952' longitude='133.0504997'><states>島根県</states><capitals>松江市</capitals></place><place latitude='34.6617511' longitude='133.9344057'><states>岡山県</states><capitals>岡山市</capitals></place><place latitude='34.3965603' longitude='132.4596225'><states>広島県</states><capitals>広島市</capitals></place><place latitude='34.1859563' longitude='131.4706493'><states>山口県</states><capitals>山口市</capitals></place></genre><genre id='四国'><place latitude='34.0657179' longitude='134.5593601'><states>徳島県</states><capitals>徳島市</capitals></place><place latitude='34.3401491' longitude='134.0434436'><states>香川県</states><capitals>高松市</capitals></place><place latitude='33.8416238' longitude='132.7656808'><states>愛媛県</states><capitals>松山市</capitals></place><place latitude='33.5597062' longitude='133.5310786'><states>高知県</states><capitals>高知市</capitals></place></genre><genre id='九州'><place latitude='33.6065756' longitude='130.4182970'><states>福岡県</states><capitals>福岡市</capitals></place><place latitude='33.2494416' longitude='130.2997942'><states>佐賀県</states><capitals>佐賀市</capitals></place><place latitude='32.7448388' longitude='129.8737562'><states>長崎県</states><capitals>長崎市</capitals></place><place latitude='32.7898270' longitude='130.7416672'><states>熊本県</states><capitals>熊本市</capitals></place><place latitude='33.2381718' longitude='131.6126189'><states>大分県</states><capitals>大分市</capitals></place><place latitude='31.9110956' longitude='131.4238934'><states>宮崎県</states><capitals>宮崎市</capitals></place><place latitude='31.5610825' longitude='130.5577279'><states>鹿児島県</states><capitals>鹿児島市</capitals></place></genre><genre id='沖縄'><place latitude='26.2124013' longitude='127.6809317'><states>沖縄県</states><capitals>那覇市</capitals></place></genre></places>"
+        xml: $.parseXML """<?xml version='1.0' encoding='UTF-8'?>
+          <places>
+          <genre id='北海道'><place latitude='43.0646147' longitude='141.3468074'><states>北海道</states><capitals>札幌市</capitals></place></genre>
+          <genre id='東北'><place latitude='41.8243077' longitude='140.7399984'><states>青森県</states><capitals>青森市</capitals></place><place latitude='39.7036194' longitude='141.1526839'><states>岩手県</states><capitals>盛岡市</capitals></place><place latitude='38.2688373' longitude='140.8721000'><states>宮城県</states><capitals>仙台市</capitals></place><place latitude='39.7186135' longitude='140.1023643'><states>秋田県</states><capitals>秋田市</capitals></place><place latitude='38.2404355' longitude='140.3636333'><states>山形県</states><capitals>山形市</capitals></place><place latitude='37.7502986' longitude='140.4675514'><states>福島県</states><capitals>福島市</capitals></place></genre>
+          <genre id='関東'><place latitude='36.3418112' longitude='140.4467935'><states>茨城県</states><capitals>水戸市</capitals></place><place latitude='36.5657250' longitude='139.8835651'><states>栃木県</states><capitals>宇都宮市</capitals></place><place latitude='36.3906675' longitude='139.0604061'><states>群馬県</states><capitals>前橋市</capitals></place><place latitude='35.8569991' longitude='139.6488487'><states>埼玉県</states><capitals>さいたま市</capitals></place><place latitude='35.6050574' longitude='140.1233063'><states>千葉県</states><capitals>千葉市</capitals></place><place latitude='35.6894875' longitude='139.6917064'><states>東京都</states><capitals>新宿区</capitals></place><place latitude='35.4475073' longitude='139.6423446'><states>神奈川県</states><capitals>横浜市</capitals></place><place latitude='35.6641575' longitude='138.5684486'><states>山梨県</states><capitals>甲府市</capitals></place></genre>
+          <genre id='信越'><place latitude='37.9025518' longitude='139.0230946'><states>新潟県</states><capitals>新潟市</capitals></place><place latitude='36.6512986' longitude='138.1809557'><states>長野県</states><capitals>長野市</capitals></place></genre>
+          <genre id='北陸'><place latitude='36.6952907' longitude='137.2113383'><states>富山県</states><capitals>富山市</capitals></place><place latitude='36.5946816' longitude='136.6255726'><states>石川県</states><capitals>金沢市</capitals></place><place latitude='36.0651779' longitude='136.2215269'><states>福井県</states><capitals>福井市</capitals></place></genre>
+          <genre id='東海'><place latitude='35.3912272' longitude='136.7222906'><states>岐阜県</states><capitals>岐阜市</capitals></place><place latitude='34.9771201' longitude='138.3830845'><states>静岡県</states><capitals>静岡市</capitals></place><place latitude='35.1801883' longitude='136.9065647'><states>愛知県</states><capitals>名古屋市</capitals></place><place latitude='34.7302829' longitude='136.5085883'><states>三重県</states><capitals>津市</capitals></place></genre>
+          <genre id='近畿'><place latitude='35.0045306' longitude='135.8685899'><states>滋賀県</states><capitals>大津市</capitals></place><place latitude='35.0212466' longitude='135.7555968'><states>京都府</states><capitals>京都市</capitals></place><place latitude='34.6862971' longitude='135.5196609'><states>大阪府</states><capitals>大阪市</capitals></place><place latitude='34.6912688' longitude='135.1830706'><states>兵庫県</states><capitals>神戸市</capitals></place><place latitude='34.6853345' longitude='135.8327421'><states>奈良県</states><capitals>奈良市</capitals></place><place latitude='34.2259867' longitude='135.1675086'><states>和歌山県</states><capitals>和歌山市</capitals></place></genre>
+          <genre id='中国'><place latitude='35.5038906' longitude='134.2377356'><states>鳥取県</states><capitals>鳥取市</capitals></place><place latitude='35.4722952' longitude='133.0504997'><states>島根県</states><capitals>松江市</capitals></place><place latitude='34.6617511' longitude='133.9344057'><states>岡山県</states><capitals>岡山市</capitals></place><place latitude='34.3965603' longitude='132.4596225'><states>広島県</states><capitals>広島市</capitals></place><place latitude='34.1859563' longitude='131.4706493'><states>山口県</states><capitals>山口市</capitals></place></genre>
+          <genre id='四国'><place latitude='34.0657179' longitude='134.5593601'><states>徳島県</states><capitals>徳島市</capitals></place><place latitude='34.3401491' longitude='134.0434436'><states>香川県</states><capitals>高松市</capitals></place><place latitude='33.8416238' longitude='132.7656808'><states>愛媛県</states><capitals>松山市</capitals></place><place latitude='33.5597062' longitude='133.5310786'><states>高知県</states><capitals>高知市</capitals></place></genre>
+          <genre id='九州'><place latitude='33.6065756' longitude='130.4182970'><states>福岡県</states><capitals>福岡市</capitals></place><place latitude='33.2494416' longitude='130.2997942'><states>佐賀県</states><capitals>佐賀市</capitals></place><place latitude='32.7448388' longitude='129.8737562'><states>長崎県</states><capitals>長崎市</capitals></place><place latitude='32.7898270' longitude='130.7416672'><states>熊本県</states><capitals>熊本市</capitals></place><place latitude='33.2381718' longitude='131.6126189'><states>大分県</states><capitals>大分市</capitals></place><place latitude='31.9110956' longitude='131.4238934'><states>宮崎県</states><capitals>宮崎市</capitals></place><place latitude='31.5610825' longitude='130.5577279'><states>鹿児島県</states><capitals>鹿児島市</capitals></place></genre>
+          <genre id='沖縄'><place latitude='26.2124013' longitude='127.6809317'><states>沖縄県</states><capitals>那覇市</capitals></place></genre>
+          </places>"""
       }
       matcher:{
         toDeepEqual: (expected)->
@@ -60,37 +73,6 @@ describe "MapList", ->
       }
     } #}}}
 
-  describe ".Entries", -> #{{{
-    Entries = undefined
-    ans = undefined
-
-    beforeEach ->
-      Entries = MapList.Entries
-      ans = data.entries.object
-
-    it "get source ( array )", ->
-      source = Entries.getSource(ans)
-      source.then (data)->
-        expect(data).toEqual(ans)
-
-    it "@getSource ( url:json )", ->
-      source = Entries.getSource("data/entries.json")
-      waitsFor( =>
-        source.state() == "resolved"
-      , "timeout", 1000 )
-      runs =>
-        source.then (data)=>
-          expect(data).toEqual(ans)
-
-    it "@getSource ( url:xml )", ->
-      source = Entries.getSource("data/entries.xml")
-      waitsFor( =>
-        source.state() == "resolved"
-      , "timeout", 1000 )
-      runs =>
-        source.then (data)->
-          expect(data).toEqual(ans)
-  #}}}
   describe ".Parser", -> #{{{
     Parser = undefined
 
@@ -218,6 +200,76 @@ describe "MapList", ->
         data = [0..10]
         expect(parser.execute(data)).toBe(data)
     #}}}
+  #}}}
+  describe ".Entry", -> #{{{
+  #}}}
+  describe ".Entries", -> #{{{
+    Entries = undefined
+    ans = undefined
+
+    beforeEach ->
+      Entries = MapList.Entries
+      ans = data.entries.object
+
+    it "getSource ( array )", ->
+      source = Entries.getSource(ans)
+      source.then (data)->
+        expect(data).toEqual(ans)
+
+    it "getSource ( url:json )", ->
+      source = Entries.getSource("data/entries.json")
+      waitsFor( =>
+        source.state() == "resolved"
+      , "timeout", 1000 )
+      runs =>
+        source.then (data)=>
+          expect(data).toEqual(ans)
+
+    it "getSource ( url:xml )", ->
+      source = Entries.getSource("data/entries.xml")
+      waitsFor( =>
+        source.state() == "resolved"
+      , "timeout", 1000 )
+      runs =>
+        source.then (data)->
+          expect(data).toEqual(ans)
+  #}}}
+  describe ".HtmlFactory", -> #{{{
+    obj = template = factory = HtmlFactory = undefined
+    beforeEach ->
+      HtmlFactory = MapList.HtmlFactory
+      obj = { title: "FooBar" }
+
+    describe "by _.template",->
+      beforeEach ->
+        template = "<p><%- title %></p>"
+        factory = new HtmlFactory(_.template,template)
+
+      it "template unchange",->
+        expect(factory.template).toEqual(template)
+
+      it "getTemplateEngineName", ->
+        expect(factory.getTemplateEngineName()).toEqual("_.template")
+
+      it "make", ->
+        answer = "<p>FooBar</p>"
+        expect(factory.make(obj)).toEqual(answer)
+
+    describe "by $.tmpl", ->
+      beforeEach ->
+        template = "<p>${ title }</p>"
+        factory = new HtmlFactory($.tmpl,template)
+
+      it "template wrap",->
+        answer = "<wrap>#{template}</wrap>"
+        expect(factory.template).toEqual(answer)
+
+      it "getTemplateEngineName", ->
+        expect(factory.getTemplateEngineName()).toEqual("$.tmpl")
+
+      it "make", ->
+        answer = "<p>FooBar</p>"
+        expect(factory.make(obj)).toEqual(answer)
   #}}}
 
 

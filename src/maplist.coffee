@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.2.8
+MapList JavaScript Library v1.2.9
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -239,12 +239,28 @@ do ($=jQuery,global=this)->
   #}}}
   class HtmlFactory #{{{
     constructor:(@templateEngine, @template)->
+      switch @getTemplateEngineName()
+        when "_.template"
+          @engine = @templateEngine(@template)
+        when "$.tmpl"
+          @template = "<wrap>#{@template}</wrap>"
+          @engine = _.bind( @templateEngine, @, @template )
+        else
+          @engine = _.bind( @templateEngine, @, @template )
 
     make:(object)->
       return null unless @templateEngine? and @template?
-      res = @templateEngine( @template, object )
+      res = @engine(object)
       res = res.html() if res.html?
       return res
+
+    getTemplateEngineName:->
+      if _?.template? and _.template == @templateEngine
+        "_.template"
+      else if $?.tmpl? and $.tmpl == @templateEngine
+        "$.tmpl"
+      else
+        "other"
   #}}}
   class MapView extends Backbone.View # info and marker {{{
     initialize: ->
