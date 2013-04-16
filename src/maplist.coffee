@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.2.11
+MapList JavaScript Library v1.2.12
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -73,6 +73,9 @@ do ($=jQuery,global=this)->
 
       @entries.on "openinfo", (entry)=>
         @mapView.openInfo(entry.info, entry.marker)
+
+      @entries.on "closeinfo", (entry)=>
+        @mapView.closeOpenedInfo()
 
       @genresView.on "change:genre", (genreId)=>
         @rebuild(genreId)
@@ -196,11 +199,14 @@ do ($=jQuery,global=this)->
     openInfo:->
       @trigger('openinfo', @)
 
+    closeInfo:->
+      @trigger('closeinfo', @)
+
     makeInfo:(infoHtmlFactory)->
       content = infoHtmlFactory.make( @toJSON() )
       if content?
         info = new google.maps.InfoWindow {content}
-        google.maps.event.addListener( info, 'closeclick', @openInfo )
+        google.maps.event.addListener( info, 'closeclick', @closeInfo )
         return info
 
     makeMarker:->
