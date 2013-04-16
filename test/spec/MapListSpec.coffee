@@ -119,6 +119,14 @@ describe "MapList", ->
       it "arguments is xml", ->
         expect(Parser.defaultParser(data.entries.xml)).toEqual(data.entries.object)
     #}}}
+    it "make icon", ->
+      src = {
+      }
+      dst = {
+      }
+
+    it "finallyParser", ->
+
     describe ".XMLParser", -> #{{{
       parser = undefined
       xml = undefined
@@ -216,12 +224,12 @@ describe "MapList", ->
       Entries = MapList.Entries
       ans = data.entries.object
 
-    it "getSource ( array )", ->
+    it ".getSource ( array )", ->
       source = Entries.getSource(ans)
       source.then (data)->
         expect(data).toEqual(ans)
 
-    it "getSource ( url:json )", ->
+    it ".getSource ( url:json )", ->
       source = Entries.getSource("data/entries.json")
       waitsFor( =>
         source.state() == "resolved"
@@ -230,7 +238,7 @@ describe "MapList", ->
         source.then (data)=>
           expect(data).toEqual(ans)
 
-    it "getSource ( url:xml )", ->
+    it ".getSource ( url:xml )", ->
       source = Entries.getSource("data/entries.xml")
       waitsFor( =>
         source.state() == "resolved"

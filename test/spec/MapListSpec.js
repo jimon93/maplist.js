@@ -374,6 +374,13 @@
           return expect(Parser.defaultParser(data.entries.xml)).toEqual(data.entries.object);
         });
       });
+      it("make icon", function() {
+        var dst, src;
+
+        src = {};
+        return dst = {};
+      });
+      it("finallyParser", function() {});
       describe(".XMLParser", function() {
         var parser, xml;
 
@@ -486,7 +493,7 @@
         Entries = MapList.Entries;
         return ans = data.entries.object;
       });
-      it("getSource ( array )", function() {
+      it(".getSource ( array )", function() {
         var source;
 
         source = Entries.getSource(ans);
@@ -494,7 +501,7 @@
           return expect(data).toEqual(ans);
         });
       });
-      it("getSource ( url:json )", function() {
+      it(".getSource ( url:json )", function() {
         var source,
           _this = this;
 
@@ -508,7 +515,7 @@
           });
         });
       });
-      return it("getSource ( url:xml )", function() {
+      return it(".getSource ( url:xml )", function() {
         var source,
           _this = this;
 
