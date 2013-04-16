@@ -119,13 +119,76 @@ describe "MapList", ->
       it "arguments is xml", ->
         expect(Parser.defaultParser(data.entries.xml)).toEqual(data.entries.object)
     #}}}
-    it "make icon", ->
-      src = {
-      }
-      dst = {
-      }
+    describe ".makeIcon", ->
+      it "with object", ->
+        src = {
+          url: "foo.png"
+          anchor:[10,20]
+          origin:[44,42]
+          size:[55,55]
+          scaledSize:[1,1]
+        }
+        dst = {
+          url: "foo.png"
+          anchor: new google.maps.Point(10,20)
+          origin: new google.maps.Point(44,42)
+          size: new google.maps.Size(55,55)
+          scaledSize: new google.maps.Size(1,1)
+        }
 
-    it "finallyParser", ->
+        expect(Parser.makeIcon(src)).toEqual(dst)
+
+      it "with string", ->
+        src = "foo.png"
+        dst = "foo.png"
+        expect(Parser.makeIcon(src)).toEqual(dst)
+
+    describe "finallyParser", ->
+      it "with icon data", ->
+        src = {
+          name : "hoge"
+          icon :{
+            url: "foo.png"
+            anchor:[10,20]
+            origin:[44,42]
+            size:[55,55]
+            scaledSize:[1,1]
+          }
+          shadow :{
+            url: "foo.png"
+            anchor:[10,20]
+            origin:[44,42]
+            size:[55,55]
+            scaledSize:[1,1]
+          }
+        }
+        dst = {
+          name : "hoge"
+          icon :{
+            url: "foo.png"
+            anchor: new google.maps.Point(10,20)
+            origin: new google.maps.Point(44,42)
+            size: new google.maps.Size(55,55)
+            scaledSize: new google.maps.Size(1,1)
+          }
+          shadow :{
+            url: "foo.png"
+            anchor: new google.maps.Point(10,20)
+            origin: new google.maps.Point(44,42)
+            size: new google.maps.Size(55,55)
+            scaledSize: new google.maps.Size(1,1)
+          }
+        }
+        expect(Parser.finallyParser(src)).toEqual(dst)
+
+      it "no icon data", ->
+        src = {
+          name : "hoge"
+        }
+        dst = {
+          name : "hoge"
+        }
+        expect(Parser.finallyParser(src)).toEqual(dst)
 
     describe ".XMLParser", -> #{{{
       parser = undefined

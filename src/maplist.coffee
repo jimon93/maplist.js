@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.2.10
+MapList JavaScript Library v1.2.11
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -11,8 +11,8 @@ MIT License
 ###
 do ($=jQuery,global=this)->
   log = _.bind( console.log, console )
-  class App #{{{
-    default: => { #{{{
+  class App
+    default: => {
       lat              : 35
       lng              : 135
       #center          : null #new google.maps.LatLng( 35, 135 )
@@ -38,7 +38,7 @@ do ($=jQuery,global=this)->
       fitZoomReset     : false
       templateEngine   : $.tmpl || _.template
     }
-    #}}}
+
     constructor:(options)->
       _.bindAll(@)
       @options = @makeOptions(options)
@@ -97,8 +97,8 @@ do ($=jQuery,global=this)->
     # map objectを取得
     getMap:->
       return @mapView.map
-  #}}}
-  class Parser #{{{
+
+  class Parser
     constructor:( @parser )->
       _.bindAll(@)
       @parser = Parser.defaultParser unless @parser?
@@ -132,10 +132,10 @@ do ($=jQuery,global=this)->
         data = _.clone data
         for key, val of data
           switch key
-            when "point", "anchor"
-              data[key] = new google.maps.Point.apply( google.maps, val )
-            when "size", "scalledSize"
-              data[key] = new google.maps.Size.apply( google.maps, val )
+            when "origin", "anchor"
+              data[key] = new google.maps.Point(val...)
+            when "size", "scaledSize"
+              data[key] = new google.maps.Size(val...)
       return data
 
   class Parser.XMLParser
@@ -185,8 +185,8 @@ do ($=jQuery,global=this)->
   class Parser.ObjectParser
     execute: (data)->
       data
-  #}}}
-  class Entry extends Backbone.Model #{{{
+
+  class Entry extends Backbone.Model
     initialize: (attributes, options)->
       _.bindAll(@)
       @info   = @makeInfo(options.infoHtmlFactory)
@@ -219,8 +219,8 @@ do ($=jQuery,global=this)->
       switch genreId
         when "__all__" then true
         else genreId == @attributes.genre
-  #}}}
-  class Entries extends Backbone.Collection #{{{
+
+  class Entries extends Backbone.Collection
     model: Entry
 
     initialize:(source, options)->
@@ -253,8 +253,8 @@ do ($=jQuery,global=this)->
       else
         dfd.reject()
       dfd.promise()
-  #}}}
-  class HtmlFactory #{{{
+
+  class HtmlFactory
     constructor:(@templateEngine, @template)->
       switch @getTemplateEngineName()
         when "_.template"
@@ -278,7 +278,7 @@ do ($=jQuery,global=this)->
         "$.tmpl"
       else
         "other"
-  #}}}
+
   class MapView extends Backbone.View # info and marker {{{
     initialize: ->
       _.bindAll(@)
@@ -315,8 +315,8 @@ do ($=jQuery,global=this)->
       if @openedInfo?
         @openedInfo.close()
         @openedInfo = null
-  #}}}
-  class ListView extends Backbone.View #{{{
+
+  class ListView extends Backbone.View
     initialize:->
       @$el = $(@options.listSelector)
       @$el.on( "click", @options.openInfoSelector, @openInfo )
@@ -333,8 +333,8 @@ do ($=jQuery,global=this)->
       $target = $(e.currentTarget)
       $target.closest(".__list").data("entry").openInfo()
       return false
-  #}}}
-  class GenresView extends Backbone.View #{{{
+
+  class GenresView extends Backbone.View
     initialize:->
       # event
       _.bindAll(@)
@@ -347,7 +347,7 @@ do ($=jQuery,global=this)->
         genreId = $target.data( @options.genreDataName )
       @trigger("change:genre",genreId)
       return false
-  #}}}
+
 
   global.MapList = _.extend App, {
     Parser

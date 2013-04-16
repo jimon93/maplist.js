@@ -374,13 +374,86 @@
           return expect(Parser.defaultParser(data.entries.xml)).toEqual(data.entries.object);
         });
       });
-      it("make icon", function() {
-        var dst, src;
+      describe(".makeIcon", function() {
+        it("with object", function() {
+          var dst, src;
 
-        src = {};
-        return dst = {};
+          src = {
+            url: "foo.png",
+            anchor: [10, 20],
+            origin: [44, 42],
+            size: [55, 55],
+            scaledSize: [1, 1]
+          };
+          dst = {
+            url: "foo.png",
+            anchor: new google.maps.Point(10, 20),
+            origin: new google.maps.Point(44, 42),
+            size: new google.maps.Size(55, 55),
+            scaledSize: new google.maps.Size(1, 1)
+          };
+          return expect(Parser.makeIcon(src)).toEqual(dst);
+        });
+        return it("with string", function() {
+          var dst, src;
+
+          src = "foo.png";
+          dst = "foo.png";
+          return expect(Parser.makeIcon(src)).toEqual(dst);
+        });
       });
-      it("finallyParser", function() {});
+      describe("finallyParser", function() {
+        it("with icon data", function() {
+          var dst, src;
+
+          src = {
+            name: "hoge",
+            icon: {
+              url: "foo.png",
+              anchor: [10, 20],
+              origin: [44, 42],
+              size: [55, 55],
+              scaledSize: [1, 1]
+            },
+            shadow: {
+              url: "foo.png",
+              anchor: [10, 20],
+              origin: [44, 42],
+              size: [55, 55],
+              scaledSize: [1, 1]
+            }
+          };
+          dst = {
+            name: "hoge",
+            icon: {
+              url: "foo.png",
+              anchor: new google.maps.Point(10, 20),
+              origin: new google.maps.Point(44, 42),
+              size: new google.maps.Size(55, 55),
+              scaledSize: new google.maps.Size(1, 1)
+            },
+            shadow: {
+              url: "foo.png",
+              anchor: new google.maps.Point(10, 20),
+              origin: new google.maps.Point(44, 42),
+              size: new google.maps.Size(55, 55),
+              scaledSize: new google.maps.Size(1, 1)
+            }
+          };
+          return expect(Parser.finallyParser(src)).toEqual(dst);
+        });
+        return it("no icon data", function() {
+          var dst, src;
+
+          src = {
+            name: "hoge"
+          };
+          dst = {
+            name: "hoge"
+          };
+          return expect(Parser.finallyParser(src)).toEqual(dst);
+        });
+      });
       describe(".XMLParser", function() {
         var parser, xml;
 
