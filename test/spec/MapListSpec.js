@@ -555,7 +555,53 @@
       beforeEach(function() {
         return Entry = MapList.Entry;
       });
-      return it("make List", function() {});
+      it("::makeInfo", function() {
+        var entry, factory, info;
+
+        entry = new Backbone.Model({
+          title: "FooBar"
+        });
+        entry.closeInfo = jasmine.createSpy("closeInfo");
+        factory = new MapList.HtmlFactory(_.template, "<%- title %>");
+        info = Entry.prototype.makeInfo.call(entry, factory);
+        expect(info instanceof google.maps.InfoWindow).toBeTruthy();
+        expect(info.getContent()).toEqual("FooBar");
+        google.maps.event.trigger(info, "closeclick");
+        return expect(entry.closeInfo).toHaveBeenCalled();
+      });
+      it("::makeMarker", function() {
+        var entry, marker;
+
+        entry = new Backbone.Model({
+          lat: 35,
+          lng: 135,
+          icon: "icon.png",
+          shadow: "shadow.png"
+        });
+        entry.openInfo = jasmine.createSpy("openInfo");
+        entry.info = true;
+        marker = Entry.prototype.makeMarker.call(entry);
+        expect(marker instanceof google.maps.Marker).toBeTruthy();
+        expect(marker.getPosition() instanceof google.maps.LatLng).toBeTruthy();
+        expect(marker.getPosition().lat()).toEqual(35);
+        expect(marker.getPosition().lng()).toEqual(135);
+        expect(marker.getIcon()).toEqual("icon.png");
+        expect(marker.getShadow()).toEqual("shadow.png");
+        google.maps.event.trigger(marker, "click");
+        return expect(entry.openInfo).toHaveBeenCalled();
+      });
+      return it("::makeList", function() {
+        var entry, factory, res;
+
+        entry = new Backbone.Model({
+          title: "FooBar"
+        });
+        factory = new MapList.HtmlFactory(_.template, "<div><%- title %></div>");
+        res = Entry.prototype.makeList.call(entry, factory);
+        expect(res instanceof jQuery).toBeTruthy();
+        expect(res.attr("class")).toEqual("__list");
+        return expect(res.data("entry")).toBe(entry);
+      });
     });
     describe(".Entries", function() {
       var Entries, ans;
