@@ -468,7 +468,15 @@
         });
       });
     });
-    describe(".Entry", function() {});
+    describe(".Entry", function() {
+      var Entry;
+
+      Entry = void 0;
+      beforeEach(function() {
+        return Entry = MapList.Entry;
+      });
+      return it("make List", function() {});
+    });
     describe(".Entries", function() {
       var Entries, ans;
 
@@ -525,7 +533,7 @@
           title: "FooBar"
         };
       });
-      describe("by _.template", function() {
+      describe("by _.template;", function() {
         beforeEach(function() {
           template = "<p><%- title %></p>";
           return factory = new HtmlFactory(_.template, template);
@@ -536,6 +544,17 @@
         it("getTemplateEngineName", function() {
           return expect(factory.getTemplateEngineName()).toEqual("_.template");
         });
+        it("template chche", function() {
+          var backup;
+
+          backup = _.template;
+          spyOn(_, 'template').andCallThrough();
+          factory = new HtmlFactory(_.template, template);
+          factory.make(obj);
+          factory.make(obj);
+          expect(_.template.calls.length).toEqual(1);
+          return _.template = backup;
+        });
         return it("make", function() {
           var answer;
 
@@ -543,9 +562,9 @@
           return expect(factory.make(obj)).toEqual(answer);
         });
       });
-      return describe("by $.tmpl", function() {
+      return describe("by $.tmpl;", function() {
         beforeEach(function() {
-          template = "<p>${ title }</p>";
+          template = "<p>${title}</p>";
           return factory = new HtmlFactory($.tmpl, template);
         });
         it("template wrap", function() {
@@ -557,6 +576,17 @@
         it("getTemplateEngineName", function() {
           return expect(factory.getTemplateEngineName()).toEqual("$.tmpl");
         });
+        /*
+        it "template nochche",->
+          backup = $.tmpl
+          spyOn($,'tmpl').andCallThrough()
+          factory = new HtmlFactory($.tmpl,template)
+          factory.make(obj)
+          factory.make(obj)
+          expect($.tmpl.calls.length).toEqual(2)
+          $.tmpl = backup
+        */
+
         return it("make", function() {
           var answer;
 

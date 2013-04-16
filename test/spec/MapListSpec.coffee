@@ -202,6 +202,11 @@ describe "MapList", ->
     #}}}
   #}}}
   describe ".Entry", -> #{{{
+    Entry = undefined
+    beforeEach ->
+      Entry = MapList.Entry
+
+    it "make List", ->
   #}}}
   describe ".Entries", -> #{{{
     Entries = undefined
@@ -240,7 +245,7 @@ describe "MapList", ->
       HtmlFactory = MapList.HtmlFactory
       obj = { title: "FooBar" }
 
-    describe "by _.template",->
+    describe "by _.template;",->
       beforeEach ->
         template = "<p><%- title %></p>"
         factory = new HtmlFactory(_.template,template)
@@ -251,13 +256,22 @@ describe "MapList", ->
       it "getTemplateEngineName", ->
         expect(factory.getTemplateEngineName()).toEqual("_.template")
 
+      it "template chche",->
+        backup = _.template
+        spyOn(_,'template').andCallThrough()
+        factory = new HtmlFactory(_.template,template)
+        factory.make(obj)
+        factory.make(obj)
+        expect(_.template.calls.length).toEqual(1)
+        _.template = backup
+
       it "make", ->
         answer = "<p>FooBar</p>"
         expect(factory.make(obj)).toEqual(answer)
 
-    describe "by $.tmpl", ->
+    describe "by $.tmpl;", ->
       beforeEach ->
-        template = "<p>${ title }</p>"
+        template = "<p>${title}</p>"
         factory = new HtmlFactory($.tmpl,template)
 
       it "template wrap",->
@@ -266,6 +280,17 @@ describe "MapList", ->
 
       it "getTemplateEngineName", ->
         expect(factory.getTemplateEngineName()).toEqual("$.tmpl")
+
+      ###
+      it "template nochche",->
+        backup = $.tmpl
+        spyOn($,'tmpl').andCallThrough()
+        factory = new HtmlFactory($.tmpl,template)
+        factory.make(obj)
+        factory.make(obj)
+        expect($.tmpl.calls.length).toEqual(2)
+        $.tmpl = backup
+      ###
 
       it "make", ->
         answer = "<p>FooBar</p>"
