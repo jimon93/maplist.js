@@ -308,6 +308,44 @@ describe "MapList", ->
       expect(res instanceof jQuery).toBeTruthy()
       expect(res.attr("class")).toEqual("__list")
       expect(res.data("entry")).toBe(entry)
+
+    describe "::isSelect",->
+      it "have not lat & lng",->
+        entry = new Backbone.Model
+        expect(Entry::isSelect.call(entry,"foo")).toBeFalsy()
+
+      it "genreId equal '__all__", ->
+        entry = new Backbone.Model {lat:35,lng:135}
+        expect(Entry::isSelect.call(entry,"__all__")).toBeTruthy()
+
+      it "by genreId", ->
+        entry = new Backbone.Model {lat:35,lng:135,genre:"foo"}
+        expect(Entry::isSelect.call(entry,"foo")).toBeTruthy()
+        expect(Entry::isSelect.call(entry,"bar")).toBeFalsy()
+
+    describe "triger check",->
+      entry = undefined
+      beforeEach ->
+        entry = new Backbone.Model
+
+      it "::openInfo",->
+        entry.on "openinfo",(args)-> expect(args).toBe(entry)
+        Entry::openInfo.call(entry)
+
+      it "::closeInfo",->
+        entry.on "closeinfo",(args)-> expect(args).toBe(entry)
+        Entry::closeInfo.call(entry)
+
+    describe "constructor",->
+      it "new Entry",->
+        attributes = {}
+        options = MapList::makeOptions {}
+        entry = new Entry(attributes,options)
+        expect(entry.info instanceof google.maps.InfoWindow).toBeTruthy()
+        expect(entry.marker instanceof google.maps.Marker).toBeTruthy()
+        expect(entry.list instanceof jQuery).toBeTruthy()
+
+
   #}}}
   describe ".Entries", -> #{{{
     Entries = undefined

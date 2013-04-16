@@ -590,7 +590,7 @@
         google.maps.event.trigger(marker, "click");
         return expect(entry.openInfo).toHaveBeenCalled();
       });
-      return it("::makeList", function() {
+      it("::makeList", function() {
         var entry, factory, res;
 
         entry = new Backbone.Model({
@@ -601,6 +601,66 @@
         expect(res instanceof jQuery).toBeTruthy();
         expect(res.attr("class")).toEqual("__list");
         return expect(res.data("entry")).toBe(entry);
+      });
+      describe("::isSelect", function() {
+        it("have not lat & lng", function() {
+          var entry;
+
+          entry = new Backbone.Model;
+          return expect(Entry.prototype.isSelect.call(entry, "foo")).toBeFalsy();
+        });
+        it("genreId equal '__all__", function() {
+          var entry;
+
+          entry = new Backbone.Model({
+            lat: 35,
+            lng: 135
+          });
+          return expect(Entry.prototype.isSelect.call(entry, "__all__")).toBeTruthy();
+        });
+        return it("by genreId", function() {
+          var entry;
+
+          entry = new Backbone.Model({
+            lat: 35,
+            lng: 135,
+            genre: "foo"
+          });
+          expect(Entry.prototype.isSelect.call(entry, "foo")).toBeTruthy();
+          return expect(Entry.prototype.isSelect.call(entry, "bar")).toBeFalsy();
+        });
+      });
+      describe("triger check", function() {
+        var entry;
+
+        entry = void 0;
+        beforeEach(function() {
+          return entry = new Backbone.Model;
+        });
+        it("::openInfo", function() {
+          entry.on("openinfo", function(args) {
+            return expect(args).toBe(entry);
+          });
+          return Entry.prototype.openInfo.call(entry);
+        });
+        return it("::closeInfo", function() {
+          entry.on("closeinfo", function(args) {
+            return expect(args).toBe(entry);
+          });
+          return Entry.prototype.closeInfo.call(entry);
+        });
+      });
+      return describe("constructor", function() {
+        return it("new Entry", function() {
+          var attributes, entry, options;
+
+          attributes = {};
+          options = MapList.prototype.makeOptions({});
+          entry = new Entry(attributes, options);
+          expect(entry.info instanceof google.maps.InfoWindow).toBeTruthy();
+          expect(entry.marker instanceof google.maps.Marker).toBeTruthy();
+          return expect(entry.list instanceof jQuery).toBeTruthy();
+        });
       });
     });
     describe(".Entries", function() {
