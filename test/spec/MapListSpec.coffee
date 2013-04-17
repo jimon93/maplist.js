@@ -544,7 +544,6 @@ describe "MapList", ->
         answer = "<p>FooBar</p>"
         expect(factory.make(obj)).toEqual(answer)
   #}}}
-  ###
   describe ".MapView",-> #{{{
     options = mapView = entries = undefined
     beforeEach ->
@@ -652,6 +651,61 @@ describe "MapList", ->
       it "nonchche openedInfo", ->
         expect(mapView.openedInfo).toBe(null)
   #}}}
-  describe ".ListView",->
+  describe ".ListView",-> #{{{
+    listView = options = undefined
+    beforeEach ->
+      options = MapList::makeOptions {}
+      listView = new MapList.ListView(options)
+
+    describe "constructor",->
+      it "is instanceof Backbone.View",->
+        expect(listView instanceof Backbone.View).toBeTruthy()
+
+      it "check @$el is jQuey object",->
+        expect(listView.$el instanceof jQuery).toBeTruthy()
+
+      it "check @$el.selector",->
+        expect(listView.$el.selector).toEqual(options.listSelector)
+
+    describe "build",->
+      entries = appendTo = undefined
+      beforeEach ->
+        entries = new MapList.Entries(data.entries.object,options)
+        appendTo = createSpy("appendTo")
+        entries.each (entry)-> entry.list.appendTo = appendTo
+        listView.build(entries.models)
+
+      it "execute entry.list.appendTo",->
+        expect(appendTo).toHaveBeenCalled()
+
+      it "execute entry.list.appendTo width @$el",->
+        expect(appendTo.calls[0].args[0]).toBe(listView.$el)
+
+    describe "clear",->
+      entries = detach = undefined
+      beforeEach ->
+        entries = new MapList.Entries(data.entries.object,options)
+        detach = createSpy("detach")
+        entries.each (entry)-> entry.list.appendTo = detach
+        listView.build(entries.models)
+
+      it "execute entry.list.appendTo",->
+        expect(detach).toHaveBeenCalled()
+
+    describe "openInfo",->
+      $elem = spy = undefined
+      beforeEach ->
+        selector = options.openInfoSelector
+        spy = createSpy("openInfo")
+        $elem = $("<div class='__list'><a class='#{selector[1..-1]}'></a></div>")
+          .on("click",selector, listView.openInfo)
+          .data("entry",{ openInfo: spy })
+          .find(selector)
+          .trigger("click")
+
+      it "execute openInfo of entry",->
+        expect(spy).toHaveBeenCalled()
+  #}}}
+  ###
   describe ".GenreView",->
 

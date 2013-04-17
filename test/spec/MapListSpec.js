@@ -777,138 +777,170 @@
           answer = "<p>FooBar</p>"
           expect(factory.make(obj)).toEqual(answer)
     #}}}
+    describe ".MapView",-> #{{{
+      options = mapView = entries = undefined
+      beforeEach ->
+        options = MapList::makeOptions {}
+        mapView = new MapList.MapView(options)
+        entries = new MapList.Entries(data.entries.object,options)
+    
+      afterEach ->
+        $("#map_canvas").children().remove()
+    
+      describe "constructor",->
+        it "instance of Backbone.View",->
+          expect(mapView instanceof Backbone.View).toBeTruthy()
+    
+        it "google maps create",->
+          expect(mapView.map instanceof google.maps.Map).toBeTruthy()
+    
+      describe "::build",->
+        setMap = undefined
+        beforeEach ->
+          setMap = createSpy("setMap")
+          entries.each (entry) -> entry.marker.setMap = setMap
+          mapView.fitBounds = createSpy("fitBounds")
+    
+        it "execute entry.marker.setMap",->
+          mapView.build(entries.models)
+          expect(setMap.calls.length).toEqual(entries.length)
+    
+        it "execute entry.marker.setMap with @map",->
+          mapView.build(entries.models)
+          expect(setMap.calls[0].args[0]).toBe(mapView.map)
+    
+        it "execute @fitBounds if @options.doFit == true",->
+          mapView.build(entries.models)
+          expect(mapView.fitBounds).toHaveBeenCalled()
+    
+        it "execute @fitBounds with entries",->
+          mapView.build(entries.models)
+          expect(mapView.fitBounds.calls[0].args[0]).toBe(entries.models)
+    
+      describe "::fitBounds",->
+        # あとで実装
+    
+      describe "::clear",->
+        setMap = undefined
+        beforeEach ->
+          setMap = createSpy("setMap")
+          entries.each (entry) -> entry.marker.setMap = setMap
+          mapView.closeOpenedInfo = createSpy("closeOpenedInfo")
+          mapView.clear(entries.models)
+    
+        it "execute @closeOpenedInfo",->
+          expect(mapView.closeOpenedInfo).toHaveBeenCalled()
+    
+        it "execute entry.marker.setMap",->
+          expect(setMap.calls.length).toEqual(entries.length)
+    
+        it "execute entry.marker.setMap with null",->
+          expect(setMap.calls[0].args[0]).toBe(null)
+    
+      describe "::openInfo",->
+        info = marker = eventSpy = undefined
+        beforeEach ->
+          mapView.closeOpenedInfo = createSpy("closeOpenedInfo")
+          info = { open: createSpy("open") }
+          marker = 'marker'
+          eventSpy = createSpy('infoOpened')
+          mapView.on 'infoOpened', eventSpy
+          mapView.openInfo(info,marker)
+    
+        it "execute @closeOpenedInfo",->
+          expect(mapView.closeOpenedInfo).toHaveBeenCalled()
+    
+        it "execute info.open", ->
+          expect(info.open).toHaveBeenCalled()
+    
+        it "execute info.open with 0:@map", ->
+          expect(info.open.calls[0].args[0]).toBe(mapView.map)
+    
+        it "execute info.open with 1:marker", ->
+          expect(info.open.calls[0].args[1]).toBe(marker)
+    
+        it "chche @openedInfo",->
+          expect(mapView.openedInfo).toBe(info)
+    
+        it "fire infoOpened event",->
+          expect(eventSpy).toHaveBeenCalled()
+    
+        it "fire infoOpened event with 0:info",->
+          expect(eventSpy.calls[0].args[0]).toBe(info)
+    
+        it "fire infoOpened event with 1:marker",->
+          expect(eventSpy.calls[0].args[1]).toBe(marker)
+    
+      describe "closeOpenedInfo",->
+        close = undefined
+        beforeEach ->
+          close = createSpy("close")
+          mapView.openedInfo = { close }
+          mapView.closeOpenedInfo()
+    
+        it "execute openedInfo.close",->
+          expect(close).toHaveBeenCalled()
+    
+        it "nonchche openedInfo", ->
+          expect(mapView.openedInfo).toBe(null)
+    #}}}
+    describe ".ListView",-> #{{{
+      listView = options = undefined
+      beforeEach ->
+        options = MapList::makeOptions {}
+        listView = new MapList.ListView(options)
+    
+      describe "constructor",->
+        it "is instanceof Backbone.View",->
+          expect(listView instanceof Backbone.View).toBeTruthy()
+    
+        it "check @$el is jQuey object",->
+          expect(listView.$el instanceof jQuery).toBeTruthy()
+    
+        it "check @$el.selector",->
+          expect(listView.$el.selector).toEqual(options.listSelector)
+    
+      describe "build",->
+        entries = appendTo = undefined
+        beforeEach ->
+          entries = new MapList.Entries(data.entries.object,options)
+          appendTo = createSpy("appendTo")
+          entries.each (entry)-> entry.list.appendTo = appendTo
+          listView.build(entries.models)
+    
+        it "execute entry.list.appendTo",->
+          expect(appendTo).toHaveBeenCalled()
+    
+        it "execute entry.list.appendTo width @$el",->
+          expect(appendTo.calls[0].args[0]).toBe(listView.$el)
+    
+      describe "clear",->
+        entries = detach = undefined
+        beforeEach ->
+          entries = new MapList.Entries(data.entries.object,options)
+          detach = createSpy("detach")
+          entries.each (entry)-> entry.list.appendTo = detach
+          listView.build(entries.models)
+    
+        it "execute entry.list.appendTo",->
+          expect(detach).toHaveBeenCalled()
+    
+      describe "openInfo",->
+        $elem = spy = undefined
+        beforeEach ->
+          selector = options.openInfoSelector
+          spy = createSpy("openInfo")
+          $elem = $("<div class='__list'><a class='#{selector[1..-1]}'></a></div>")
+            .on("click",selector, listView.openInfo)
+            .data("entry",{ openInfo: spy })
+            .find(selector)
+            .trigger("click")
+    
+        it "execute openInfo of entry",->
+          expect(spy).toHaveBeenCalled()
+    #}}}
     */
 
-    describe(".MapView", function() {
-      var entries, mapView, options;
-
-      options = mapView = entries = void 0;
-      beforeEach(function() {
-        options = MapList.prototype.makeOptions({});
-        mapView = new MapList.MapView(options);
-        return entries = new MapList.Entries(data.entries.object, options);
-      });
-      afterEach(function() {
-        return $("#map_canvas").children().remove();
-      });
-      describe("constructor", function() {
-        it("instance of Backbone.View", function() {
-          return expect(mapView instanceof Backbone.View).toBeTruthy();
-        });
-        return it("google maps create", function() {
-          return expect(mapView.map instanceof google.maps.Map).toBeTruthy();
-        });
-      });
-      describe("::build", function() {
-        var setMap;
-
-        setMap = void 0;
-        beforeEach(function() {
-          setMap = createSpy("setMap");
-          entries.each(function(entry) {
-            return entry.marker.setMap = setMap;
-          });
-          return mapView.fitBounds = createSpy("fitBounds");
-        });
-        it("execute entry.marker.setMap", function() {
-          mapView.build(entries.models);
-          return expect(setMap.calls.length).toEqual(entries.length);
-        });
-        it("execute entry.marker.setMap with @map", function() {
-          mapView.build(entries.models);
-          return expect(setMap.calls[0].args[0]).toBe(mapView.map);
-        });
-        it("execute @fitBounds if @options.doFit == true", function() {
-          mapView.build(entries.models);
-          return expect(mapView.fitBounds).toHaveBeenCalled();
-        });
-        return it("execute @fitBounds with entries", function() {
-          mapView.build(entries.models);
-          return expect(mapView.fitBounds.calls[0].args[0]).toBe(entries.models);
-        });
-      });
-      describe("::fitBounds", function() {});
-      describe("::clear", function() {
-        var setMap;
-
-        setMap = void 0;
-        beforeEach(function() {
-          setMap = createSpy("setMap");
-          entries.each(function(entry) {
-            return entry.marker.setMap = setMap;
-          });
-          mapView.closeOpenedInfo = createSpy("closeOpenedInfo");
-          return mapView.clear(entries.models);
-        });
-        it("execute @closeOpenedInfo", function() {
-          return expect(mapView.closeOpenedInfo).toHaveBeenCalled();
-        });
-        it("execute entry.marker.setMap", function() {
-          return expect(setMap.calls.length).toEqual(entries.length);
-        });
-        return it("execute entry.marker.setMap with null", function() {
-          return expect(setMap.calls[0].args[0]).toBe(null);
-        });
-      });
-      describe("::openInfo", function() {
-        var eventSpy, info, marker;
-
-        info = marker = eventSpy = void 0;
-        beforeEach(function() {
-          mapView.closeOpenedInfo = createSpy("closeOpenedInfo");
-          info = {
-            open: createSpy("open")
-          };
-          marker = 'marker';
-          eventSpy = createSpy('infoOpened');
-          mapView.on('infoOpened', eventSpy);
-          return mapView.openInfo(info, marker);
-        });
-        it("execute @closeOpenedInfo", function() {
-          return expect(mapView.closeOpenedInfo).toHaveBeenCalled();
-        });
-        it("execute info.open", function() {
-          return expect(info.open).toHaveBeenCalled();
-        });
-        it("execute info.open with 0:@map", function() {
-          return expect(info.open.calls[0].args[0]).toBe(mapView.map);
-        });
-        it("execute info.open with 1:marker", function() {
-          return expect(info.open.calls[0].args[1]).toBe(marker);
-        });
-        it("chche @openedInfo", function() {
-          return expect(mapView.openedInfo).toBe(info);
-        });
-        it("fire infoOpened event", function() {
-          return expect(eventSpy).toHaveBeenCalled();
-        });
-        it("fire infoOpened event with 0:info", function() {
-          return expect(eventSpy.calls[0].args[0]).toBe(info);
-        });
-        return it("fire infoOpened event with 1:marker", function() {
-          return expect(eventSpy.calls[0].args[1]).toBe(marker);
-        });
-      });
-      return describe("closeOpenedInfo", function() {
-        var close;
-
-        close = void 0;
-        beforeEach(function() {
-          close = createSpy("close");
-          mapView.openedInfo = {
-            close: close
-          };
-          return mapView.closeOpenedInfo();
-        });
-        it("execute openedInfo.close", function() {
-          return expect(close).toHaveBeenCalled();
-        });
-        return it("nonchche openedInfo", function() {
-          return expect(mapView.openedInfo).toBe(null);
-        });
-      });
-    });
-    describe(".ListView", function() {});
     return describe(".GenreView", function() {});
   });
 
