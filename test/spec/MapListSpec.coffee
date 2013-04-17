@@ -1,6 +1,7 @@
 describe "MapList", ->
-  data = undefined
+  data = createSpy = undefined
   beforeEach ->
+    createSpy = jasmine.createSpy
     data = { #{{{
       entries : {
         object: [
@@ -277,39 +278,72 @@ describe "MapList", ->
     beforeEach ->
       Entry = MapList.Entry
 
-    it "::makeInfo", ->
-      entry = new Backbone.Model({title:"FooBar"})
-      entry.closeInfo = jasmine.createSpy("closeInfo")
-      factory = new MapList.HtmlFactory(_.template,"<%- title %>")
-      info = Entry::makeInfo.call(entry,factory)
-      expect(info instanceof google.maps.InfoWindow).toBeTruthy()
-      expect(info.getContent()).toEqual("FooBar")
-      google.maps.event.trigger(info,"closeclick")
-      expect(entry.closeInfo).toHaveBeenCalled()
+    describe "::makeInfo", ->
+      entry = factory = info = undefined
+      beforeEach ->
+        entry = new Backbone.Model({title:"FooBar"})
+        entry.closeInfo = createSpy("closeInfo")
+        factory = new MapList.HtmlFactory(_.template,"<%- title %>")
+        info = Entry::makeInfo.call(entry,factory)
 
-    it "::makeMarker",->
-      entry = new Backbone.Model({lat:35,lng:135,icon:"icon.png",shadow:"shadow.png"})
-      entry.openInfo = jasmine.createSpy("openInfo")
-      entry.info = true
-      marker = Entry::makeMarker.call(entry)
-      expect(marker instanceof google.maps.Marker).toBeTruthy()
-      expect(marker.getPosition() instanceof google.maps.LatLng).toBeTruthy()
-      expect(marker.getPosition().lat()).toEqual(35)
-      expect(marker.getPosition().lng()).toEqual(135)
-      expect(marker.getIcon()).toEqual("icon.png")
-      expect(marker.getShadow()).toEqual("shadow.png")
-      google.maps.event.trigger(marker,"click")
-      expect(entry.openInfo).toHaveBeenCalled()
+      it "instanceof InfoWindow",->
+        expect(info instanceof google.maps.InfoWindow).toBeTruthy()
 
-    it "::makeList", ->
-      entry = new Backbone.Model({title:"FooBar"})
-      factory = new MapList.HtmlFactory(_.template,"<div><%- title %></div>")
-      res = Entry::makeList.call(entry,factory)
-      expect(res instanceof jQuery).toBeTruthy()
-      expect(res.attr("class")).toEqual("__list")
-      expect(res.data("entry")).toBe(entry)
+      it "make sure that info has content", ->
+        expect(info.getContent()).toEqual("FooBar")
+
+      it "fires the closeclick event and execute @closeInfo",->
+        google.maps.event.trigger(info,"closeclick")
+        expect(entry.closeInfo).toHaveBeenCalled()
+
+    describe "::makeMarker",->
+      entry = marker = undefined
+      beforeEach ->
+        entry = new Backbone.Model({lat:35,lng:135,icon:"icon.png",shadow:"shadow.png"})
+        entry.openInfo = createSpy("openInfo")
+        entry.info = true
+        marker = Entry::makeMarker.call(entry)
+
+      it "instance of Marker",->
+        expect(marker instanceof google.maps.Marker).toBeTruthy()
+
+      it "position instanceof LatLng",->
+        expect(marker.getPosition() instanceof google.maps.LatLng).toBeTruthy()
+
+      it "check lat",->
+        expect(marker.getPosition().lat()).toEqual(35)
+
+      it "check lng",->
+        expect(marker.getPosition().lng()).toEqual(135)
+
+      it "check icon",->
+        expect(marker.getIcon()).toEqual("icon.png")
+
+      it "check shadow",->
+        expect(marker.getShadow()).toEqual("shadow.png")
+
+      it "fires the click event and execute @openInfo",->
+        google.maps.event.trigger(marker,"click")
+        expect(entry.openInfo).toHaveBeenCalled()
+
+    describe "::makeList", ->
+      entry = factory = res = undefined
+      beforeEach ->
+        entry = new Backbone.Model({title:"FooBar"})
+        factory = new MapList.HtmlFactory(_.template,"<div><%- title %></div>")
+        res = Entry::makeList.call(entry,factory)
+
+      it "responce itstanceof jQuery",->
+        expect(res instanceof jQuery).toBeTruthy()
+
+      it "class is '__list'",->
+        expect(res.attr("class")).toEqual("__list")
+
+      it "have entry",->
+        expect(res.data("entry")).toBe(entry)
 
     describe "::isSelect",->
+      # 普通にentry作っちゃってよかったな...
       it "have not lat & lng",->
         entry = new Backbone.Model
         expect(Entry::isSelect.call(entry,"foo")).toBeFalsy()
@@ -318,9 +352,12 @@ describe "MapList", ->
         entry = new Backbone.Model {lat:35,lng:135}
         expect(Entry::isSelect.call(entry,"__all__")).toBeTruthy()
 
-      it "by genreId", ->
+      it "by genreId true", ->
         entry = new Backbone.Model {lat:35,lng:135,genre:"foo"}
         expect(Entry::isSelect.call(entry,"foo")).toBeTruthy()
+
+      it "by genreId false", ->
+        entry = new Backbone.Model {lat:35,lng:135,genre:"foo"}
         expect(Entry::isSelect.call(entry,"bar")).toBeFalsy()
 
     describe "triger check",->
@@ -337,46 +374,116 @@ describe "MapList", ->
         Entry::closeInfo.call(entry)
 
     describe "constructor",->
-      it "new Entry",->
+      attributes = options = entry = undefined
+      beforeEach ->
         attributes = {}
         options = MapList::makeOptions {}
         entry = new Entry(attributes,options)
-        expect(entry.info instanceof google.maps.InfoWindow).toBeTruthy()
-        expect(entry.marker instanceof google.maps.Marker).toBeTruthy()
-        expect(entry.list instanceof jQuery).toBeTruthy()
 
+      it "instance check info",->
+        expect(entry.info instanceof google.maps.InfoWindow).toBeTruthy()
+
+      it "instance check marker",->
+        expect(entry.marker instanceof google.maps.Marker).toBeTruthy()
+
+      it "instance check list",->
+        expect(entry.list instanceof jQuery).toBeTruthy()
 
   #}}}
   describe ".Entries", -> #{{{
     Entries = undefined
-    ans = undefined
+    obj = options = entries = prop = undefined
 
     beforeEach ->
       Entries = MapList.Entries
-      ans = data.entries.object
+      obj = data.entries.object
+      options = MapList::makeOptions {}
+      entries = new Entries( obj, options )
+      prop = "関東"
 
-    it ".getSource ( array )", ->
-      source = Entries.getSource(ans)
-      source.then (data)->
-        expect(data).toEqual(ans)
+    describe "constructor", ->
 
-    it ".getSource ( url:json )", ->
-      source = Entries.getSource("data/entries.json")
-      waitsFor( =>
-        source.state() == "resolved"
-      , "timeout", 1000 )
-      runs =>
-        source.then (data)=>
-          expect(data).toEqual(ans)
+      it "is instanceof Backbone.Collection", ->
+        expect(entries instanceof Backbone.Collection).toBeTruthy()
 
-    it ".getSource ( url:xml )", ->
-      source = Entries.getSource("data/entries.xml")
-      waitsFor( =>
-        source.state() == "resolved"
-      , "timeout", 1000 )
-      runs =>
+      it "attributes check",->
+        expect(entries.toJSON()).toEqual(obj)
+
+      it "make sure that selectedList is empty",->
+        expect(entries.selectedList).toEqual([])
+
+    describe "::select",->
+
+      it "return selected List",->
+        responce = entries.select(prop)
+        answer = _(obj).filter (entry)-> entry.genre == prop
+        expect(_(responce).map (entry)->entry.toJSON()).toEqual(answer)
+
+      it "chche selected List",->
+        responce = entries.select(prop)
+        expect(entries.selectedList).toBe(responce)
+
+      it "fires the select event",->
+        spy = createSpy("select")
+        entries.on "select", spy
+        responce = entries.select(prop)
+        expect(spy).toHaveBeenCalled()
+
+      it "fires the select event with arguments",->
+        spy = createSpy("select")
+        entries.on "select", spy
+        responce = entries.select(prop)
+        expect(spy.calls[0].args[0]).toBe(responce)
+
+    describe "::unselect",->
+      it "return empty array",->
+        expect(entries.unselect()).toEqual([])
+
+      it "chche selected List to empty",->
+        entries.select(prop) # make non empty chche
+        expect(entries.unselect()).toBe(entries.selectedList)
+
+      it "fires the unselect event",->
+        spy = createSpy('unselect')
+        entries.on "unselect", spy
+        responce = entries.unselect()
+        expect(spy).toHaveBeenCalled()
+
+      it "fires the unselect event with arguments",->
+        selectEntries = entries.select(prop) # make non empty chche
+        spy = createSpy('unselect')
+        entries.on "unselect", spy
+        responce = entries.unselect()
+        expect(spy.calls[0].args[0]).toBe(selectEntries)
+
+    describe "::selected",->
+      it "return cached selectedList",->
+        responce = entries.select(prop)
+        expect(entries.selected()).toBe(responce)
+
+    describe ".getSource", ->
+      it "array", ->
+        source = Entries.getSource(obj)
         source.then (data)->
-          expect(data).toEqual(ans)
+          expect(data).toEqual(obj)
+
+      it "url:json", ->
+        source = Entries.getSource("data/entries.json")
+        waitsFor( =>
+          source.state() == "resolved"
+        , "timeout", 1000 )
+        runs =>
+          source.then (data)=>
+            expect(data).toEqual(obj)
+
+      it "url:xml", ->
+        source = Entries.getSource("data/entries.xml")
+        waitsFor( =>
+          source.state() == "resolved"
+        , "timeout", 1000 )
+        runs =>
+          source.then (data)->
+            expect(data).toEqual(obj)
   #}}}
   describe ".HtmlFactory", -> #{{{
     obj = template = factory = HtmlFactory = undefined
