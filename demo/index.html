@@ -3,41 +3,49 @@
 
 <head>
 <meta charset="UTF-8">
+<link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.1/css/bootstrap.min.css">
 <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false"></script>
 <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
 <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.4/underscore-min.js"></script>
 <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.0.0/backbone-min.js"></script>
 <script type="text/javascript" src="../src/maplist.js"></script>
+<style>
+#genre li, #list li{
+  list-style:none;
+}
+</style>
 </head>
 
 <body>
+<div class="container">
 
+  <h4>Genre</h4>
+  <ul id="genre" class="row">
+    <li class="span1"><a href="#" data-target-genre="北海道"><span class="label label-warning">北海道</span></a></li>
+    <li class="span1"><a href="#" data-target-genre="東北"><span class="label label-warning">東北</span></a></li>
+    <li class="span1"><a href="#" data-target-genre="関東"><span class="label label-warning">関東</span></a></li>
+    <li class="span1"><a href="#" data-target-genre="信越"><span class="label label-warning">信越</span></a></li>
+    <li class="span1"><a href="#" data-target-genre="北陸"><span class="label label-warning">北陸</span></a></li>
+    <li class="span1"><a href="#" data-target-genre="東海"><span class="label label-warning">東海</span></a></li>
+    <li class="span1"><a href="#" data-target-genre="近畿"><span class="label label-warning">近畿</span></a></li>
+    <li class="span1"><a href="#" data-target-genre="中国"><span class="label label-warning">中国</span></a></li>
+    <li class="span1"><a href="#" data-target-genre="四国"><span class="label label-warning">四国</span></a></li>
+    <li class="span1"><a href="#" data-target-genre="九州"><span class="label label-warning">九州</span></a></li>
+    <li class="span1"><a href="#" data-target-genre="沖縄"><span class="label label-warning">沖縄</span></a></li>
+    <li class="span1"><a href="#" data-target-genre="__all__"><span class="label label-warning">すべて</span></a></li>
+  </ul>
+
+  <h4>Map</h4>
+  <div id="map_canvas" style="width:940px;height:600px;"></div>
+
+  <h4>List</h4>
+  <ul id="list" class="row"> </ul>
+
+</div>
 <script type="text/javascript">
 $(function(){
-  var entries = [ {
-    lat: 36.115135,
-    lng: 137.953,
-    title: "うどん",
-    genre: "kitune",
-    genreName: "きつね",
-    message: "あかいきつね"
-  },{
-    lat: 36.115135,
-    lng: 137.955,
-    title: "そば",
-    genre: "tanuki",
-    genreName: "たぬき",
-    message: "みどりのたぬき"
-  },{
-    lat: 36.115136,
-    lng: 137.954,
-    title: "肉うどん",
-    genre: "kitune",
-    genreName: "きつね",
-    message: "お肉がお得感！"
-  } ];
   var maplist = new MapList({
-    data: entries,
+    data: "../test/data/entries.xml",
     listTemplate: $("#tmpl-list-elem").html(),
     infoTemplate: $("#tmpl-info-window").html()
   });
@@ -45,30 +53,18 @@ $(function(){
 </script>
 <script id="tmpl-info-window" type="text/template">
 <div id="info-window">
-  <h3> <%- title %> </h3>
-  <p>[ <%- genreName %> ] </p>
-<p> <%- message %> </p>
+  <h3> <%- states %> - <%- capitals %> </h3>
+  <p>[ <%- genre %> ] </p>
 </div>
 </script>
 <script id="tmpl-list-elem" type="text/template">
-<li>
-<a href="#" class='open-info'> <%- title %> </a>
-<span>[ <%- genreName %> ] </span>
+<li class="span2">
+  <a href="#" class='open-info'>
+    <span class="label label-info">
+      <%- states %> - <%- capitals %>
+    </span>
+  </a>
 </li>
 </script>
-
-<h4>Genre</h4>
-<ul id="genre">
-  <li><a href="tanuki" data-target-genre="tanuki">たぬき</a></li>
-  <li><a href="kitune" data-target-genre="kitune">きつね</a></li>
-  <li><a href="all" data-target-genre="__all__">すべて</a></li>
-</ul>
-
-<div id="map_canvas" style="width:400px;height:400px;"></div>
-
-<h4>List</h4>
-<ul id="list">
-</ul>
-
 </body>
 </html>
