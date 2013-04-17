@@ -81,7 +81,6 @@ describe "MapList", ->
     beforeEach ->
       maplistArgs = { data: data.entries.object }
 
-    ###
     describe "constructor",-> #{{{
       options = delegateEvents = rebuild = undefined
       beforeEach ->
@@ -293,9 +292,55 @@ describe "MapList", ->
         it "catch args",->
           expect(method.calls[0].args[0]).toBe(obj)
     #}}}
-    ###
+    describe "::build",-> #{{{
+      spy = genreId = undefined
+      beforeEach ->
+        app = new MapList maplistArgs
+        app.entries.select = spy = createSpy("select")
+        genreId = "__all__"
+        app.build(genreId)
 
-  ###
+      it "call entries.select",->
+        expect(spy).toHaveBeenCalled()
+
+      it "call entries.select with genreId",->
+        expect(spy.calls[0].args[0]).toBe(genreId)
+    #}}}
+    describe "::clear",-> #{{{
+      spy = genreId = undefined
+      beforeEach ->
+        app = new MapList maplistArgs
+        app.entries.unselect = spy = createSpy("unselect")
+        app.clear()
+
+      it "call entries.select",->
+        expect(spy).toHaveBeenCalled()
+    #}}}
+    describe "rebuild",-> #{{{
+      genreId = undefined
+      beforeEach ->
+        app = new MapList maplistArgs
+        app.clear = createSpy("clear")
+        app.build = createSpy("build")
+        genreId = "__all__"
+        app.rebuild(genreId)
+
+      it "call clear",->
+        expect(app.clear).toHaveBeenCalled()
+
+      it "call build",->
+        expect(app.build).toHaveBeenCalled()
+
+      it "call build with genreId",->
+        expect(app.build.calls[0].args[0]).toBe(genreId)
+    #}}}
+    describe "getMap",-> #{{{
+      beforeEach ->
+        app = new MapList maplistArgs
+
+      it "return map",->
+        expect(app.getMap()).toBe(app.mapView.map)
+    #}}}
   describe ".Parser", -> #{{{
     Parser = undefined
 
@@ -957,4 +1002,3 @@ describe "MapList", ->
       it "fire change:genre event with 1:genreId",->
         expect(spy.calls[0].args[1]).toEqual("foo")
   #}}}
-  ###
