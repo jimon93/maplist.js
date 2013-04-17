@@ -310,17 +310,54 @@
       };
     });
     return describe("= APP", function() {
-      var app;
+      var app, maplistArgs;
 
-      app = void 0;
+      app = maplistArgs = void 0;
       return beforeEach(function() {
-        return app = new MapList({
+        return maplistArgs = {
           data: data.entries.object
-        });
+        };
       });
       /*
+      describe "constructor",-> #{{{
+        options = delegateEvents = rebuild = undefined
+        beforeEach ->
+          options = MapList::makeOptions()
+          delegateEvents = createSpy("delegateEvents")
+          rebuild = createSpy("rebuild")
+          class MyMapList extends MapList
+            makeOptions: createSpy("makeOptions").andReturn(options)
+            delegateEvents : delegateEvents
+            rebuild: rebuild
+          app = new MyMapList { data: data.entries.object }
+      
+        it "check options",->
+          expect(app.options).toBe(options)
+      
+        it "check mapView",->
+          expect(app.mapView instanceof MapList.MapView).toBeTruthy()
+      
+        it "check listView", ->
+          expect(app.listView instanceof MapList.ListView).toBeTruthy()
+      
+        it "check genresView", ->
+          expect(app.genresView instanceof MapList.GenresView).toBeTruthy()
+      
+        it "check entries", ->
+          expect(app.entries instanceof MapList.Entries).toBeTruthy()
+      
+        it "called delegateEvents",->
+          expect(delegateEvents).toHaveBeenCalled()
+      
+        it "called rebuild",->
+          expect(rebuild).toHaveBeenCalled()
+      
+        it "called rebuild with firstGenre",->
+          expect(rebuild.calls[0].args[0]).toBe(app.options.firstGenre)
+      #}}}
       describe "::makeOptions",-> #{{{
         beforeEach ->
+          app = new MapList maplistArgs
           spyOn(app,"extendDefaultOptions").andCallThrough()
           app.extendOptions = createSpy("extendOptions")
       
@@ -403,6 +440,7 @@
       describe "::delegateEvents",-> #{{{
         method = obj = obj2 = undefined
         beforeEach ->
+          app = new MapList maplistArgs
           app.entries.off()
           app.mapView.off()
           app.genresView.off()
