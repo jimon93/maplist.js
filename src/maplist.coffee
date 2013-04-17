@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.2.15
+MapList JavaScript Library v1.2.17
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -41,8 +41,6 @@ do ($=jQuery,global=this)->
     #}}}
     constructor:(options)->
       _.bindAll(@)
-      for name, func of @eventMethods
-        @eventMethods[name] = _.bind(func,@)
 
       @options = @makeOptions(options)
       @mapView = new MapView(@options)
@@ -69,33 +67,33 @@ do ($=jQuery,global=this)->
       _.extend( center, options, templates )
 
     delegateEvents:->
-      @entries.on    "select"       , @eventMethods.entries_select
-      @entries.on    "unselect"     , @eventMethods.entries_unselect
-      @entries.on    "openinfo"     , @eventMethods.openInfo
-      @mapView.on    "openedInfo"   , @eventMethods.openedInfo
-      @entries.on    "closeinfo"    , @eventMethods.closeInfo
-      @genresView.on "change:genre" , @eventMethods.changeGenre
+      @entries.on    "select"       , @entries_select
+      @entries.on    "unselect"     , @entries_unselect
+      @entries.on    "openinfo"     , @openInfo
+      @mapView.on    "openedInfo"   , @openedInfo
+      @entries.on    "closeinfo"    , @closeInfo
+      @genresView.on "change:genre" , @changeGenre
 
-    eventMethods:{
-      entries_select: (entries)->
-        @mapView .build(entries)
-        @listView.build(entries)
+    # eventMethods {{{
+    entries_select: (entries)->
+      @mapView .build(entries)
+      @listView.build(entries)
 
-      entries_unselect: (entries)->
-        @mapView .clear(entries)
-        @listView.clear(entries)
+    entries_unselect: (entries)->
+      @mapView .clear(entries)
+      @listView.clear(entries)
 
-      openInfo: (entry)->
-        @mapView.openInfo(entry.info, entry.marker)
+    openInfo: (entry)->
+      @mapView.openInfo(entry.info, entry.marker)
 
-      openedInfo: (info,marker)->
+    openedInfo: (info,marker)->
 
-      closeInfo: (entry)->
-        @mapView.closeOpenedInfo()
+    closeInfo: (entry)->
+      @mapView.closeOpenedInfo()
 
-      changeGenre: (genreId)->
-        @rebuild(genreId)
-    }
+    changeGenre: (genreId)->
+      @rebuild(genreId)
+    #}}}
 
     # 地図とリストを構築する
     build:(genreId)->

@@ -480,19 +480,19 @@
           app.entries.off();
           app.mapView.off();
           app.genresView.off();
-          app.eventMethods = {
+          _.extend(app, {
             entries_select: createSpy("entries_select"),
             entries_unselect: createSpy("entries_unselect"),
             openInfo: createSpy("openInfo"),
             openedInfo: createSpy("openedInfo"),
             closeInfo: createSpy("closeInfo"),
             changeGenre: createSpy("changeGenre")
-          };
+          });
           return app.delegateEvents();
         });
         describe("on select event", function() {
           beforeEach(function() {
-            method = app.eventMethods.entries_select;
+            method = app.entries_select;
             obj = [];
             return app.entries.trigger("select", obj);
           });
@@ -505,7 +505,7 @@
         });
         describe("on unselect event", function() {
           beforeEach(function() {
-            method = app.eventMethods.entries_unselect;
+            method = app.entries_unselect;
             obj = [];
             return app.entries.trigger("unselect", obj);
           });
@@ -518,7 +518,7 @@
         });
         describe("on openinfo event", function() {
           beforeEach(function() {
-            method = app.eventMethods.openInfo;
+            method = app.openInfo;
             obj = [];
             return app.entries.trigger("openinfo", obj);
           });
@@ -531,7 +531,7 @@
         });
         describe("on openedInfo event", function() {
           beforeEach(function() {
-            method = app.eventMethods.openedInfo;
+            method = app.openedInfo;
             obj = [];
             obj2 = {};
             return app.mapView.trigger("openedInfo", obj, obj2);
@@ -548,7 +548,7 @@
         });
         describe("on closeinfo event", function() {
           beforeEach(function() {
-            method = app.eventMethods.closeInfo;
+            method = app.closeInfo;
             obj = [];
             return app.entries.trigger("closeinfo", obj);
           });
@@ -561,7 +561,7 @@
         });
         return describe("on change:genre event", function() {
           beforeEach(function() {
-            method = app.eventMethods.changeGenre;
+            method = app.changeGenre;
             obj = [];
             return app.genresView.trigger("change:genre", obj);
           });
@@ -570,6 +570,125 @@
           });
           return it("catch args", function() {
             return expect(method.calls[0].args[0]).toBe(obj);
+          });
+        });
+      });
+      describe("eventMethods", function() {
+        beforeEach(function() {
+          return app = new MapList(maplistArgs);
+        });
+        describe(".entries_select", function() {
+          var entries, spy1, spy2;
+
+          entries = spy1 = spy2 = void 0;
+          beforeEach(function() {
+            app.mapView = {
+              build: spy1 = createSpy("mapView:build")
+            };
+            app.listView = {
+              build: spy2 = createSpy("listView:build")
+            };
+            return app.entries_select(entries = []);
+          });
+          it("call mapView.build", function() {
+            return expect(spy1).toHaveBeenCalled();
+          });
+          it("call mapView.build with entries", function() {
+            return expect(spy1.calls[0].args[0]).toBe(entries);
+          });
+          it("call mapView.build", function() {
+            return expect(spy2).toHaveBeenCalled();
+          });
+          return it("call mapView.build with entries", function() {
+            return expect(spy2.calls[0].args[0]).toBe(entries);
+          });
+        });
+        describe(".entries_unselect", function() {
+          var entries, spy1, spy2;
+
+          spy1 = spy2 = entries = void 0;
+          beforeEach(function() {
+            var method;
+
+            method = app.entries_unselect;
+            app.mapView = {
+              clear: spy1 = createSpy("mapView:clear")
+            };
+            app.listView = {
+              clear: spy2 = createSpy("listView:clear")
+            };
+            return method(entries = []);
+          });
+          it("call mapView.build", function() {
+            return expect(spy1).toHaveBeenCalled();
+          });
+          it("call mapView.build with entries", function() {
+            return expect(spy1.calls[0].args[0]).toBe(entries);
+          });
+          it("call mapView.build", function() {
+            return expect(spy2).toHaveBeenCalled();
+          });
+          return it("call mapView.build with entries", function() {
+            return expect(spy2.calls[0].args[0]).toBe(entries);
+          });
+        });
+        describe(".openInfo", function() {
+          var entry, spy1;
+
+          spy1 = entry = void 0;
+          beforeEach(function() {
+            var method;
+
+            method = app.openInfo;
+            app.mapView = {
+              openInfo: spy1 = createSpy("mapView:openInfo")
+            };
+            entry = {
+              info: "info",
+              marker: "marker"
+            };
+            return method(entry);
+          });
+          it("call mapView.build", function() {
+            return expect(spy1).toHaveBeenCalled();
+          });
+          it("call mapView.build with args1", function() {
+            return expect(spy1.calls[0].args[0]).toBe(entry.info);
+          });
+          return it("call mapView.build with args2", function() {
+            return expect(spy1.calls[0].args[1]).toBe(entry.marker);
+          });
+        });
+        describe(".openedInfo", function() {});
+        describe(".closeInfo", function() {
+          var entry, spy1;
+
+          spy1 = entry = void 0;
+          beforeEach(function() {
+            app.mapView = {
+              closeOpenedInfo: spy1 = createSpy("mapView:openInfo")
+            };
+            entry = {};
+            return app.closeInfo(entry);
+          });
+          return it("call mapView.build", function() {
+            return expect(spy1).toHaveBeenCalled();
+          });
+        });
+        return describe(".changeGenre", function() {
+          var genreId, spy1;
+
+          spy1 = genreId = void 0;
+          beforeEach(function() {
+            app.rebuild = spy1 = createSpy("mapView:openInfo");
+            genreId = "foo";
+            return app.changeGenre(genreId);
+          });
+          it("call mapView.build", function() {
+            return expect(spy1).toHaveBeenCalled();
+          });
+          return it("call mapView.build with entries", function() {
+            return expect(spy1.calls[0].args[0]).toBe(genreId);
           });
         });
       });

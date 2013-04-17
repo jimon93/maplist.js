@@ -206,7 +206,7 @@ describe "MapList", ->
         app.entries.off()
         app.mapView.off()
         app.genresView.off()
-        app.eventMethods = {
+        _.extend app, {
           entries_select   : createSpy("entries_select")
           entries_unselect : createSpy("entries_unselect")
           openInfo         : createSpy("openInfo")
@@ -218,7 +218,7 @@ describe "MapList", ->
 
       describe "on select event",->
         beforeEach ->
-          method = app.eventMethods.entries_select
+          method = app.entries_select
           obj = []
           app.entries.trigger "select", obj
 
@@ -230,7 +230,7 @@ describe "MapList", ->
 
       describe "on unselect event",->
         beforeEach ->
-          method = app.eventMethods.entries_unselect
+          method = app.entries_unselect
           obj = []
           app.entries.trigger "unselect", obj
 
@@ -242,7 +242,7 @@ describe "MapList", ->
 
       describe "on openinfo event",->
         beforeEach ->
-          method = app.eventMethods.openInfo
+          method = app.openInfo
           obj = []
           app.entries.trigger "openinfo", obj
 
@@ -254,7 +254,7 @@ describe "MapList", ->
 
       describe "on openedInfo event",->
         beforeEach ->
-          method = app.eventMethods.openedInfo
+          method = app.openedInfo
           obj = []
           obj2 = {}
           app.mapView.trigger "openedInfo", obj, obj2
@@ -270,7 +270,7 @@ describe "MapList", ->
 
       describe "on closeinfo event",->
         beforeEach ->
-          method = app.eventMethods.closeInfo
+          method = app.closeInfo
           obj = []
           app.entries.trigger "closeinfo", obj
 
@@ -282,7 +282,7 @@ describe "MapList", ->
 
       describe "on change:genre event",->
         beforeEach ->
-          method = app.eventMethods.changeGenre
+          method = app.changeGenre
           obj = []
           app.genresView.trigger "change:genre", obj
 
@@ -291,6 +291,90 @@ describe "MapList", ->
 
         it "catch args",->
           expect(method.calls[0].args[0]).toBe(obj)
+    #}}}
+    describe "eventMethods",-> #{{{
+      beforeEach ->
+        app = new MapList maplistArgs
+
+      describe ".entries_select",->
+        entries = spy1 = spy2= undefined
+        beforeEach ->
+          app.mapView  = { build : spy1 = createSpy("mapView:build") }
+          app.listView = { build : spy2 = createSpy("listView:build") }
+          app.entries_select(entries = [])
+
+        it "call mapView.build",->
+          expect(spy1).toHaveBeenCalled()
+
+        it "call mapView.build with entries",->
+          expect(spy1.calls[0].args[0]).toBe(entries)
+
+        it "call mapView.build",->
+          expect(spy2).toHaveBeenCalled()
+
+        it "call mapView.build with entries",->
+          expect(spy2.calls[0].args[0]).toBe(entries)
+
+      describe ".entries_unselect",->
+        spy1 = spy2 = entries = undefined
+        beforeEach ->
+          method = app.entries_unselect
+          app.mapView  = { clear : spy1 = createSpy("mapView:clear") }
+          app.listView = { clear : spy2 = createSpy("listView:clear") }
+          method(entries = [])
+
+        it "call mapView.build",->
+          expect(spy1).toHaveBeenCalled()
+
+        it "call mapView.build with entries",->
+          expect(spy1.calls[0].args[0]).toBe(entries)
+
+        it "call mapView.build",->
+          expect(spy2).toHaveBeenCalled()
+
+        it "call mapView.build with entries",->
+          expect(spy2.calls[0].args[0]).toBe(entries)
+
+      describe ".openInfo",->
+        spy1 = entry = undefined
+        beforeEach ->
+          method = app.openInfo
+          app.mapView  = { openInfo : spy1 = createSpy("mapView:openInfo") }
+          entry = { info : "info", marker: "marker" }
+          method(entry)
+
+        it "call mapView.build",->
+          expect(spy1).toHaveBeenCalled()
+
+        it "call mapView.build with args1",->
+          expect(spy1.calls[0].args[0]).toBe(entry.info)
+
+        it "call mapView.build with args2",->
+          expect(spy1.calls[0].args[1]).toBe(entry.marker)
+
+      describe ".openedInfo",->
+      describe ".closeInfo",->
+        spy1 = entry = undefined
+        beforeEach ->
+          app.mapView  = { closeOpenedInfo : spy1 = createSpy("mapView:openInfo") }
+          entry = {}
+          app.closeInfo(entry)
+
+        it "call mapView.build",->
+          expect(spy1).toHaveBeenCalled()
+
+      describe ".changeGenre",->
+        spy1 = genreId = undefined
+        beforeEach ->
+          app.rebuild = spy1 = createSpy("mapView:openInfo")
+          genreId = "foo"
+          app.changeGenre(genreId)
+
+        it "call mapView.build",->
+          expect(spy1).toHaveBeenCalled()
+
+        it "call mapView.build with entries",->
+          expect(spy1.calls[0].args[0]).toBe(genreId)
     #}}}
     describe "::build",-> #{{{
       spy = genreId = undefined
