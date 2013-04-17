@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.2.14
+MapList JavaScript Library v1.2.15
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -12,7 +12,7 @@ MIT License
 do ($=jQuery,global=this)->
   log = _.bind( console.log, console )
   class App #{{{
-    default: => { #{{{
+    default: -> { #{{{
       lat              : 35
       lng              : 135
       #center          : null #new google.maps.LatLng( 35, 135 )
@@ -41,6 +41,9 @@ do ($=jQuery,global=this)->
     #}}}
     constructor:(options)->
       _.bindAll(@)
+      for name, func of @eventMethods
+        @eventMethods[name] = _.bind(func,@)
+
       @options = @makeOptions(options)
       @mapView = new MapView(@options)
       @listView = new ListView(@options)
@@ -52,10 +55,13 @@ do ($=jQuery,global=this)->
         @rebuild( @options.firstGenre )
 
     makeOptions:(options)->
+      @extendOptions @extendDefaultOptions options
+
+    extendDefaultOptions:(options = {})->
       options = _.extend( {}, _(@).result('default'), options )
-      center = {
-        center : new google.maps.LatLng( options.lat, options.lng )
-      }
+
+    extendOptions:(options)->
+      center = { center : new google.maps.LatLng( options.lat, options.lng ) }
       templates = {
         infoHtmlFactory : new HtmlFactory(options.templateEngine, options.infoTemplate)
         listHtmlFactory : new HtmlFactory(options.templateEngine, options.listTemplate)
@@ -63,22 +69,33 @@ do ($=jQuery,global=this)->
       _.extend( center, options, templates )
 
     delegateEvents:->
-      @entries.on "select", (entries)=>
+      @entries.on    "select"       , @eventMethods.entries_select
+      @entries.on    "unselect"     , @eventMethods.entries_unselect
+      @entries.on    "openinfo"     , @eventMethods.openInfo
+      @mapView.on    "openedInfo"   , @eventMethods.openedInfo
+      @entries.on    "closeinfo"    , @eventMethods.closeInfo
+      @genresView.on "change:genre" , @eventMethods.changeGenre
+
+    eventMethods:{
+      entries_select: (entries)->
         @mapView .build(entries)
         @listView.build(entries)
 
-      @entries.on "unselect", (entries)=>
+      entries_unselect: (entries)->
         @mapView .clear(entries)
         @listView.clear(entries)
 
-      @entries.on "openinfo", (entry)=>
+      openInfo: (entry)->
         @mapView.openInfo(entry.info, entry.marker)
 
-      @entries.on "closeinfo", (entry)=>
+      openedInfo: (info,marker)->
+
+      closeInfo: (entry)->
         @mapView.closeOpenedInfo()
 
-      @genresView.on "change:genre", (genreId)=>
+      changeGenre: (genreId)->
         @rebuild(genreId)
+    }
 
     # 地図とリストを構築する
     build:(genreId)->
@@ -318,7 +335,7 @@ do ($=jQuery,global=this)->
       @closeOpenedInfo()
       info.open(@map,marker)
       @openedInfo = info
-      @trigger('infoOpened', info, marker)
+      @trigger('openedInfo', info, marker)
 
     closeOpenedInfo:->
       if @openedInfo?
@@ -327,6 +344,7 @@ do ($=jQuery,global=this)->
   #}}}
   class ListView extends Backbone.View #{{{
     initialize:->
+      _.bindAll(@)
       @$el = $(@options.listSelector)
       @$el.on( "click", @options.openInfoSelector, @openInfo )
 
@@ -350,10 +368,9 @@ do ($=jQuery,global=this)->
       @$el = $(@options.genresSelector)
       @$el.on( "click", @options.genreSelector, @selectGenre )
 
-    selectGenre:(e, genreId)->
-      unless genreId?
-        $target = $(e.currentTarget)
-        genreId = $target.data( @options.genreDataName )
+    selectGenre:(e)->
+      $target = $(e.currentTarget)
+      genreId = $target.data( @options.genreDataName )
       @trigger("change:genre",genreId)
       return false
   #}}}

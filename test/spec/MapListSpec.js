@@ -309,858 +309,856 @@
         }
       };
     });
-    describe(".Parser", function() {
-      var Parser;
+    return describe("= APP", function() {
+      var app;
 
-      Parser = void 0;
-      beforeEach(function() {
-        return Parser = MapList.Parser;
-      });
-      it("第1引数(parser)を渡すと，@parserにその値が格納される", function() {
-        var obj, parser;
-
-        obj = {};
-        parser = new Parser(obj);
-        return expect(parser.parser).toBe(obj);
-      });
-      it("parserがない場合，デフォルトのものを使う", function() {
-        var parser;
-
-        parser = new Parser;
-        return expect(parser.parser).toBe(Parser.defaultParser);
-      });
-      describe(".execute", function() {
-        it("parserに関数を渡した場合，executeでその関数を使う", function() {
-          var identity, parser;
-
-          identity = function(val) {
-            return _(val).map(function(v) {
-              return v - 1;
-            });
-          };
-          parser = new Parser(identity);
-          data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-          return expect(parser.execute(data)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+      app = void 0;
+      return beforeEach(function() {
+        return app = new MapList({
+          data: data.entries.object
         });
-        it("parserにObjectを渡した場合，Objectのexecuteメソッドを使う", function() {
-          var myPerser, parser;
+      });
+      /*
+      describe "::makeOptions",-> #{{{
+        beforeEach ->
+          spyOn(app,"extendDefaultOptions").andCallThrough()
+          app.extendOptions = createSpy("extendOptions")
+      
+        it "call @extendDefaultOptions",->
+          app.makeOptions({})
+          expect(app.extendDefaultOptions).toHaveBeenCalled()
+      
+        it "call @extendOptions",->
+          app.makeOptions({})
+          expect(app.extendOptions).toHaveBeenCalled()
+      
+        it "compose extendDefaultOptions and extendOptions",->
+          obj = app.extendDefaultOptions()
+          app.extendDefaultOptions = createSpy("extendDefaultOptions").andReturn(obj)
+          app.makeOptions({})
+          expect(app.extendOptions.calls[0].args[0]).toBe(obj)
+      #}}}
+      describe "::extendDefaultOptions",-> #{{{
+        defaultData = undefined
+        beforeEach ->
+          defaultData = _(app).result('default')
+      
+        it "return default value without arguments",->
+          expect(app.extendDefaultOptions()).toEqual(defaultData)
+      
+        it "return default value with {}",->
+          expect(app.extendDefaultOptions({})).toEqual(defaultData)
+      
+        it "return value is not default",->
+          expect(app.extendDefaultOptions()).not.toBe(defaultData)
+      
+        it "return value default + options",->
+          options = { lat: 0, lng: 0 }
+          answer = _.extend {}, defaultData, options
+          expect(app.extendDefaultOptions(options)).toEqual(answer)
+      #}}}
+      describe "::extendOptions",-> #{{{
+        options = res = undefined
+        beforeEach ->
+          options = {
+            lat: 35
+            lng: 135
+            templateEngine: _.template
+            infoTemplate: "infoTemplate"
+            listTemplate: "listTemplate"
+          }
+          res = MapList::extendOptions(options)
+      
+      
+        it "return value is not options",->
+          expect(res).not.toEqual(options)
+      
+        it "has center object",->
+          expect(res.center instanceof google.maps.LatLng).toBeTruthy()
+      
+        it "check lat",->
+          expect(res.center.lat()).toBe(options.lat)
+      
+        it "check lng",->
+          expect(res.center.lng()).toBe(options.lng)
+      
+        it "has infoHtmlFactory object",->
+          expect(res.infoHtmlFactory instanceof MapList.HtmlFactory).toBeTruthy()
+      
+        it "check infoHtmlFactory.templateEngine",->
+          expect(res.infoHtmlFactory.templateEngine).toBe(options.templateEngine)
+      
+        it "check infoHtmlFactory.template",->
+          expect(res.infoHtmlFactory.template).toBe(options.infoTemplate)
+      
+        it "has listHtmlFactory object",->
+          expect(res.listHtmlFactory instanceof MapList.HtmlFactory).toBeTruthy()
+      
+        it "check listHtmlFactory.templateEngine",->
+          expect(res.listHtmlFactory.templateEngine).toBe(options.templateEngine)
+      
+        it "check listHtmlFactory.template",->
+          expect(res.listHtmlFactory.template).toBe(options.listTemplate)
+      #}}}
+      describe "::delegateEvents",-> #{{{
+        method = obj = obj2 = undefined
+        beforeEach ->
+          app.entries.off()
+          app.mapView.off()
+          app.genresView.off()
+          app.eventMethods = {
+            entries_select   : createSpy("entries_select")
+            entries_unselect : createSpy("entries_unselect")
+            openInfo         : createSpy("openInfo")
+            openedInfo       : createSpy("openedInfo")
+            closeInfo        : createSpy("closeInfo")
+            changeGenre      : createSpy("changeGenre")
+          }
+          app.delegateEvents()
+      
+        describe "on select event",->
+          beforeEach ->
+            method = app.eventMethods.entries_select
+            obj = []
+            app.entries.trigger "select", obj
+      
+          it "called",->
+            expect(method).toHaveBeenCalled()
+      
+          it "catch args",->
+            expect(method.calls[0].args[0]).toBe(obj)
+      
+        describe "on unselect event",->
+          beforeEach ->
+            method = app.eventMethods.entries_unselect
+            obj = []
+            app.entries.trigger "unselect", obj
+      
+          it "called",->
+            expect(method).toHaveBeenCalled()
+      
+          it "catch args",->
+            expect(method.calls[0].args[0]).toBe(obj)
+      
+        describe "on openinfo event",->
+          beforeEach ->
+            method = app.eventMethods.openInfo
+            obj = []
+            app.entries.trigger "openinfo", obj
+      
+          it "called",->
+            expect(method).toHaveBeenCalled()
+      
+          it "catch args",->
+            expect(method.calls[0].args[0]).toBe(obj)
+      
+        describe "on openedInfo event",->
+          beforeEach ->
+            method = app.eventMethods.openedInfo
+            obj = []
+            obj2 = {}
+            app.mapView.trigger "openedInfo", obj, obj2
+      
+          it "called",->
+            expect(method).toHaveBeenCalled()
+      
+          it "catch args[0]",->
+            expect(method.calls[0].args[0]).toBe(obj)
+      
+          it "catch args[1]",->
+            expect(method.calls[0].args[1]).toBe(obj2)
+      
+        describe "on closeinfo event",->
+          beforeEach ->
+            method = app.eventMethods.closeInfo
+            obj = []
+            app.entries.trigger "closeinfo", obj
+      
+          it "called",->
+            expect(method).toHaveBeenCalled()
+      
+          it "catch args",->
+            expect(method.calls[0].args[0]).toBe(obj)
+      
+        describe "on change:genre event",->
+          beforeEach ->
+            method = app.eventMethods.changeGenre
+            obj = []
+            app.genresView.trigger "change:genre", obj
+      
+          it "called",->
+            expect(method).toHaveBeenCalled()
+      
+          it "catch args",->
+            expect(method.calls[0].args[0]).toBe(obj)
+      #}}}
+      */
 
+    });
+    /*
+    describe ".Parser", -> #{{{
+      Parser = undefined
+    
+      beforeEach ->
+        Parser = MapList.Parser
+    
+      it "第1引数(parser)を渡すと，@parserにその値が格納される", ->
+        obj = {}
+        parser = new Parser(obj)
+        expect(parser.parser).toBe(obj)
+    
+      it "parserがない場合，デフォルトのものを使う", ->
+        parser = new Parser
+        expect(parser.parser).toBe(Parser.defaultParser)
+    
+      describe ".execute", ->
+        it "parserに関数を渡した場合，executeでその関数を使う", ->
+          identity = (val) -> _(val).map (v)->v-1
+          parser = new Parser(identity)
+          data = [1..10]
+          expect(parser.execute(data)).toEqual([0..9])
+    
+        it "parserにObjectを渡した場合，Objectのexecuteメソッドを使う", ->
           myPerser = {
-            execute: function(val) {
-              return _(val).map(function(v) {
-                return v - 1;
-              });
-            }
-          };
-          parser = new Parser(myPerser);
-          data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-          return expect(parser.execute(data)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
-        });
-        return it("上記2つ以外のparserの場合, Errorを投げる", function() {
-          var myPerser, parser;
-
-          myPerser = {};
-          parser = new Parser(myPerser);
-          data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-          return expect(function() {
-            return parser.execute(data);
-          }).toThrow("parser is function or on object with the execute method");
-        });
-      });
-      describe(".defaultParser", function() {
-        it("arguments is array", function() {
-          var _i, _results;
-
-          data = (function() {
-            _results = [];
-            for (_i = 1; _i <= 100; _i++){ _results.push(_i); }
-            return _results;
-          }).apply(this);
-          return expect(Parser.defaultParser(data)).toEqual(data);
-        });
-        return it("arguments is xml", function() {
-          return expect(Parser.defaultParser(data.entries.xml)).toEqual(data.entries.object);
-        });
-      });
-      describe(".makeIcon", function() {
-        it("with object", function() {
-          var dst, src;
-
+            execute : (val) -> _(val).map (v)->v-1
+          }
+          parser = new Parser(myPerser)
+          data = [1..10]
+          expect(parser.execute(data)).toEqual([0..9])
+    
+        it "上記2つ以外のparserの場合, Errorを投げる",->
+          myPerser = { }
+          parser = new Parser(myPerser)
+          data = [1..10]
+          expect(-> parser.execute(data))
+            .toThrow("parser is function or on object with the execute method")
+    
+      describe ".defaultParser", -> #{{{
+    
+        it "arguments is array", ->
+          data = [1..100]
+          expect(Parser.defaultParser(data)).toEqual(data)
+    
+        it "arguments is xml", ->
+          expect(Parser.defaultParser(data.entries.xml)).toEqual(data.entries.object)
+      #}}}
+      describe ".makeIcon", ->
+        it "with object", ->
           src = {
-            url: "foo.png",
-            anchor: [10, 20],
-            origin: [44, 42],
-            size: [55, 55],
-            scaledSize: [1, 1]
-          };
+            url: "foo.png"
+            anchor:[10,20]
+            origin:[44,42]
+            size:[55,55]
+            scaledSize:[1,1]
+          }
           dst = {
-            url: "foo.png",
-            anchor: new google.maps.Point(10, 20),
-            origin: new google.maps.Point(44, 42),
-            size: new google.maps.Size(55, 55),
-            scaledSize: new google.maps.Size(1, 1)
-          };
-          return expect(Parser.makeIcon(src)).toEqual(dst);
-        });
-        return it("with string", function() {
-          var dst, src;
-
-          src = "foo.png";
-          dst = "foo.png";
-          return expect(Parser.makeIcon(src)).toEqual(dst);
-        });
-      });
-      describe("finallyParser", function() {
-        it("with icon data", function() {
-          var dst, src;
-
+            url: "foo.png"
+            anchor: new google.maps.Point(10,20)
+            origin: new google.maps.Point(44,42)
+            size: new google.maps.Size(55,55)
+            scaledSize: new google.maps.Size(1,1)
+          }
+    
+          expect(Parser.makeIcon(src)).toEqual(dst)
+    
+        it "with string", ->
+          src = "foo.png"
+          dst = "foo.png"
+          expect(Parser.makeIcon(src)).toEqual(dst)
+    
+      describe "finallyParser", ->
+        it "with icon data", ->
           src = {
-            name: "hoge",
-            icon: {
-              url: "foo.png",
-              anchor: [10, 20],
-              origin: [44, 42],
-              size: [55, 55],
-              scaledSize: [1, 1]
-            },
-            shadow: {
-              url: "foo.png",
-              anchor: [10, 20],
-              origin: [44, 42],
-              size: [55, 55],
-              scaledSize: [1, 1]
+            name : "hoge"
+            icon :{
+              url: "foo.png"
+              anchor:[10,20]
+              origin:[44,42]
+              size:[55,55]
+              scaledSize:[1,1]
             }
-          };
+            shadow :{
+              url: "foo.png"
+              anchor:[10,20]
+              origin:[44,42]
+              size:[55,55]
+              scaledSize:[1,1]
+            }
+          }
           dst = {
-            name: "hoge",
-            icon: {
-              url: "foo.png",
-              anchor: new google.maps.Point(10, 20),
-              origin: new google.maps.Point(44, 42),
-              size: new google.maps.Size(55, 55),
-              scaledSize: new google.maps.Size(1, 1)
-            },
-            shadow: {
-              url: "foo.png",
-              anchor: new google.maps.Point(10, 20),
-              origin: new google.maps.Point(44, 42),
-              size: new google.maps.Size(55, 55),
-              scaledSize: new google.maps.Size(1, 1)
+            name : "hoge"
+            icon :{
+              url: "foo.png"
+              anchor: new google.maps.Point(10,20)
+              origin: new google.maps.Point(44,42)
+              size: new google.maps.Size(55,55)
+              scaledSize: new google.maps.Size(1,1)
             }
-          };
-          return expect(Parser.finallyParser(src)).toEqual(dst);
-        });
-        return it("no icon data", function() {
-          var dst, src;
-
+            shadow :{
+              url: "foo.png"
+              anchor: new google.maps.Point(10,20)
+              origin: new google.maps.Point(44,42)
+              size: new google.maps.Size(55,55)
+              scaledSize: new google.maps.Size(1,1)
+            }
+          }
+          expect(Parser.finallyParser(src)).toEqual(dst)
+    
+        it "no icon data", ->
           src = {
-            name: "hoge"
-          };
+            name : "hoge"
+          }
           dst = {
-            name: "hoge"
-          };
-          return expect(Parser.finallyParser(src)).toEqual(dst);
-        });
-      });
-      describe(".XMLParser", function() {
-        var parser, xml;
-
-        parser = void 0;
-        xml = void 0;
-        beforeEach(function() {
-          parser = new Parser.XMLParser;
-          return xml = $.parseXML("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<places>\n  <genre id=\"fruits\" name=\"フルーツ\" icon=\"/fruits.png\">\n    <place latitude=\"123\" longitude=\"321\" icon=\"/apple.png\">\n      <name>A</name>\n      <longName>Apple</longName>\n    </place>\n    <place latitude=\"111\" longitude=\"222\">\n      <name>B</name>\n      <longName>Banana</longName>\n    </place>\n  </genre>\n</places>");
-        });
-        it(".getAttribute", function() {
-          var $place, ans;
-
-          $place = $("place", xml).eq(0);
+            name : "hoge"
+          }
+          expect(Parser.finallyParser(src)).toEqual(dst)
+    
+      describe ".XMLParser", -> #{{{
+        parser = undefined
+        xml = undefined
+        beforeEach ->
+          parser = new Parser.XMLParser
+          xml = $.parseXML """
+          <?xml version="1.0" encoding="UTF-8"?>
+          <places>
+            <genre id="fruits" name="フルーツ" icon="/fruits.png">
+              <place latitude="123" longitude="321" icon="/apple.png">
+                <name>A</name>
+                <longName>Apple</longName>
+              </place>
+              <place latitude="111" longitude="222">
+                <name>B</name>
+                <longName>Banana</longName>
+              </place>
+            </genre>
+          </places>
+          """
+    
+        it ".getAttribute", ->
+          $place = $("place",xml).eq(0)
+          ans = {latitude: "123", longitude: "321", icon: "/apple.png"}
+          expect(parser.getAttribute($place)).toEqual(ans)
+    
+        it ".getContent", ->
+          $place = $("place",xml).eq(0)
+          ans = {name: "A", longname: "Apple"}
+          expect(parser.getContent($place)).toEqual(ans)
+    
+        it ".getGenre", ->
+          $place = $("place",xml).eq(0)
+          ans = {genre: "fruits", genreName: "フルーツ", icon: "/fruits.png"}
+          expect(parser.getGenre($place)).toEqual(ans)
+    
+        it ".makePlace", ->
+          $place = $("place",xml).eq(0)
           ans = {
-            latitude: "123",
-            longitude: "321",
-            icon: "/apple.png"
-          };
-          return expect(parser.getAttribute($place)).toEqual(ans);
-        });
-        it(".getContent", function() {
-          var $place, ans;
-
-          $place = $("place", xml).eq(0);
-          ans = {
-            name: "A",
+            genre: "fruits"
+            genreName: "フルーツ"
+            name: "A"
             longname: "Apple"
-          };
-          return expect(parser.getContent($place)).toEqual(ans);
-        });
-        it(".getGenre", function() {
-          var $place, ans;
-
-          $place = $("place", xml).eq(0);
-          ans = {
-            genre: "fruits",
-            genreName: "フルーツ",
-            icon: "/fruits.png"
-          };
-          return expect(parser.getGenre($place)).toEqual(ans);
-        });
-        it(".makePlace", function() {
-          var $place, ans;
-
-          $place = $("place", xml).eq(0);
-          ans = {
-            genre: "fruits",
-            genreName: "フルーツ",
-            name: "A",
-            longname: "Apple",
-            lat: "123",
-            lng: "321",
+            lat: "123"
+            lng: "321"
             icon: "/apple.png"
-          };
-          return expect(parser.makePlace($place)).toEqual(ans);
-        });
-        return it(".execute", function() {
-          var ans;
-
+          }
+          expect(parser.makePlace($place)).toEqual(ans)
+    
+        it ".execute", ->
           ans = [
             {
-              genre: "fruits",
-              genreName: "フルーツ",
-              name: "A",
-              longname: "Apple",
-              lat: "123",
-              lng: "321",
+              genre: "fruits"
+              genreName: "フルーツ"
+              name: "A"
+              longname: "Apple"
+              lat: "123"
+              lng: "321"
               icon: "/apple.png"
-            }, {
-              genre: "fruits",
-              genreName: "フルーツ",
-              name: "B",
-              longname: "Banana",
-              lat: "111",
-              lng: "222",
+            }
+            {
+              genre: "fruits"
+              genreName: "フルーツ"
+              name: "B"
+              longname: "Banana"
+              lat: "111"
+              lng: "222"
               icon: "/fruits.png"
             }
-          ];
-          return expect(parser.execute(xml)).toEqual(ans);
-        });
-      });
-      return describe(".ObjectParser", function() {
-        var parser;
+          ]
+          expect(parser.execute(xml)).toEqual(ans)
+      #}}}
+      describe ".ObjectParser", -> #{{{
+        parser = undefined
+        beforeEach ->
+          parser = new Parser.ObjectParser
+    
+        it ".execute", ->
+          data = [0..10]
+          expect(parser.execute(data)).toBe(data)
+      #}}}
+    #}}}
+    describe ".Entry", -> #{{{
+      Entry = undefined
+      beforeEach ->
+        Entry = MapList.Entry
+    
+      describe "::makeInfo", ->
+        entry = factory = info = undefined
+        beforeEach ->
+          entry = new Backbone.Model({title:"FooBar"})
+          entry.closeInfo = createSpy("closeInfo")
+          factory = new MapList.HtmlFactory(_.template,"<%- title %>")
+          info = Entry::makeInfo.call(entry,factory)
+    
+        it "instanceof InfoWindow",->
+          expect(info instanceof google.maps.InfoWindow).toBeTruthy()
+    
+        it "make sure that info has content", ->
+          expect(info.getContent()).toEqual("FooBar")
+    
+        it "fires the closeclick event and execute @closeInfo",->
+          google.maps.event.trigger(info,"closeclick")
+          expect(entry.closeInfo).toHaveBeenCalled()
+    
+      describe "::makeMarker",->
+        entry = marker = undefined
+        beforeEach ->
+          entry = new Backbone.Model({lat:35,lng:135,icon:"icon.png",shadow:"shadow.png"})
+          entry.openInfo = createSpy("openInfo")
+          entry.info = true
+          marker = Entry::makeMarker.call(entry)
+    
+        it "instance of Marker",->
+          expect(marker instanceof google.maps.Marker).toBeTruthy()
+    
+        it "position instanceof LatLng",->
+          expect(marker.getPosition() instanceof google.maps.LatLng).toBeTruthy()
+    
+        it "check lat",->
+          expect(marker.getPosition().lat()).toEqual(35)
+    
+        it "check lng",->
+          expect(marker.getPosition().lng()).toEqual(135)
+    
+        it "check icon",->
+          expect(marker.getIcon()).toEqual("icon.png")
+    
+        it "check shadow",->
+          expect(marker.getShadow()).toEqual("shadow.png")
+    
+        it "fires the click event and execute @openInfo",->
+          google.maps.event.trigger(marker,"click")
+          expect(entry.openInfo).toHaveBeenCalled()
+    
+      describe "::makeList", ->
+        entry = factory = res = undefined
+        beforeEach ->
+          entry = new Backbone.Model({title:"FooBar"})
+          factory = new MapList.HtmlFactory(_.template,"<div><%- title %></div>")
+          res = Entry::makeList.call(entry,factory)
+    
+        it "responce itstanceof jQuery",->
+          expect(res instanceof jQuery).toBeTruthy()
+    
+        it "class is '__list'",->
+          expect(res.attr("class")).toEqual("__list")
+    
+        it "have entry",->
+          expect(res.data("entry")).toBe(entry)
+    
+      describe "::isSelect",->
+        # 普通にentry作っちゃってよかったな...
+        it "have not lat & lng",->
+          entry = new Backbone.Model
+          expect(Entry::isSelect.call(entry,"foo")).toBeFalsy()
+    
+        it "genreId equal '__all__", ->
+          entry = new Backbone.Model {lat:35,lng:135}
+          expect(Entry::isSelect.call(entry,"__all__")).toBeTruthy()
+    
+        it "by genreId true", ->
+          entry = new Backbone.Model {lat:35,lng:135,genre:"foo"}
+          expect(Entry::isSelect.call(entry,"foo")).toBeTruthy()
+    
+        it "by genreId false", ->
+          entry = new Backbone.Model {lat:35,lng:135,genre:"foo"}
+          expect(Entry::isSelect.call(entry,"bar")).toBeFalsy()
+    
+      describe "triger check",->
+        entry = undefined
+        beforeEach ->
+          entry = new Backbone.Model
+    
+        it "::openInfo",->
+          entry.on "openinfo",(args)-> expect(args).toBe(entry)
+          Entry::openInfo.call(entry)
+    
+        it "::closeInfo",->
+          entry.on "closeinfo",(args)-> expect(args).toBe(entry)
+          Entry::closeInfo.call(entry)
+    
+      describe "constructor",->
+        attributes = options = entry = undefined
+        beforeEach ->
+          attributes = {}
+          options = MapList::makeOptions {}
+          entry = new Entry(attributes,options)
+    
+        it "instance check info",->
+          expect(entry.info instanceof google.maps.InfoWindow).toBeTruthy()
+    
+        it "instance check marker",->
+          expect(entry.marker instanceof google.maps.Marker).toBeTruthy()
+    
+        it "instance check list",->
+          expect(entry.list instanceof jQuery).toBeTruthy()
+    
+    #}}}
+    describe ".Entries", -> #{{{
+      Entries = undefined
+      obj = options = entries = prop = undefined
+    
+      beforeEach ->
+        Entries = MapList.Entries
+        obj = data.entries.object
+        options = MapList::makeOptions {}
+        entries = new Entries( obj, options )
+        prop = "関東"
+    
+      describe "constructor", ->
+    
+        it "is instanceof Backbone.Collection", ->
+          expect(entries instanceof Backbone.Collection).toBeTruthy()
+    
+        it "attributes check",->
+          expect(entries.toJSON()).toEqual(obj)
+    
+        it "make sure that selectedList is empty",->
+          expect(entries.selectedList).toEqual([])
+    
+      describe "::select",->
+    
+        it "return selected List",->
+          responce = entries.select(prop)
+          answer = _(obj).filter (entry)-> entry.genre == prop
+          expect(_(responce).map (entry)->entry.toJSON()).toEqual(answer)
+    
+        it "chche selected List",->
+          responce = entries.select(prop)
+          expect(entries.selectedList).toBe(responce)
+    
+        it "fires the select event",->
+          spy = createSpy("select")
+          entries.on "select", spy
+          responce = entries.select(prop)
+          expect(spy).toHaveBeenCalled()
+    
+        it "fires the select event with arguments",->
+          spy = createSpy("select")
+          entries.on "select", spy
+          responce = entries.select(prop)
+          expect(spy.calls[0].args[0]).toBe(responce)
+    
+      describe "::unselect",->
+        it "return empty array",->
+          expect(entries.unselect()).toEqual([])
+    
+        it "chche selected List to empty",->
+          entries.select(prop) # make non empty chche
+          expect(entries.unselect()).toBe(entries.selectedList)
+    
+        it "fires the unselect event",->
+          spy = createSpy('unselect')
+          entries.on "unselect", spy
+          responce = entries.unselect()
+          expect(spy).toHaveBeenCalled()
+    
+        it "fires the unselect event with arguments",->
+          selectEntries = entries.select(prop) # make non empty chche
+          spy = createSpy('unselect')
+          entries.on "unselect", spy
+          responce = entries.unselect()
+          expect(spy.calls[0].args[0]).toBe(selectEntries)
+    
+      describe "::selected",->
+        it "return cached selectedList",->
+          responce = entries.select(prop)
+          expect(entries.selected()).toBe(responce)
+    
+      describe ".getSource", ->
+        it "array", ->
+          source = Entries.getSource(obj)
+          source.then (data)->
+            expect(data).toEqual(obj)
+    
+        it "url:json", ->
+          source = Entries.getSource("data/entries.json")
+          waitsFor( =>
+            source.state() == "resolved"
+          , "timeout", 1000 )
+          runs =>
+            source.then (data)=>
+              expect(data).toEqual(obj)
+    
+        it "url:xml", ->
+          source = Entries.getSource("data/entries.xml")
+          waitsFor( =>
+            source.state() == "resolved"
+          , "timeout", 1000 )
+          runs =>
+            source.then (data)->
+              expect(data).toEqual(obj)
+    #}}}
+    describe ".HtmlFactory", -> #{{{
+      obj = template = factory = HtmlFactory = undefined
+      beforeEach ->
+        HtmlFactory = MapList.HtmlFactory
+        obj = { title: "FooBar" }
+    
+      describe "by _.template;",->
+        beforeEach ->
+          template = "<p><%- title %></p>"
+          factory = new HtmlFactory(_.template,template)
+    
+        it "template unchange",->
+          expect(factory.template).toEqual(template)
+    
+        it "getTemplateEngineName", ->
+          expect(factory.getTemplateEngineName()).toEqual("_.template")
+    
+        it "template chche",->
+          backup = _.template
+          spyOn(_,'template').andCallThrough()
+          factory = new HtmlFactory(_.template,template)
+          factory.make(obj)
+          factory.make(obj)
+          expect(_.template.calls.length).toEqual(1)
+          _.template = backup
+    
+        it "make", ->
+          answer = "<p>FooBar</p>"
+          expect(factory.make(obj)).toEqual(answer)
+    
+      describe "by $.tmpl;", ->
+        beforeEach ->
+          template = "<p>${title}</p>"
+          factory = new HtmlFactory($.tmpl,template)
+    
+        it "template wrap",->
+          answer = "<wrap>#{template}</wrap>"
+          expect(factory.template).toEqual(answer)
+    
+        it "getTemplateEngineName", ->
+          expect(factory.getTemplateEngineName()).toEqual("$.tmpl")
+    
+        #it "template nochche",->
+        #  backup = $.tmpl
+        #  spyOn($,'tmpl').andCallThrough()
+        #  factory = new HtmlFactory($.tmpl,template)
+        #  factory.make(obj)
+        #  factory.make(obj)
+        #  expect($.tmpl.calls.length).toEqual(2)
+        #  $.tmpl = backup
+    
+        it "make", ->
+          answer = "<p>FooBar</p>"
+          expect(factory.make(obj)).toEqual(answer)
+    #}}}
+    describe ".MapView",-> #{{{
+      options = mapView = entries = undefined
+      beforeEach ->
+        options = MapList::makeOptions {}
+        mapView = new MapList.MapView(options)
+        entries = new MapList.Entries(data.entries.object,options)
+    
+      afterEach ->
+        $("#map_canvas").children().remove()
+    
+      describe "constructor",->
+        it "instance of Backbone.View",->
+          expect(mapView instanceof Backbone.View).toBeTruthy()
+    
+        it "google maps create",->
+          expect(mapView.map instanceof google.maps.Map).toBeTruthy()
+    
+      describe "::build",->
+        setMap = undefined
+        beforeEach ->
+          setMap = createSpy("setMap")
+          entries.each (entry) -> entry.marker.setMap = setMap
+          mapView.fitBounds = createSpy("fitBounds")
+    
+        it "execute entry.marker.setMap",->
+          mapView.build(entries.models)
+          expect(setMap.calls.length).toEqual(entries.length)
+    
+        it "execute entry.marker.setMap with @map",->
+          mapView.build(entries.models)
+          expect(setMap.calls[0].args[0]).toBe(mapView.map)
+    
+        it "execute @fitBounds if @options.doFit == true",->
+          mapView.build(entries.models)
+          expect(mapView.fitBounds).toHaveBeenCalled()
+    
+        it "execute @fitBounds with entries",->
+          mapView.build(entries.models)
+          expect(mapView.fitBounds.calls[0].args[0]).toBe(entries.models)
+    
+      describe "::fitBounds",->
+        # あとで実装
+    
+      describe "::clear",->
+        setMap = undefined
+        beforeEach ->
+          setMap = createSpy("setMap")
+          entries.each (entry) -> entry.marker.setMap = setMap
+          mapView.closeOpenedInfo = createSpy("closeOpenedInfo")
+          mapView.clear(entries.models)
+    
+        it "execute @closeOpenedInfo",->
+          expect(mapView.closeOpenedInfo).toHaveBeenCalled()
+    
+        it "execute entry.marker.setMap",->
+          expect(setMap.calls.length).toEqual(entries.length)
+    
+        it "execute entry.marker.setMap with null",->
+          expect(setMap.calls[0].args[0]).toBe(null)
+    
+      describe "::openInfo",->
+        info = marker = eventSpy = undefined
+        beforeEach ->
+          mapView.closeOpenedInfo = createSpy("closeOpenedInfo")
+          info = { open: createSpy("open") }
+          marker = 'marker'
+          eventSpy = createSpy('openedInfo')
+          mapView.on 'openedInfo', eventSpy
+          mapView.openInfo(info,marker)
+    
+        it "execute @closeOpenedInfo",->
+          expect(mapView.closeOpenedInfo).toHaveBeenCalled()
+    
+        it "execute info.open", ->
+          expect(info.open).toHaveBeenCalled()
+    
+        it "execute info.open with 0:@map", ->
+          expect(info.open.calls[0].args[0]).toBe(mapView.map)
+    
+        it "execute info.open with 1:marker", ->
+          expect(info.open.calls[0].args[1]).toBe(marker)
+    
+        it "chche @openedInfo",->
+          expect(mapView.openedInfo).toBe(info)
+    
+        it "fire openedInfo event",->
+          expect(eventSpy).toHaveBeenCalled()
+    
+        it "fire openedInfo event with 0:info",->
+          expect(eventSpy.calls[0].args[0]).toBe(info)
+    
+        it "fire openedInfo event with 1:marker",->
+          expect(eventSpy.calls[0].args[1]).toBe(marker)
+    
+      describe "closeOpenedInfo",->
+        close = undefined
+        beforeEach ->
+          close = createSpy("close")
+          mapView.openedInfo = { close }
+          mapView.closeOpenedInfo()
+    
+        it "execute openedInfo.close",->
+          expect(close).toHaveBeenCalled()
+    
+        it "nonchche openedInfo", ->
+          expect(mapView.openedInfo).toBe(null)
+    #}}}
+    describe ".ListView",-> #{{{
+      listView = options = undefined
+      beforeEach ->
+        options = MapList::makeOptions {}
+        listView = new MapList.ListView(options)
+    
+      describe "constructor",->
+        it "is instanceof Backbone.View",->
+          expect(listView instanceof Backbone.View).toBeTruthy()
+    
+        it "check @$el is jQuey object",->
+          expect(listView.$el instanceof jQuery).toBeTruthy()
+    
+        it "check @$el.selector",->
+          expect(listView.$el.selector).toEqual(options.listSelector)
+    
+      describe "build",->
+        entries = appendTo = undefined
+        beforeEach ->
+          entries = new MapList.Entries(data.entries.object,options)
+          appendTo = createSpy("appendTo")
+          entries.each (entry)-> entry.list.appendTo = appendTo
+          listView.build(entries.models)
+    
+        it "execute entry.list.appendTo",->
+          expect(appendTo).toHaveBeenCalled()
+    
+        it "execute entry.list.appendTo width @$el",->
+          expect(appendTo.calls[0].args[0]).toBe(listView.$el)
+    
+      describe "clear",->
+        entries = detach = undefined
+        beforeEach ->
+          entries = new MapList.Entries(data.entries.object,options)
+          detach = createSpy("detach")
+          entries.each (entry)-> entry.list.appendTo = detach
+          listView.build(entries.models)
+    
+        it "execute entry.list.appendTo",->
+          expect(detach).toHaveBeenCalled()
+    
+      describe "openInfo",->
+        $elem = spy = undefined
+        beforeEach ->
+          selector = options.openInfoSelector
+          spy = createSpy("openInfo")
+          e = { currentTarget : $("<div>").data(options.genreDataName, "foo")[0] }
+          $elem = $("<div class='__list'><a class='#{selector[1..-1]}'></a></div>")
+            .on("click",selector, listView.openInfo)
+            .data("entry",{ openInfo: spy })
+            .find(selector)
+            .trigger("click")
+    
+        it "execute openInfo of entry",->
+          expect(spy).toHaveBeenCalled()
+    #}}}
+    describe ".GenreView",-> #{{{
+      genreView = options = undefined
+      beforeEach ->
+        options = MapList::makeOptions {}
+        genreView = new MapList.GenresView(options)
+    
+      describe "constructor",->
+        it "is instanceof Backbone.View",->
+          expect(genreView instanceof Backbone.View).toBeTruthy()
+    
+        it "check @$el is jQuey object",->
+          expect(genreView.$el instanceof jQuery).toBeTruthy()
+    
+        it "check @$el.selector",->
+          expect(genreView.$el.selector).toEqual(options.genresSelector)
+    
+      describe "::selectGenre",->
+        $elem = spy = undefined
+        beforeEach ->
+          e = { currentTarget : $("<div>").data(options.genreDataName, "foo")[0] }
+          genreView.trigger = spy = createSpy("change:genre")
+          genreView.selectGenre(e)
+    
+        it "fire change:genre event",->
+          expect(spy).toHaveBeenCalled()
+    
+        it "fire change:genre event with 0:eventName",->
+          expect(spy.calls[0].args[0]).toEqual("change:genre")
+    
+        it "fire change:genre event with 1:genreId",->
+          expect(spy.calls[0].args[1]).toEqual("foo")
+    #}}}
+    */
 
-        parser = void 0;
-        beforeEach(function() {
-          return parser = new Parser.ObjectParser;
-        });
-        return it(".execute", function() {
-          data = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-          return expect(parser.execute(data)).toBe(data);
-        });
-      });
-    });
-    describe(".Entry", function() {
-      var Entry;
-
-      Entry = void 0;
-      beforeEach(function() {
-        return Entry = MapList.Entry;
-      });
-      describe("::makeInfo", function() {
-        var entry, factory, info;
-
-        entry = factory = info = void 0;
-        beforeEach(function() {
-          entry = new Backbone.Model({
-            title: "FooBar"
-          });
-          entry.closeInfo = createSpy("closeInfo");
-          factory = new MapList.HtmlFactory(_.template, "<%- title %>");
-          return info = Entry.prototype.makeInfo.call(entry, factory);
-        });
-        it("instanceof InfoWindow", function() {
-          return expect(info instanceof google.maps.InfoWindow).toBeTruthy();
-        });
-        it("make sure that info has content", function() {
-          return expect(info.getContent()).toEqual("FooBar");
-        });
-        return it("fires the closeclick event and execute @closeInfo", function() {
-          google.maps.event.trigger(info, "closeclick");
-          return expect(entry.closeInfo).toHaveBeenCalled();
-        });
-      });
-      describe("::makeMarker", function() {
-        var entry, marker;
-
-        entry = marker = void 0;
-        beforeEach(function() {
-          entry = new Backbone.Model({
-            lat: 35,
-            lng: 135,
-            icon: "icon.png",
-            shadow: "shadow.png"
-          });
-          entry.openInfo = createSpy("openInfo");
-          entry.info = true;
-          return marker = Entry.prototype.makeMarker.call(entry);
-        });
-        it("instance of Marker", function() {
-          return expect(marker instanceof google.maps.Marker).toBeTruthy();
-        });
-        it("position instanceof LatLng", function() {
-          return expect(marker.getPosition() instanceof google.maps.LatLng).toBeTruthy();
-        });
-        it("check lat", function() {
-          return expect(marker.getPosition().lat()).toEqual(35);
-        });
-        it("check lng", function() {
-          return expect(marker.getPosition().lng()).toEqual(135);
-        });
-        it("check icon", function() {
-          return expect(marker.getIcon()).toEqual("icon.png");
-        });
-        it("check shadow", function() {
-          return expect(marker.getShadow()).toEqual("shadow.png");
-        });
-        return it("fires the click event and execute @openInfo", function() {
-          google.maps.event.trigger(marker, "click");
-          return expect(entry.openInfo).toHaveBeenCalled();
-        });
-      });
-      describe("::makeList", function() {
-        var entry, factory, res;
-
-        entry = factory = res = void 0;
-        beforeEach(function() {
-          entry = new Backbone.Model({
-            title: "FooBar"
-          });
-          factory = new MapList.HtmlFactory(_.template, "<div><%- title %></div>");
-          return res = Entry.prototype.makeList.call(entry, factory);
-        });
-        it("responce itstanceof jQuery", function() {
-          return expect(res instanceof jQuery).toBeTruthy();
-        });
-        it("class is '__list'", function() {
-          return expect(res.attr("class")).toEqual("__list");
-        });
-        return it("have entry", function() {
-          return expect(res.data("entry")).toBe(entry);
-        });
-      });
-      describe("::isSelect", function() {
-        it("have not lat & lng", function() {
-          var entry;
-
-          entry = new Backbone.Model;
-          return expect(Entry.prototype.isSelect.call(entry, "foo")).toBeFalsy();
-        });
-        it("genreId equal '__all__", function() {
-          var entry;
-
-          entry = new Backbone.Model({
-            lat: 35,
-            lng: 135
-          });
-          return expect(Entry.prototype.isSelect.call(entry, "__all__")).toBeTruthy();
-        });
-        it("by genreId true", function() {
-          var entry;
-
-          entry = new Backbone.Model({
-            lat: 35,
-            lng: 135,
-            genre: "foo"
-          });
-          return expect(Entry.prototype.isSelect.call(entry, "foo")).toBeTruthy();
-        });
-        return it("by genreId false", function() {
-          var entry;
-
-          entry = new Backbone.Model({
-            lat: 35,
-            lng: 135,
-            genre: "foo"
-          });
-          return expect(Entry.prototype.isSelect.call(entry, "bar")).toBeFalsy();
-        });
-      });
-      describe("triger check", function() {
-        var entry;
-
-        entry = void 0;
-        beforeEach(function() {
-          return entry = new Backbone.Model;
-        });
-        it("::openInfo", function() {
-          entry.on("openinfo", function(args) {
-            return expect(args).toBe(entry);
-          });
-          return Entry.prototype.openInfo.call(entry);
-        });
-        return it("::closeInfo", function() {
-          entry.on("closeinfo", function(args) {
-            return expect(args).toBe(entry);
-          });
-          return Entry.prototype.closeInfo.call(entry);
-        });
-      });
-      return describe("constructor", function() {
-        var attributes, entry, options;
-
-        attributes = options = entry = void 0;
-        beforeEach(function() {
-          attributes = {};
-          options = MapList.prototype.makeOptions({});
-          return entry = new Entry(attributes, options);
-        });
-        it("instance check info", function() {
-          return expect(entry.info instanceof google.maps.InfoWindow).toBeTruthy();
-        });
-        it("instance check marker", function() {
-          return expect(entry.marker instanceof google.maps.Marker).toBeTruthy();
-        });
-        return it("instance check list", function() {
-          return expect(entry.list instanceof jQuery).toBeTruthy();
-        });
-      });
-    });
-    describe(".Entries", function() {
-      var Entries, entries, obj, options, prop;
-
-      Entries = void 0;
-      obj = options = entries = prop = void 0;
-      beforeEach(function() {
-        Entries = MapList.Entries;
-        obj = data.entries.object;
-        options = MapList.prototype.makeOptions({});
-        entries = new Entries(obj, options);
-        return prop = "関東";
-      });
-      describe("constructor", function() {
-        it("is instanceof Backbone.Collection", function() {
-          return expect(entries instanceof Backbone.Collection).toBeTruthy();
-        });
-        it("attributes check", function() {
-          return expect(entries.toJSON()).toEqual(obj);
-        });
-        return it("make sure that selectedList is empty", function() {
-          return expect(entries.selectedList).toEqual([]);
-        });
-      });
-      describe("::select", function() {
-        it("return selected List", function() {
-          var answer, responce;
-
-          responce = entries.select(prop);
-          answer = _(obj).filter(function(entry) {
-            return entry.genre === prop;
-          });
-          return expect(_(responce).map(function(entry) {
-            return entry.toJSON();
-          })).toEqual(answer);
-        });
-        it("chche selected List", function() {
-          var responce;
-
-          responce = entries.select(prop);
-          return expect(entries.selectedList).toBe(responce);
-        });
-        it("fires the select event", function() {
-          var responce, spy;
-
-          spy = createSpy("select");
-          entries.on("select", spy);
-          responce = entries.select(prop);
-          return expect(spy).toHaveBeenCalled();
-        });
-        return it("fires the select event with arguments", function() {
-          var responce, spy;
-
-          spy = createSpy("select");
-          entries.on("select", spy);
-          responce = entries.select(prop);
-          return expect(spy.calls[0].args[0]).toBe(responce);
-        });
-      });
-      describe("::unselect", function() {
-        it("return empty array", function() {
-          return expect(entries.unselect()).toEqual([]);
-        });
-        it("chche selected List to empty", function() {
-          entries.select(prop);
-          return expect(entries.unselect()).toBe(entries.selectedList);
-        });
-        it("fires the unselect event", function() {
-          var responce, spy;
-
-          spy = createSpy('unselect');
-          entries.on("unselect", spy);
-          responce = entries.unselect();
-          return expect(spy).toHaveBeenCalled();
-        });
-        return it("fires the unselect event with arguments", function() {
-          var responce, selectEntries, spy;
-
-          selectEntries = entries.select(prop);
-          spy = createSpy('unselect');
-          entries.on("unselect", spy);
-          responce = entries.unselect();
-          return expect(spy.calls[0].args[0]).toBe(selectEntries);
-        });
-      });
-      describe("::selected", function() {
-        return it("return cached selectedList", function() {
-          var responce;
-
-          responce = entries.select(prop);
-          return expect(entries.selected()).toBe(responce);
-        });
-      });
-      return describe(".getSource", function() {
-        it("array", function() {
-          var source;
-
-          source = Entries.getSource(obj);
-          return source.then(function(data) {
-            return expect(data).toEqual(obj);
-          });
-        });
-        it("url:json", function() {
-          var source,
-            _this = this;
-
-          source = Entries.getSource("data/entries.json");
-          waitsFor(function() {
-            return source.state() === "resolved";
-          }, "timeout", 1000);
-          return runs(function() {
-            return source.then(function(data) {
-              return expect(data).toEqual(obj);
-            });
-          });
-        });
-        return it("url:xml", function() {
-          var source,
-            _this = this;
-
-          source = Entries.getSource("data/entries.xml");
-          waitsFor(function() {
-            return source.state() === "resolved";
-          }, "timeout", 1000);
-          return runs(function() {
-            return source.then(function(data) {
-              return expect(data).toEqual(obj);
-            });
-          });
-        });
-      });
-    });
-    describe(".HtmlFactory", function() {
-      var HtmlFactory, factory, obj, template;
-
-      obj = template = factory = HtmlFactory = void 0;
-      beforeEach(function() {
-        HtmlFactory = MapList.HtmlFactory;
-        return obj = {
-          title: "FooBar"
-        };
-      });
-      describe("by _.template;", function() {
-        beforeEach(function() {
-          template = "<p><%- title %></p>";
-          return factory = new HtmlFactory(_.template, template);
-        });
-        it("template unchange", function() {
-          return expect(factory.template).toEqual(template);
-        });
-        it("getTemplateEngineName", function() {
-          return expect(factory.getTemplateEngineName()).toEqual("_.template");
-        });
-        it("template chche", function() {
-          var backup;
-
-          backup = _.template;
-          spyOn(_, 'template').andCallThrough();
-          factory = new HtmlFactory(_.template, template);
-          factory.make(obj);
-          factory.make(obj);
-          expect(_.template.calls.length).toEqual(1);
-          return _.template = backup;
-        });
-        return it("make", function() {
-          var answer;
-
-          answer = "<p>FooBar</p>";
-          return expect(factory.make(obj)).toEqual(answer);
-        });
-      });
-      return describe("by $.tmpl;", function() {
-        beforeEach(function() {
-          template = "<p>${title}</p>";
-          return factory = new HtmlFactory($.tmpl, template);
-        });
-        it("template wrap", function() {
-          var answer;
-
-          answer = "<wrap>" + template + "</wrap>";
-          return expect(factory.template).toEqual(answer);
-        });
-        it("getTemplateEngineName", function() {
-          return expect(factory.getTemplateEngineName()).toEqual("$.tmpl");
-        });
-        return it("make", function() {
-          var answer;
-
-          answer = "<p>FooBar</p>";
-          return expect(factory.make(obj)).toEqual(answer);
-        });
-      });
-    });
-    describe(".MapView", function() {
-      var entries, mapView, options;
-
-      options = mapView = entries = void 0;
-      beforeEach(function() {
-        options = MapList.prototype.makeOptions({});
-        mapView = new MapList.MapView(options);
-        return entries = new MapList.Entries(data.entries.object, options);
-      });
-      afterEach(function() {
-        return $("#map_canvas").children().remove();
-      });
-      describe("constructor", function() {
-        it("instance of Backbone.View", function() {
-          return expect(mapView instanceof Backbone.View).toBeTruthy();
-        });
-        return it("google maps create", function() {
-          return expect(mapView.map instanceof google.maps.Map).toBeTruthy();
-        });
-      });
-      describe("::build", function() {
-        var setMap;
-
-        setMap = void 0;
-        beforeEach(function() {
-          setMap = createSpy("setMap");
-          entries.each(function(entry) {
-            return entry.marker.setMap = setMap;
-          });
-          return mapView.fitBounds = createSpy("fitBounds");
-        });
-        it("execute entry.marker.setMap", function() {
-          mapView.build(entries.models);
-          return expect(setMap.calls.length).toEqual(entries.length);
-        });
-        it("execute entry.marker.setMap with @map", function() {
-          mapView.build(entries.models);
-          return expect(setMap.calls[0].args[0]).toBe(mapView.map);
-        });
-        it("execute @fitBounds if @options.doFit == true", function() {
-          mapView.build(entries.models);
-          return expect(mapView.fitBounds).toHaveBeenCalled();
-        });
-        return it("execute @fitBounds with entries", function() {
-          mapView.build(entries.models);
-          return expect(mapView.fitBounds.calls[0].args[0]).toBe(entries.models);
-        });
-      });
-      describe("::fitBounds", function() {});
-      describe("::clear", function() {
-        var setMap;
-
-        setMap = void 0;
-        beforeEach(function() {
-          setMap = createSpy("setMap");
-          entries.each(function(entry) {
-            return entry.marker.setMap = setMap;
-          });
-          mapView.closeOpenedInfo = createSpy("closeOpenedInfo");
-          return mapView.clear(entries.models);
-        });
-        it("execute @closeOpenedInfo", function() {
-          return expect(mapView.closeOpenedInfo).toHaveBeenCalled();
-        });
-        it("execute entry.marker.setMap", function() {
-          return expect(setMap.calls.length).toEqual(entries.length);
-        });
-        return it("execute entry.marker.setMap with null", function() {
-          return expect(setMap.calls[0].args[0]).toBe(null);
-        });
-      });
-      describe("::openInfo", function() {
-        var eventSpy, info, marker;
-
-        info = marker = eventSpy = void 0;
-        beforeEach(function() {
-          mapView.closeOpenedInfo = createSpy("closeOpenedInfo");
-          info = {
-            open: createSpy("open")
-          };
-          marker = 'marker';
-          eventSpy = createSpy('infoOpened');
-          mapView.on('infoOpened', eventSpy);
-          return mapView.openInfo(info, marker);
-        });
-        it("execute @closeOpenedInfo", function() {
-          return expect(mapView.closeOpenedInfo).toHaveBeenCalled();
-        });
-        it("execute info.open", function() {
-          return expect(info.open).toHaveBeenCalled();
-        });
-        it("execute info.open with 0:@map", function() {
-          return expect(info.open.calls[0].args[0]).toBe(mapView.map);
-        });
-        it("execute info.open with 1:marker", function() {
-          return expect(info.open.calls[0].args[1]).toBe(marker);
-        });
-        it("chche @openedInfo", function() {
-          return expect(mapView.openedInfo).toBe(info);
-        });
-        it("fire infoOpened event", function() {
-          return expect(eventSpy).toHaveBeenCalled();
-        });
-        it("fire infoOpened event with 0:info", function() {
-          return expect(eventSpy.calls[0].args[0]).toBe(info);
-        });
-        return it("fire infoOpened event with 1:marker", function() {
-          return expect(eventSpy.calls[0].args[1]).toBe(marker);
-        });
-      });
-      return describe("closeOpenedInfo", function() {
-        var close;
-
-        close = void 0;
-        beforeEach(function() {
-          close = createSpy("close");
-          mapView.openedInfo = {
-            close: close
-          };
-          return mapView.closeOpenedInfo();
-        });
-        it("execute openedInfo.close", function() {
-          return expect(close).toHaveBeenCalled();
-        });
-        return it("nonchche openedInfo", function() {
-          return expect(mapView.openedInfo).toBe(null);
-        });
-      });
-    });
-    describe(".ListView", function() {
-      var listView, options;
-
-      listView = options = void 0;
-      beforeEach(function() {
-        options = MapList.prototype.makeOptions({});
-        return listView = new MapList.ListView(options);
-      });
-      describe("constructor", function() {
-        it("is instanceof Backbone.View", function() {
-          return expect(listView instanceof Backbone.View).toBeTruthy();
-        });
-        it("check @$el is jQuey object", function() {
-          return expect(listView.$el instanceof jQuery).toBeTruthy();
-        });
-        return it("check @$el.selector", function() {
-          return expect(listView.$el.selector).toEqual(options.listSelector);
-        });
-      });
-      describe("build", function() {
-        var appendTo, entries;
-
-        entries = appendTo = void 0;
-        beforeEach(function() {
-          entries = new MapList.Entries(data.entries.object, options);
-          appendTo = createSpy("appendTo");
-          entries.each(function(entry) {
-            return entry.list.appendTo = appendTo;
-          });
-          return listView.build(entries.models);
-        });
-        it("execute entry.list.appendTo", function() {
-          return expect(appendTo).toHaveBeenCalled();
-        });
-        return it("execute entry.list.appendTo width @$el", function() {
-          return expect(appendTo.calls[0].args[0]).toBe(listView.$el);
-        });
-      });
-      describe("clear", function() {
-        var detach, entries;
-
-        entries = detach = void 0;
-        beforeEach(function() {
-          entries = new MapList.Entries(data.entries.object, options);
-          detach = createSpy("detach");
-          entries.each(function(entry) {
-            return entry.list.appendTo = detach;
-          });
-          return listView.build(entries.models);
-        });
-        return it("execute entry.list.appendTo", function() {
-          return expect(detach).toHaveBeenCalled();
-        });
-      });
-      return describe("openInfo", function() {
-        var $elem, spy;
-
-        $elem = spy = void 0;
-        beforeEach(function() {
-          var e, selector;
-
-          selector = options.openInfoSelector;
-          spy = createSpy("openInfo");
-          e = {
-            currentTarget: $("<div>").data(options.genreDataName, "foo")[0]
-          };
-          return $elem = $("<div class='__list'><a class='" + selector.slice(1) + "'></a></div>").on("click", selector, listView.openInfo).data("entry", {
-            openInfo: spy
-          }).find(selector).trigger("click");
-        });
-        return it("execute openInfo of entry", function() {
-          return expect(spy).toHaveBeenCalled();
-        });
-      });
-    });
-    return describe(".GenreView", function() {
-      var genreView, options;
-
-      genreView = options = void 0;
-      beforeEach(function() {
-        options = MapList.prototype.makeOptions({});
-        return genreView = new MapList.GenresView(options);
-      });
-      describe("constructor", function() {
-        it("is instanceof Backbone.View", function() {
-          return expect(genreView instanceof Backbone.View).toBeTruthy();
-        });
-        it("check @$el is jQuey object", function() {
-          return expect(genreView.$el instanceof jQuery).toBeTruthy();
-        });
-        return it("check @$el.selector", function() {
-          return expect(genreView.$el.selector).toEqual(options.genresSelector);
-        });
-      });
-      return describe("::selectGenre", function() {
-        var $elem, spy;
-
-        $elem = spy = void 0;
-        beforeEach(function() {
-          var e;
-
-          e = {
-            currentTarget: $("<div>").data(options.genreDataName, "foo")[0]
-          };
-          genreView.trigger = spy = createSpy("change:genre");
-          return genreView.selectGenre(e);
-        });
-        it("fire change:genre event", function() {
-          return expect(spy).toHaveBeenCalled();
-        });
-        it("fire change:genre event with 0:eventName", function() {
-          return expect(spy.calls[0].args[0]).toEqual("change:genre");
-        });
-        return it("fire change:genre event with 1:genreId", function() {
-          return expect(spy.calls[0].args[1]).toEqual("foo");
-        });
-      });
-    });
   });
 
 }).call(this);

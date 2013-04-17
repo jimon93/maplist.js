@@ -76,6 +76,186 @@ describe "MapList", ->
       }
     } #}}}
 
+  describe "= APP",->
+    app = undefined
+    beforeEach ->
+      app = new MapList { data: data.entries.object }
+    ###
+    describe "::makeOptions",-> #{{{
+      beforeEach ->
+        spyOn(app,"extendDefaultOptions").andCallThrough()
+        app.extendOptions = createSpy("extendOptions")
+
+      it "call @extendDefaultOptions",->
+        app.makeOptions({})
+        expect(app.extendDefaultOptions).toHaveBeenCalled()
+
+      it "call @extendOptions",->
+        app.makeOptions({})
+        expect(app.extendOptions).toHaveBeenCalled()
+
+      it "compose extendDefaultOptions and extendOptions",->
+        obj = app.extendDefaultOptions()
+        app.extendDefaultOptions = createSpy("extendDefaultOptions").andReturn(obj)
+        app.makeOptions({})
+        expect(app.extendOptions.calls[0].args[0]).toBe(obj)
+    #}}}
+    describe "::extendDefaultOptions",-> #{{{
+      defaultData = undefined
+      beforeEach ->
+        defaultData = _(app).result('default')
+
+      it "return default value without arguments",->
+        expect(app.extendDefaultOptions()).toEqual(defaultData)
+
+      it "return default value with {}",->
+        expect(app.extendDefaultOptions({})).toEqual(defaultData)
+
+      it "return value is not default",->
+        expect(app.extendDefaultOptions()).not.toBe(defaultData)
+
+      it "return value default + options",->
+        options = { lat: 0, lng: 0 }
+        answer = _.extend {}, defaultData, options
+        expect(app.extendDefaultOptions(options)).toEqual(answer)
+    #}}}
+    describe "::extendOptions",-> #{{{
+      options = res = undefined
+      beforeEach ->
+        options = {
+          lat: 35
+          lng: 135
+          templateEngine: _.template
+          infoTemplate: "infoTemplate"
+          listTemplate: "listTemplate"
+        }
+        res = MapList::extendOptions(options)
+
+
+      it "return value is not options",->
+        expect(res).not.toEqual(options)
+
+      it "has center object",->
+        expect(res.center instanceof google.maps.LatLng).toBeTruthy()
+
+      it "check lat",->
+        expect(res.center.lat()).toBe(options.lat)
+
+      it "check lng",->
+        expect(res.center.lng()).toBe(options.lng)
+
+      it "has infoHtmlFactory object",->
+        expect(res.infoHtmlFactory instanceof MapList.HtmlFactory).toBeTruthy()
+
+      it "check infoHtmlFactory.templateEngine",->
+        expect(res.infoHtmlFactory.templateEngine).toBe(options.templateEngine)
+
+      it "check infoHtmlFactory.template",->
+        expect(res.infoHtmlFactory.template).toBe(options.infoTemplate)
+
+      it "has listHtmlFactory object",->
+        expect(res.listHtmlFactory instanceof MapList.HtmlFactory).toBeTruthy()
+
+      it "check listHtmlFactory.templateEngine",->
+        expect(res.listHtmlFactory.templateEngine).toBe(options.templateEngine)
+
+      it "check listHtmlFactory.template",->
+        expect(res.listHtmlFactory.template).toBe(options.listTemplate)
+    #}}}
+    describe "::delegateEvents",-> #{{{
+      method = obj = obj2 = undefined
+      beforeEach ->
+        app.entries.off()
+        app.mapView.off()
+        app.genresView.off()
+        app.eventMethods = {
+          entries_select   : createSpy("entries_select")
+          entries_unselect : createSpy("entries_unselect")
+          openInfo         : createSpy("openInfo")
+          openedInfo       : createSpy("openedInfo")
+          closeInfo        : createSpy("closeInfo")
+          changeGenre      : createSpy("changeGenre")
+        }
+        app.delegateEvents()
+
+      describe "on select event",->
+        beforeEach ->
+          method = app.eventMethods.entries_select
+          obj = []
+          app.entries.trigger "select", obj
+
+        it "called",->
+          expect(method).toHaveBeenCalled()
+
+        it "catch args",->
+          expect(method.calls[0].args[0]).toBe(obj)
+
+      describe "on unselect event",->
+        beforeEach ->
+          method = app.eventMethods.entries_unselect
+          obj = []
+          app.entries.trigger "unselect", obj
+
+        it "called",->
+          expect(method).toHaveBeenCalled()
+
+        it "catch args",->
+          expect(method.calls[0].args[0]).toBe(obj)
+
+      describe "on openinfo event",->
+        beforeEach ->
+          method = app.eventMethods.openInfo
+          obj = []
+          app.entries.trigger "openinfo", obj
+
+        it "called",->
+          expect(method).toHaveBeenCalled()
+
+        it "catch args",->
+          expect(method.calls[0].args[0]).toBe(obj)
+
+      describe "on openedInfo event",->
+        beforeEach ->
+          method = app.eventMethods.openedInfo
+          obj = []
+          obj2 = {}
+          app.mapView.trigger "openedInfo", obj, obj2
+
+        it "called",->
+          expect(method).toHaveBeenCalled()
+
+        it "catch args[0]",->
+          expect(method.calls[0].args[0]).toBe(obj)
+
+        it "catch args[1]",->
+          expect(method.calls[0].args[1]).toBe(obj2)
+
+      describe "on closeinfo event",->
+        beforeEach ->
+          method = app.eventMethods.closeInfo
+          obj = []
+          app.entries.trigger "closeinfo", obj
+
+        it "called",->
+          expect(method).toHaveBeenCalled()
+
+        it "catch args",->
+          expect(method.calls[0].args[0]).toBe(obj)
+
+      describe "on change:genre event",->
+        beforeEach ->
+          method = app.eventMethods.changeGenre
+          obj = []
+          app.genresView.trigger "change:genre", obj
+
+        it "called",->
+          expect(method).toHaveBeenCalled()
+
+        it "catch args",->
+          expect(method.calls[0].args[0]).toBe(obj)
+    #}}}
+    ###
+  ###
   describe ".Parser", -> #{{{
     Parser = undefined
 
@@ -608,8 +788,8 @@ describe "MapList", ->
         mapView.closeOpenedInfo = createSpy("closeOpenedInfo")
         info = { open: createSpy("open") }
         marker = 'marker'
-        eventSpy = createSpy('infoOpened')
-        mapView.on 'infoOpened', eventSpy
+        eventSpy = createSpy('openedInfo')
+        mapView.on 'openedInfo', eventSpy
         mapView.openInfo(info,marker)
 
       it "execute @closeOpenedInfo",->
@@ -627,13 +807,13 @@ describe "MapList", ->
       it "chche @openedInfo",->
         expect(mapView.openedInfo).toBe(info)
 
-      it "fire infoOpened event",->
+      it "fire openedInfo event",->
         expect(eventSpy).toHaveBeenCalled()
 
-      it "fire infoOpened event with 0:info",->
+      it "fire openedInfo event with 0:info",->
         expect(eventSpy.calls[0].args[0]).toBe(info)
 
-      it "fire infoOpened event with 1:marker",->
+      it "fire openedInfo event with 1:marker",->
         expect(eventSpy.calls[0].args[1]).toBe(marker)
 
     describe "closeOpenedInfo",->
@@ -737,3 +917,4 @@ describe "MapList", ->
       it "fire change:genre event with 1:genreId",->
         expect(spy.calls[0].args[1]).toEqual("foo")
   #}}}
+  ###
