@@ -2,6 +2,7 @@
 <html>
 
 <head>
+<title>MapList Demo</title>
 <meta charset="UTF-8">
 <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.1/css/bootstrap.min.css">
 <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false"></script>
@@ -18,6 +19,7 @@
 
 <body>
 <div class="container">
+  <h1>MapList Demo</h1>
 
   <h4>Genre</h4>
   <ul id="genre" class="row">
@@ -45,7 +47,7 @@
 <script type="text/javascript">
 $(function(){
   var maplist = new MapList({
-    data: "../test/data/entries.xml",
+    data: "../test/data/entries.json",
     listTemplate: $("#tmpl-list-elem").html(),
     infoTemplate: $("#tmpl-info-window").html()
   });
