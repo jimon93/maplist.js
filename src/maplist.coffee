@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.2.13
+MapList JavaScript Library v1.2.14
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -294,16 +294,19 @@ do ($=jQuery,global=this)->
     # 構築
     # マーカー，インフォ，リストを構築
     build:(entries)->
-      bounds = new google.maps.LatLngBounds if @options.doFit
       for entry in entries
         entry.marker.setMap(@map)
-        bounds.extend( entry.marker.getPosition() ) if @options.doFit
-      if @options.doFit
-        unless @options.fitZoomReset
-          @map.fitBounds( bounds )
-        else
-          @map.setCenter( bounds.getCenter() )
-          @map.setZoom( @options.zoom )
+      @fitBounds(entries) if @options.doFit
+
+    fitBounds:(entries)->
+      bounds = new google.maps.LatLngBounds
+      for entry in entries
+        bounds.extend( entry.marker.getPosition() )
+      if @options.fitZoomReset # option名を変えよう
+        @map.setCenter( bounds.getCenter() )
+        @map.setZoom( @options.zoom )
+      else
+        @map.fitBounds( bounds )
 
     # マーカー, インフォ, リストを消す
     clear:(entries)->
@@ -315,7 +318,7 @@ do ($=jQuery,global=this)->
       @closeOpenedInfo()
       info.open(@map,marker)
       @openedInfo = info
-      @options.infoOpened?(marker,info)
+      @trigger('infoOpened', info, marker)
 
     closeOpenedInfo:->
       if @openedInfo?

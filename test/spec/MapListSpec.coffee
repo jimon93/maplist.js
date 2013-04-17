@@ -1,7 +1,9 @@
+log = -> console.log(arguments...)
 describe "MapList", ->
-  data = createSpy = undefined
+  data = createSpy = createSpyObj = undefined
   beforeEach ->
     createSpy = jasmine.createSpy
+    createSpyObj = jasmine.createSpyObj
     data = { #{{{
       entries : {
         object: [
@@ -74,6 +76,8 @@ describe "MapList", ->
       }
     } #}}}
 
+  ###
+  describe "::makeOptions",->
   describe ".Parser", -> #{{{
     Parser = undefined
 
@@ -527,20 +531,127 @@ describe "MapList", ->
       it "getTemplateEngineName", ->
         expect(factory.getTemplateEngineName()).toEqual("$.tmpl")
 
-      ###
-      it "template nochche",->
-        backup = $.tmpl
-        spyOn($,'tmpl').andCallThrough()
-        factory = new HtmlFactory($.tmpl,template)
-        factory.make(obj)
-        factory.make(obj)
-        expect($.tmpl.calls.length).toEqual(2)
-        $.tmpl = backup
-      ###
+      #it "template nochche",->
+      #  backup = $.tmpl
+      #  spyOn($,'tmpl').andCallThrough()
+      #  factory = new HtmlFactory($.tmpl,template)
+      #  factory.make(obj)
+      #  factory.make(obj)
+      #  expect($.tmpl.calls.length).toEqual(2)
+      #  $.tmpl = backup
 
       it "make", ->
         answer = "<p>FooBar</p>"
         expect(factory.make(obj)).toEqual(answer)
   #}}}
+  ###
+  describe ".MapView",-> #{{{
+    options = mapView = entries = undefined
+    beforeEach ->
+      options = MapList::makeOptions {}
+      mapView = new MapList.MapView(options)
+      entries = new MapList.Entries(data.entries.object,options)
 
+    afterEach ->
+      $("#map_canvas").children().remove()
+
+    describe "constructor",->
+      it "instance of Backbone.View",->
+        expect(mapView instanceof Backbone.View).toBeTruthy()
+
+      it "google maps create",->
+        expect(mapView.map instanceof google.maps.Map).toBeTruthy()
+
+    describe "::build",->
+      setMap = undefined
+      beforeEach ->
+        setMap = createSpy("setMap")
+        entries.each (entry) -> entry.marker.setMap = setMap
+        mapView.fitBounds = createSpy("fitBounds")
+
+      it "execute entry.marker.setMap",->
+        mapView.build(entries.models)
+        expect(setMap.calls.length).toEqual(entries.length)
+
+      it "execute entry.marker.setMap with @map",->
+        mapView.build(entries.models)
+        expect(setMap.calls[0].args[0]).toBe(mapView.map)
+
+      it "execute @fitBounds if @options.doFit == true",->
+        mapView.build(entries.models)
+        expect(mapView.fitBounds).toHaveBeenCalled()
+
+      it "execute @fitBounds with entries",->
+        mapView.build(entries.models)
+        expect(mapView.fitBounds.calls[0].args[0]).toBe(entries.models)
+
+    describe "::fitBounds",->
+      # あとで実装
+
+    describe "::clear",->
+      setMap = undefined
+      beforeEach ->
+        setMap = createSpy("setMap")
+        entries.each (entry) -> entry.marker.setMap = setMap
+        mapView.closeOpenedInfo = createSpy("closeOpenedInfo")
+        mapView.clear(entries.models)
+
+      it "execute @closeOpenedInfo",->
+        expect(mapView.closeOpenedInfo).toHaveBeenCalled()
+
+      it "execute entry.marker.setMap",->
+        expect(setMap.calls.length).toEqual(entries.length)
+
+      it "execute entry.marker.setMap with null",->
+        expect(setMap.calls[0].args[0]).toBe(null)
+
+    describe "::openInfo",->
+      info = marker = eventSpy = undefined
+      beforeEach ->
+        mapView.closeOpenedInfo = createSpy("closeOpenedInfo")
+        info = { open: createSpy("open") }
+        marker = 'marker'
+        eventSpy = createSpy('infoOpened')
+        mapView.on 'infoOpened', eventSpy
+        mapView.openInfo(info,marker)
+
+      it "execute @closeOpenedInfo",->
+        expect(mapView.closeOpenedInfo).toHaveBeenCalled()
+
+      it "execute info.open", ->
+        expect(info.open).toHaveBeenCalled()
+
+      it "execute info.open with 0:@map", ->
+        expect(info.open.calls[0].args[0]).toBe(mapView.map)
+
+      it "execute info.open with 1:marker", ->
+        expect(info.open.calls[0].args[1]).toBe(marker)
+
+      it "chche @openedInfo",->
+        expect(mapView.openedInfo).toBe(info)
+
+      it "fire infoOpened event",->
+        expect(eventSpy).toHaveBeenCalled()
+
+      it "fire infoOpened event with 0:info",->
+        expect(eventSpy.calls[0].args[0]).toBe(info)
+
+      it "fire infoOpened event with 1:marker",->
+        expect(eventSpy.calls[0].args[1]).toBe(marker)
+
+    describe "closeOpenedInfo",->
+      close = undefined
+      beforeEach ->
+        close = createSpy("close")
+        mapView.openedInfo = { close }
+        mapView.closeOpenedInfo()
+
+      it "execute openedInfo.close",->
+        expect(close).toHaveBeenCalled()
+
+      it "nonchche openedInfo", ->
+        expect(mapView.openedInfo).toBe(null)
+  #}}}
+  describe ".ListView",->
+  describe ".GenreView",->
 
