@@ -76,8 +76,6 @@ describe "MapList", ->
       }
     } #}}}
 
-  ###
-  describe "::makeOptions",->
   describe ".Parser", -> #{{{
     Parser = undefined
 
@@ -697,6 +695,7 @@ describe "MapList", ->
       beforeEach ->
         selector = options.openInfoSelector
         spy = createSpy("openInfo")
+        e = { currentTarget : $("<div>").data(options.genreDataName, "foo")[0] }
         $elem = $("<div class='__list'><a class='#{selector[1..-1]}'></a></div>")
           .on("click",selector, listView.openInfo)
           .data("entry",{ openInfo: spy })
@@ -706,6 +705,35 @@ describe "MapList", ->
       it "execute openInfo of entry",->
         expect(spy).toHaveBeenCalled()
   #}}}
-  ###
-  describe ".GenreView",->
+  describe ".GenreView",-> #{{{
+    genreView = options = undefined
+    beforeEach ->
+      options = MapList::makeOptions {}
+      genreView = new MapList.GenresView(options)
 
+    describe "constructor",->
+      it "is instanceof Backbone.View",->
+        expect(genreView instanceof Backbone.View).toBeTruthy()
+
+      it "check @$el is jQuey object",->
+        expect(genreView.$el instanceof jQuery).toBeTruthy()
+
+      it "check @$el.selector",->
+        expect(genreView.$el.selector).toEqual(options.genresSelector)
+
+    describe "::selectGenre",->
+      $elem = spy = undefined
+      beforeEach ->
+        e = { currentTarget : $("<div>").data(options.genreDataName, "foo")[0] }
+        genreView.trigger = spy = createSpy("change:genre")
+        genreView.selectGenre(e)
+
+      it "fire change:genre event",->
+        expect(spy).toHaveBeenCalled()
+
+      it "fire change:genre event with 0:eventName",->
+        expect(spy.calls[0].args[0]).toEqual("change:genre")
+
+      it "fire change:genre event with 1:genreId",->
+        expect(spy.calls[0].args[1]).toEqual("foo")
+  #}}}
