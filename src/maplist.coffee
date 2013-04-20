@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.3.1
+MapList JavaScript Library v1.3.2
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -37,6 +37,8 @@ do ($=jQuery,global=this)->
       firstGenre     : '__all__'
       # general
       templateEngine : $.tmpl || _.template
+      # parser
+      parser : { place: "place", genre: "genre" }
     }
 
     #}}}
