@@ -110,12 +110,6 @@ describe "MapList", ->
 
       it "called delegateEvents",->
         expect(delegateEvents).toHaveBeenCalled()
-
-      it "called rebuild",->
-        expect(rebuild).toHaveBeenCalled()
-
-      it "called rebuild with firstGenre",->
-        expect(rebuild.calls[0].args[0]).toBe(app.options.firstGenre)
     #}}}
     describe "::makeOptions",-> #{{{
       beforeEach ->

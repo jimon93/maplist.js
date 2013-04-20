@@ -46,15 +46,18 @@ do ($=jQuery,global=this)->
     constructor:(options)->
       _.bindAll(@)
 
-      @options = @makeOptions(options)
-      @mapView = new MapView(@options)
-      @listView = new ListView(@options)
+      @options    = @makeOptions(options)
+      @mapView    = new MapView(@options)
+      @listView   = new ListView(@options)
       @genresView = new GenresView(@options)
-      source = Entries.getSource(@options.data, @options.parser)
-      $.when( @map, source ).then (map,models)=>
-        @entries = new Entries(models, @options)
-        @delegateEvents()
-        @rebuild( @options.firstGenre )
+      @entries    = new Entries(null,@options)
+
+      @delegateEvents()
+
+      #source =
+      Entries
+        .getSource(@options.data, @options.parser)
+        .then (models)=> @entries.reset(models, @options)
 
     makeOptions:(options)->
       @extendOptions @extendDefaultOptions options
@@ -250,14 +253,16 @@ do ($=jQuery,global=this)->
   class Entries extends Backbone.Collection #{{{
     model: Entry
 
-    initialize:(source, options)->
+    initialize:(source, @options)->
       _.bindAll(@)
       @selectedList = []
+      @properties = @options.firstGenre
+      @on("reset", _.bind( @select, @, null ) )
 
-    select: ( @properties )->
+    select: ( @properties = @properties )->
       iterator = (entry) => entry.isSelect(@properties)
-      @selectedList = _(super iterator).tap (entries)=>
-        @trigger("select", entries)
+      @selectedList = _(super iterator)
+        .tap (entries)=> @trigger("select", entries)
 
     unselect: ->
       @trigger("unselect")

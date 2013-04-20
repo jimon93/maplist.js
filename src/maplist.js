@@ -48,19 +48,17 @@ MIT License
       };
 
       function App(options) {
-        var source,
-          _this = this;
+        var _this = this;
 
         _.bindAll(this);
         this.options = this.makeOptions(options);
         this.mapView = new MapView(this.options);
         this.listView = new ListView(this.options);
         this.genresView = new GenresView(this.options);
-        source = Entries.getSource(this.options.data, this.options.parser);
-        $.when(this.map, source).then(function(map, models) {
-          _this.entries = new Entries(models, _this.options);
-          _this.delegateEvents();
-          return _this.rebuild(_this.options.firstGenre);
+        this.entries = new Entries(null, this.options);
+        this.delegateEvents();
+        Entries.getSource(this.options.data, this.options.parser).then(function(models) {
+          return _this.entries.reset(models, _this.options);
         });
       }
 
@@ -414,15 +412,18 @@ MIT License
       Entries.prototype.model = Entry;
 
       Entries.prototype.initialize = function(source, options) {
+        this.options = options;
         _.bindAll(this);
-        return this.selectedList = [];
+        this.selectedList = [];
+        this.properties = this.options.firstGenre;
+        return this.on("reset", _.bind(this.select, this, null));
       };
 
       Entries.prototype.select = function(properties) {
         var iterator,
           _this = this;
 
-        this.properties = properties;
+        this.properties = properties != null ? properties : this.properties;
         iterator = function(entry) {
           return entry.isSelect(_this.properties);
         };

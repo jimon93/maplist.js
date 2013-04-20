@@ -366,14 +366,8 @@
         it("check entries", function() {
           return expect(app.entries instanceof MapList.Entries).toBeTruthy();
         });
-        it("called delegateEvents", function() {
+        return it("called delegateEvents", function() {
           return expect(delegateEvents).toHaveBeenCalled();
-        });
-        it("called rebuild", function() {
-          return expect(rebuild).toHaveBeenCalled();
-        });
-        return it("called rebuild with firstGenre", function() {
-          return expect(rebuild.calls[0].args[0]).toBe(app.options.firstGenre);
         });
       });
       describe("::makeOptions", function() {
