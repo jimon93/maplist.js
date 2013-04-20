@@ -1,43 +1,44 @@
 ###
-MapList JavaScript Library v1.3.0
+MapList JavaScript Library v1.3.1
 http://github.com/jimon93/maplist.js
 
 Require Library
   jquery.js
   jquery.tmpl.js
   underscore.js
+  backbone.js
 
 MIT License
 ###
 do ($=jQuery,global=this)->
   log = _.bind( console.log, console )
   class App #{{{
-    default: -> { #{{{
-      lat              : 35
-      lng              : 135
-      #center          : null #new google.maps.LatLng( 35, 135 )
-      zoom             : 4
-      mapTypeId        : google.maps.MapTypeId.ROADMAP
+    default:->{
+      # core
       data             : []
-      mapSelector      : '#map_canvas'
-      listSelector     : '#list'
-      listTemplate     : null
-      infoTemplate     : null
+      # Map Options
+      mapSelector  : '#map_canvas'
+      lat          : 35
+      lng          : 135
+      zoom         : 4
+      mapTypeId    : google.maps.MapTypeId.ROADMAP
+      canFitBounds : true
+      fixedZoom    : false
+      # List Options
+      listSelector : "#list"
+      listTemplate : null
       openInfoSelector : '.open-info'
-      #genreAlias       : 'genre'
-      genresSelector   : '#genre'
-      genreSelector    : 'a'
-      genreDataName    : "target-genre"
-      firstGenre       : '__all__'
-      infoOpened       : null
-      beforeBuild      : null
-      afterBuild       : null
-      beforeClear      : null
-      afterClear       : null
-      doFit            : true
-      fitZoomReset     : false
-      templateEngine   : $.tmpl || _.template
+      # info Options
+      infoTemplate : null
+      # Genres Options
+      genresSelector : '#genre'
+      genreSelector  : 'a'
+      genreDataName  : "target-genre"
+      firstGenre     : '__all__'
+      # general
+      templateEngine : $.tmpl || _.template
     }
+
     #}}}
     constructor:(options)->
       _.bindAll(@)
@@ -311,13 +312,13 @@ do ($=jQuery,global=this)->
     build:(entries)->
       for entry in entries
         entry.marker.setMap(@map)
-      @fitBounds(entries) if @options.doFit
+      @fitBounds(entries) if @options.canFitBounds
 
     fitBounds:(entries)->
       bounds = new google.maps.LatLngBounds
       for entry in entries
         bounds.extend( entry.marker.getPosition() )
-      if @options.fitZoomReset # option名を変えよう
+      if @options.fixedZoom
         @map.setCenter( bounds.getCenter() )
         @map.setZoom( @options.zoom )
       else
