@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.3.5
+MapList JavaScript Library v1.3.6
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -43,7 +43,7 @@ do ($=jQuery,global=this)->
     }
 
     #}}}
-    constructor:(options)->
+    constructor:(options,initFunc)->
       _.bindAll(@)
 
       @options    = @makeOptions(options)
@@ -53,6 +53,7 @@ do ($=jQuery,global=this)->
       @entries    = new Entries(null,@options)
 
       @delegateEvents()
+      initFunc?( @ )
       @data(@options.data) if @options.data?
 
     data:( data )->
