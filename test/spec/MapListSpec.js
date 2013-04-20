@@ -484,7 +484,6 @@
             build: createSpy("build"),
             clear: createSpy("clear"),
             openInfo: createSpy("openInfo"),
-            openedInfo: createSpy("openedInfo"),
             closeInfo: createSpy("closeInfo"),
             changeGenre: createSpy("changeGenre")
           });
@@ -527,23 +526,6 @@
           });
           return it("catch args", function() {
             return expect(method.calls[0].args[0]).toBe(obj);
-          });
-        });
-        describe("on openedInfo event", function() {
-          beforeEach(function() {
-            method = app.openedInfo;
-            obj = [];
-            obj2 = {};
-            return app.mapView.trigger("openedInfo", obj, obj2);
-          });
-          it("called", function() {
-            return expect(method).toHaveBeenCalled();
-          });
-          it("catch args[0]", function() {
-            return expect(method.calls[0].args[0]).toBe(obj);
-          });
-          return it("catch args[1]", function() {
-            return expect(method.calls[0].args[1]).toBe(obj2);
           });
         });
         describe("on closeinfo event", function() {
@@ -1434,8 +1416,6 @@
             open: createSpy("open")
           };
           marker = 'marker';
-          eventSpy = createSpy('openedInfo');
-          mapView.on('openedInfo', eventSpy);
           return mapView.openInfo(info, marker);
         });
         it("execute @closeOpenedInfo", function() {
@@ -1450,17 +1430,8 @@
         it("execute info.open with 1:marker", function() {
           return expect(info.open.calls[0].args[1]).toBe(marker);
         });
-        it("chche @openedInfo", function() {
+        return it("chche @openedInfo", function() {
           return expect(mapView.openedInfo).toBe(info);
-        });
-        it("fire openedInfo event", function() {
-          return expect(eventSpy).toHaveBeenCalled();
-        });
-        it("fire openedInfo event with 0:info", function() {
-          return expect(eventSpy.calls[0].args[0]).toBe(info);
-        });
-        return it("fire openedInfo event with 1:marker", function() {
-          return expect(eventSpy.calls[0].args[1]).toBe(marker);
         });
       });
       return describe("closeOpenedInfo", function() {

@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.3.3
+MapList JavaScript Library v1.3.4
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -13,7 +13,8 @@ MIT License
 do ($=jQuery,global=this)->
   log = _.bind( console.log, console )
   class App #{{{
-    default:->{
+    _.extend( @::, Backbone.Events )
+    default:->{ #{{{
       # core
       data             : []
       # Map Options
@@ -73,36 +74,43 @@ do ($=jQuery,global=this)->
       @entries.on    "select"       , @build
       @entries.on    "unselect"     , @clear
       @entries.on    "openinfo"     , @openInfo
-      @mapView.on    "openedInfo"   , @openedInfo
       @entries.on    "closeinfo"    , @closeInfo
       @genresView.on "change:genre" , @changeGenre
 
     # 地図とリストを構築する
     build:(entries)->
       prop = @entries.properties
-      @options.beforeBuild?(prop)
+      @trigger('beforeBuild',prop,entries)
+      @options.beforeBuild?(prop,enrries)
       @mapView .build(entries)
       @listView.build(entries)
+      @trigger('afterBuild',prop,entries)
       @options.afterBuild?(prop, entries)
 
     # 地図とリストを初期化する
     clear:->
       entries = @entries.selectedList
+      @trigger("beforeClear",entries)
       @options.beforeClear?()
       @mapView .clear(entries)
       @listView.clear(entries)
+      @trigger("afterBuild",entries)
       @options.afterClear?()
 
     openInfo: (entry)->
+      @trigger('openInfo',entry)
       @mapView.openInfo(entry.info, entry.marker)
-
-    openedInfo: (info,marker)->
+      @trigger('openedInfo', entry)
 
     closeInfo: (entry)->
+      @trigger('closeInfo',entry)
       @mapView.closeOpenedInfo()
+      @trigger('closedInfo',entry)
 
-    changeGenre: (genreId)->
-      @rebuild(genreId)
+    changeGenre: (prop)->
+      @trigger('chaneGenre',prop)
+      @rebuild(prop)
+      @trigger('chanedGenre',prop)
 
 
     # 地図とリストを初期化して，構築する
@@ -328,7 +336,6 @@ do ($=jQuery,global=this)->
       @closeOpenedInfo()
       info.open(@map,marker)
       @openedInfo = info
-      @trigger('openedInfo', info, marker)
 
     closeOpenedInfo:->
       if @openedInfo?

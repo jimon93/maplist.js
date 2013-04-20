@@ -210,7 +210,6 @@ describe "MapList", ->
           build       : createSpy("build")
           clear       : createSpy("clear")
           openInfo    : createSpy("openInfo")
-          openedInfo  : createSpy("openedInfo")
           closeInfo   : createSpy("closeInfo")
           changeGenre : createSpy("changeGenre")
         }
@@ -251,22 +250,6 @@ describe "MapList", ->
 
         it "catch args",->
           expect(method.calls[0].args[0]).toBe(obj)
-
-      describe "on openedInfo event",->
-        beforeEach ->
-          method = app.openedInfo
-          obj = []
-          obj2 = {}
-          app.mapView.trigger "openedInfo", obj, obj2
-
-        it "called",->
-          expect(method).toHaveBeenCalled()
-
-        it "catch args[0]",->
-          expect(method.calls[0].args[0]).toBe(obj)
-
-        it "catch args[1]",->
-          expect(method.calls[0].args[1]).toBe(obj2)
 
       describe "on closeinfo event",->
         beforeEach ->
@@ -966,8 +949,6 @@ describe "MapList", ->
         mapView.closeOpenedInfo = createSpy("closeOpenedInfo")
         info = { open: createSpy("open") }
         marker = 'marker'
-        eventSpy = createSpy('openedInfo')
-        mapView.on 'openedInfo', eventSpy
         mapView.openInfo(info,marker)
 
       it "execute @closeOpenedInfo",->
@@ -984,15 +965,6 @@ describe "MapList", ->
 
       it "chche @openedInfo",->
         expect(mapView.openedInfo).toBe(info)
-
-      it "fire openedInfo event",->
-        expect(eventSpy).toHaveBeenCalled()
-
-      it "fire openedInfo event with 0:info",->
-        expect(eventSpy.calls[0].args[0]).toBe(info)
-
-      it "fire openedInfo event with 1:marker",->
-        expect(eventSpy.calls[0].args[1]).toBe(marker)
 
     describe "closeOpenedInfo",->
       close = undefined
