@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.3.2
+MapList JavaScript Library v1.3.3
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -38,7 +38,7 @@ do ($=jQuery,global=this)->
       # general
       templateEngine : $.tmpl || _.template
       # parser
-      parser : { place: "place", genre: "genre" }
+      parser : null
     }
 
     #}}}
@@ -70,21 +70,28 @@ do ($=jQuery,global=this)->
       _.extend( center, options, templates )
 
     delegateEvents:->
-      @entries.on    "select"       , @entries_select
-      @entries.on    "unselect"     , @entries_unselect
+      @entries.on    "select"       , @build
+      @entries.on    "unselect"     , @clear
       @entries.on    "openinfo"     , @openInfo
       @mapView.on    "openedInfo"   , @openedInfo
       @entries.on    "closeinfo"    , @closeInfo
       @genresView.on "change:genre" , @changeGenre
 
-    # eventMethods {{{
-    entries_select: (entries)->
+    # 地図とリストを構築する
+    build:(entries)->
+      prop = @entries.properties
+      @options.beforeBuild?(prop)
       @mapView .build(entries)
       @listView.build(entries)
+      @options.afterBuild?(prop, entries)
 
-    entries_unselect: (entries)->
+    # 地図とリストを初期化する
+    clear:->
+      entries = @entries.selectedList
+      @options.beforeClear?()
       @mapView .clear(entries)
       @listView.clear(entries)
+      @options.afterClear?()
 
     openInfo: (entry)->
       @mapView.openInfo(entry.info, entry.marker)
@@ -96,24 +103,12 @@ do ($=jQuery,global=this)->
 
     changeGenre: (genreId)->
       @rebuild(genreId)
-    #}}}
 
-    # 地図とリストを構築する
-    build:(genreId)->
-      @options.beforeBuild?(genreId)
-      @entries.select(genreId)
-      @options.afterBuild?(genreId, @entries.selected())
-
-    # 地図とリストを初期化する
-    clear:->
-      @options.beforeClear?()
-      @entries.unselect()
-      @options.afterClear?()
 
     # 地図とリストを初期化して，構築する
     rebuild:(genreId)->
-      @clear()
-      @build(genreId)
+      @entries.unselect()
+      @entries.select(genreId)
 
     # map objectを取得
     getMap:->
@@ -251,17 +246,14 @@ do ($=jQuery,global=this)->
       _.bindAll(@)
       @selectedList = []
 
-    select: ( prop )->
-      iterator = (entry) => entry.isSelect(prop)
+    select: ( @properties )->
+      iterator = (entry) => entry.isSelect(@properties)
       @selectedList = _(super iterator).tap (entries)=>
         @trigger("select", entries)
 
     unselect: ->
-      @trigger("unselect", @selected())
+      @trigger("unselect")
       @selectedList = []
-
-    selected: ->
-      @selectedList
 
     # 長くてださい
     @getSource: (data, parser)->

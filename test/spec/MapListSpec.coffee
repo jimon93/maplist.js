@@ -207,20 +207,20 @@ describe "MapList", ->
         app.mapView.off()
         app.genresView.off()
         _.extend app, {
-          entries_select   : createSpy("entries_select")
-          entries_unselect : createSpy("entries_unselect")
-          openInfo         : createSpy("openInfo")
-          openedInfo       : createSpy("openedInfo")
-          closeInfo        : createSpy("closeInfo")
-          changeGenre      : createSpy("changeGenre")
+          build       : createSpy("build")
+          clear       : createSpy("clear")
+          openInfo    : createSpy("openInfo")
+          openedInfo  : createSpy("openedInfo")
+          closeInfo   : createSpy("closeInfo")
+          changeGenre : createSpy("changeGenre")
         }
         app.delegateEvents()
 
       describe "on select event",->
         beforeEach ->
-          method = app.entries_select
+          method = app.build
           obj = []
-          app.entries.trigger "select", obj
+          app.entries.trigger( "select", obj )
 
         it "called",->
           expect(method).toHaveBeenCalled()
@@ -230,7 +230,7 @@ describe "MapList", ->
 
       describe "on unselect event",->
         beforeEach ->
-          method = app.entries_unselect
+          method = app.clear
           obj = []
           app.entries.trigger "unselect", obj
 
@@ -296,6 +296,7 @@ describe "MapList", ->
       beforeEach ->
         app = new MapList maplistArgs
 
+      ###
       describe ".entries_select",->
         entries = spy1 = spy2= undefined
         beforeEach ->
@@ -334,6 +335,7 @@ describe "MapList", ->
 
         it "call mapView.build with entries",->
           expect(spy2.calls[0].args[0]).toBe(entries)
+      ###
 
       describe ".openInfo",->
         spy1 = entry = undefined
@@ -377,46 +379,58 @@ describe "MapList", ->
           expect(spy1.calls[0].args[0]).toBe(genreId)
     #}}}
     describe "::build",-> #{{{
-      spy = genreId = undefined
+      entries = spy1 = spy2= undefined
       beforeEach ->
         app = new MapList maplistArgs
-        app.entries.select = spy = createSpy("select")
-        genreId = "__all__"
-        app.build(genreId)
+        app.mapView  = { build : spy1 = createSpy("mapView:build") }
+        app.listView = { build : spy2 = createSpy("listView:build") }
+        app.build(entries = {})
 
-      it "call entries.select",->
-        expect(spy).toHaveBeenCalled()
+      it "call mapView.build",->
+        expect(spy1).toHaveBeenCalled()
 
-      it "call entries.select with genreId",->
-        expect(spy.calls[0].args[0]).toBe(genreId)
+      it "call mapView.build with entries",->
+        expect(spy1.calls[0].args[0]).toBe(entries)
+
+      it "call mapView.build",->
+        expect(spy2).toHaveBeenCalled()
+
+      it "call mapView.build with entries",->
+        expect(spy2.calls[0].args[0]).toBe(entries)
     #}}}
     describe "::clear",-> #{{{
-      spy = genreId = undefined
+      entries = spy1 = spy2= undefined
       beforeEach ->
         app = new MapList maplistArgs
-        app.entries.unselect = spy = createSpy("unselect")
+        app.mapView  = { clear : spy1 = createSpy("mapView:clear") }
+        app.listView = { clear : spy2 = createSpy("listView:clear") }
         app.clear()
 
-      it "call entries.select",->
-        expect(spy).toHaveBeenCalled()
+      it "call mapView.clear",->
+        expect(spy1).toHaveBeenCalled()
+
+      it "call mapView.clear",->
+        expect(spy2).toHaveBeenCalled()
     #}}}
     describe "rebuild",-> #{{{
       genreId = undefined
       beforeEach ->
         app = new MapList maplistArgs
-        app.clear = createSpy("clear")
-        app.build = createSpy("build")
+        app.entries = {
+          unselect: createSpy("unselect")
+          select: createSpy("select")
+        }
         genreId = "__all__"
         app.rebuild(genreId)
 
-      it "call clear",->
-        expect(app.clear).toHaveBeenCalled()
+      it "call unselect",->
+        expect(app.entries.unselect).toHaveBeenCalled()
 
-      it "call build",->
-        expect(app.build).toHaveBeenCalled()
+      it "call select",->
+        expect(app.entries.select).toHaveBeenCalled()
 
-      it "call build with genreId",->
-        expect(app.build.calls[0].args[0]).toBe(genreId)
+      it "call select with genreId",->
+        expect(app.entries.select.calls[0].args[0]).toBe(genreId)
     #}}}
     describe "getMap",-> #{{{
       beforeEach ->
@@ -780,7 +794,7 @@ describe "MapList", ->
         responce = entries.select(prop)
         expect(spy).toHaveBeenCalled()
 
-      it "fires the select event with arguments",->
+      it "fires the select event with arguments:0",->
         spy = createSpy("select")
         entries.on "select", spy
         responce = entries.select(prop)
@@ -800,17 +814,12 @@ describe "MapList", ->
         responce = entries.unselect()
         expect(spy).toHaveBeenCalled()
 
-      it "fires the unselect event with arguments",->
-        selectEntries = entries.select(prop) # make non empty chche
-        spy = createSpy('unselect')
-        entries.on "unselect", spy
-        responce = entries.unselect()
-        expect(spy.calls[0].args[0]).toBe(selectEntries)
-
+    ###
     describe "::selected",->
       it "return cached selectedList",->
         responce = entries.select(prop)
         expect(entries.selected()).toBe(responce)
+    ###
 
     describe ".getSource", ->
       it "array", ->
