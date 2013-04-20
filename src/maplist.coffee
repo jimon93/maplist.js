@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.3.4
+MapList JavaScript Library v1.3.5
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -53,11 +53,14 @@ do ($=jQuery,global=this)->
       @entries    = new Entries(null,@options)
 
       @delegateEvents()
+      @data(@options.data) if @options.data?
 
-      #source =
+    data:( data )->
       Entries
-        .getSource(@options.data, @options.parser)
+        .getSource(data, @options.parser)
         .then (models)=> @entries.reset(models, @options)
+
+
 
     makeOptions:(options)->
       @extendOptions @extendDefaultOptions options
