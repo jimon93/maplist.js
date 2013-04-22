@@ -46,11 +46,28 @@
 </div>
 <script type="text/javascript">
 $(function(){
+  /*
   var maplist = new MapList({
     data: "../test/data/entries.json",
     listTemplate: $("#tmpl-list-elem").html(),
     infoTemplate: $("#tmpl-info-window").html()
   });
+  */
+  var logF = function(log){ return _.bind(console.log, console, log); };
+  MapList.new({
+    listTemplate: $("#tmpl-list-elem").html(),
+    infoTemplate: $("#tmpl-info-window").html()
+  }).on("beforeBuild" , logF("beforeBuild"))
+    .on("afterBuild"  , logF("afterBuild"))
+    .on("beforeClear" , logF("beforeClear"))
+    .on("afterClear"  , logF("afterClear"))
+    .on("openInfo"    , logF("openInfo"))
+    .on("openedInfo"  , logF("openedInfo"))
+    .on("closeInfo"   , logF("closeInfo"))
+    .on("closedInfo"  , logF("closedInfo"))
+    .on("changeGenre" , logF("changeGenre"))
+    .on("changedGenre", logF("changedGenre"))
+    .data("../test/data/entries.json")
 });
 </script>
 <script id="tmpl-info-window" type="text/template">
