@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.3.7
+MapList JavaScript Library v1.3.8
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -56,8 +56,8 @@ do ($=jQuery,global=this)->
       initFunc?( @ )
       @data(@options.data) if @options.data?
 
-    @new:->
-      new @( arguments )
+    @new:(options,initFunc)->
+      new @( options, initFunc )
 
     data:( data )->
       Entries
@@ -290,7 +290,9 @@ do ($=jQuery,global=this)->
   #}}}
   class HtmlFactory #{{{
     constructor:(@templateEngine, @template)->
-      switch @getTemplateEngineName()
+      if not @template?
+        @engine = -> null
+      else switch @getTemplateEngineName()
         when "_.template"
           @engine = @templateEngine(@template)
         when "$.tmpl"
