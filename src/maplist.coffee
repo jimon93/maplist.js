@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.3.6
+MapList JavaScript Library v1.3.7
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -56,12 +56,13 @@ do ($=jQuery,global=this)->
       initFunc?( @ )
       @data(@options.data) if @options.data?
 
+    @new:->
+      new @( arguments )
+
     data:( data )->
       Entries
         .getSource(data, @options.parser)
         .then (models)=> @entries.reset(models, @options)
-
-
 
     makeOptions:(options)->
       @extendOptions @extendDefaultOptions options
@@ -88,21 +89,21 @@ do ($=jQuery,global=this)->
     build:(entries)->
       prop = @entries.properties
       @trigger('beforeBuild',prop,entries)
-      @options.beforeBuild?(prop,enrries)
+      @options.beforeBuild?(prop,enrries) #Obsolete
       @mapView .build(entries)
       @listView.build(entries)
       @trigger('afterBuild',prop,entries)
-      @options.afterBuild?(prop, entries)
+      @options.afterBuild?(prop, entries) #Obsolete
 
     # 地図とリストを初期化する
     clear:->
       entries = @entries.selectedList
       @trigger("beforeClear",entries)
-      @options.beforeClear?()
+      @options.beforeClear?() #Obsolete
       @mapView .clear(entries)
       @listView.clear(entries)
-      @trigger("afterBuild",entries)
-      @options.afterClear?()
+      @trigger("afterClear",entries)
+      @options.afterClear?() #Obsolete
 
     openInfo: (entry)->
       @trigger('openInfo',entry)
@@ -115,9 +116,9 @@ do ($=jQuery,global=this)->
       @trigger('closedInfo',entry)
 
     changeGenre: (prop)->
-      @trigger('chaneGenre',prop)
+      @trigger('changeGenre',prop)
       @rebuild(prop)
-      @trigger('chanedGenre',prop)
+      @trigger('changedGenre',prop)
 
 
     # 地図とリストを初期化して，構築する

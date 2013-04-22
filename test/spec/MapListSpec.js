@@ -321,15 +321,15 @@
         };
       });
       describe("constructor", function() {
-        var delegateEvents, options, rebuild;
+        var dataFunc, delegateEvents, options;
 
-        options = delegateEvents = rebuild = void 0;
+        options = delegateEvents = dataFunc = void 0;
         beforeEach(function() {
           var MyMapList, _ref;
 
           options = MapList.prototype.makeOptions();
           delegateEvents = createSpy("delegateEvents");
-          rebuild = createSpy("rebuild");
+          dataFunc = createSpy("data");
           MyMapList = (function(_super) {
             __extends(MyMapList, _super);
 
@@ -342,7 +342,7 @@
 
             MyMapList.prototype.delegateEvents = delegateEvents;
 
-            MyMapList.prototype.rebuild = rebuild;
+            MyMapList.prototype.data = dataFunc;
 
             return MyMapList;
 
@@ -366,8 +366,31 @@
         it("check entries", function() {
           return expect(app.entries instanceof MapList.Entries).toBeTruthy();
         });
-        return it("called delegateEvents", function() {
+        it("called delegateEvents", function() {
           return expect(delegateEvents).toHaveBeenCalled();
+        });
+        return it("called data", function() {
+          return expect(dataFunc).toHaveBeenCalled();
+        });
+      });
+      describe(".new", function() {
+        beforeEach(function() {
+          return app = MapList["new"]();
+        });
+        return it("create instance", function() {
+          return expect(app instanceof MapList).toBeTruthy();
+        });
+      });
+      describe("::data", function() {
+        beforeEach(function() {
+          return app = new MapList;
+        });
+        it("none data", function() {
+          return expect(app.entries.toJSON()).not.toEqual(data.entries.object);
+        });
+        return it("data set", function() {
+          app.data(data.entries.object);
+          return expect(app.entries.toJSON()).toEqual(data.entries.object);
         });
       });
       describe("::makeOptions", function() {
@@ -549,123 +572,21 @@
           });
         });
       });
-      describe("eventMethods", function() {
-        beforeEach(function() {
-          return app = new MapList(maplistArgs);
-        });
-        /*
-        describe ".entries_select",->
-          entries = spy1 = spy2= undefined
-          beforeEach ->
-            app.mapView  = { build : spy1 = createSpy("mapView:build") }
-            app.listView = { build : spy2 = createSpy("listView:build") }
-            app.entries_select(entries = [])
-        
-          it "call mapView.build",->
-            expect(spy1).toHaveBeenCalled()
-        
-          it "call mapView.build with entries",->
-            expect(spy1.calls[0].args[0]).toBe(entries)
-        
-          it "call mapView.build",->
-            expect(spy2).toHaveBeenCalled()
-        
-          it "call mapView.build with entries",->
-            expect(spy2.calls[0].args[0]).toBe(entries)
-        
-        describe ".entries_unselect",->
-          spy1 = spy2 = entries = undefined
-          beforeEach ->
-            method = app.entries_unselect
-            app.mapView  = { clear : spy1 = createSpy("mapView:clear") }
-            app.listView = { clear : spy2 = createSpy("listView:clear") }
-            method(entries = [])
-        
-          it "call mapView.build",->
-            expect(spy1).toHaveBeenCalled()
-        
-          it "call mapView.build with entries",->
-            expect(spy1.calls[0].args[0]).toBe(entries)
-        
-          it "call mapView.build",->
-            expect(spy2).toHaveBeenCalled()
-        
-          it "call mapView.build with entries",->
-            expect(spy2.calls[0].args[0]).toBe(entries)
-        */
-
-        describe(".openInfo", function() {
-          var entry, spy1;
-
-          spy1 = entry = void 0;
-          beforeEach(function() {
-            var method;
-
-            method = app.openInfo;
-            app.mapView = {
-              openInfo: spy1 = createSpy("mapView:openInfo")
-            };
-            entry = {
-              info: "info",
-              marker: "marker"
-            };
-            return method(entry);
-          });
-          it("call mapView.build", function() {
-            return expect(spy1).toHaveBeenCalled();
-          });
-          it("call mapView.build with args1", function() {
-            return expect(spy1.calls[0].args[0]).toBe(entry.info);
-          });
-          return it("call mapView.build with args2", function() {
-            return expect(spy1.calls[0].args[1]).toBe(entry.marker);
-          });
-        });
-        describe(".openedInfo", function() {});
-        describe(".closeInfo", function() {
-          var entry, spy1;
-
-          spy1 = entry = void 0;
-          beforeEach(function() {
-            app.mapView = {
-              closeOpenedInfo: spy1 = createSpy("mapView:openInfo")
-            };
-            entry = {};
-            return app.closeInfo(entry);
-          });
-          return it("call mapView.build", function() {
-            return expect(spy1).toHaveBeenCalled();
-          });
-        });
-        return describe(".changeGenre", function() {
-          var genreId, spy1;
-
-          spy1 = genreId = void 0;
-          beforeEach(function() {
-            app.rebuild = spy1 = createSpy("mapView:openInfo");
-            genreId = "foo";
-            return app.changeGenre(genreId);
-          });
-          it("call mapView.build", function() {
-            return expect(spy1).toHaveBeenCalled();
-          });
-          return it("call mapView.build with entries", function() {
-            return expect(spy1.calls[0].args[0]).toBe(genreId);
-          });
-        });
-      });
       describe("::build", function() {
-        var entries, spy1, spy2;
+        var afterBuild, beforeBuild, entries, prop, spy1, spy2;
 
-        entries = spy1 = spy2 = void 0;
+        entries = prop = spy1 = spy2 = beforeBuild = afterBuild = void 0;
         beforeEach(function() {
           app = new MapList(maplistArgs);
+          prop = app.entries.properties;
           app.mapView = {
             build: spy1 = createSpy("mapView:build")
           };
           app.listView = {
             build: spy2 = createSpy("listView:build")
           };
+          app.on("beforeBuild", beforeBuild = createSpy("beforeBuild"));
+          app.on("afterBuild", afterBuild = createSpy("afterBuild"));
           return app.build(entries = {});
         });
         it("call mapView.build", function() {
@@ -677,32 +598,165 @@
         it("call mapView.build", function() {
           return expect(spy2).toHaveBeenCalled();
         });
-        return it("call mapView.build with entries", function() {
+        it("call mapView.build with entries", function() {
           return expect(spy2.calls[0].args[0]).toBe(entries);
+        });
+        it("fire beforeBuild event", function() {
+          return expect(beforeBuild).toHaveBeenCalled();
+        });
+        it("fire beforeBuild event with arguments:0", function() {
+          return expect(beforeBuild.calls[0].args[0]).toBe(prop);
+        });
+        it("fire beforeBuild event with arguments:1", function() {
+          return expect(beforeBuild.calls[0].args[1]).toBe(entries);
+        });
+        it("fire afterBuild event", function() {
+          return expect(afterBuild).toHaveBeenCalled();
+        });
+        it("fire afterBuild event with arguments:0", function() {
+          return expect(afterBuild.calls[0].args[0]).toBe(prop);
+        });
+        return it("fire afterBuild event with arguments:1", function() {
+          return expect(afterBuild.calls[0].args[1]).toBe(entries);
         });
       });
       describe("::clear", function() {
-        var entries, spy1, spy2;
+        var afterClear, beforeClear, entries, spy1, spy2;
 
-        entries = spy1 = spy2 = void 0;
+        entries = spy1 = spy2 = beforeClear = afterClear = void 0;
         beforeEach(function() {
           app = new MapList(maplistArgs);
+          entries = app.entries.selectedList;
           app.mapView = {
             clear: spy1 = createSpy("mapView:clear")
           };
           app.listView = {
             clear: spy2 = createSpy("listView:clear")
           };
+          app.on("beforeClear", beforeClear = createSpy("beforeClear"));
+          app.on("afterClear", afterClear = createSpy("afterClear"));
           return app.clear();
         });
         it("call mapView.clear", function() {
           return expect(spy1).toHaveBeenCalled();
         });
-        return it("call mapView.clear", function() {
+        it("call mapView.clear", function() {
           return expect(spy2).toHaveBeenCalled();
         });
+        it("fire beforeClear event", function() {
+          return expect(beforeClear).toHaveBeenCalled();
+        });
+        it("fire beforeClear event with arguments", function() {
+          return expect(beforeClear.calls[0].args[0]).toBe(entries);
+        });
+        it("fire afterClear event", function() {
+          return expect(afterClear).toHaveBeenCalled();
+        });
+        return it("fire afterClear event with arguments", function() {
+          return expect(afterClear.calls[0].args[0]).toBe(entries);
+        });
       });
-      describe("rebuild", function() {
+      describe("::openInfo", function() {
+        var entry, openInfo, openedInfo, spy1;
+
+        spy1 = entry = openInfo = openedInfo = void 0;
+        beforeEach(function() {
+          app = new MapList(maplistArgs);
+          app.mapView = {
+            openInfo: spy1 = createSpy("mapView:openInfo")
+          };
+          entry = {
+            info: "info",
+            marker: "marker"
+          };
+          app.on("openInfo", openInfo = createSpy("openInfo"));
+          app.on("openedInfo", openedInfo = createSpy("openedInfo"));
+          return app.openInfo(entry);
+        });
+        it("call mapView.build", function() {
+          return expect(spy1).toHaveBeenCalled();
+        });
+        it("call mapView.build with args1", function() {
+          return expect(spy1.calls[0].args[0]).toBe(entry.info);
+        });
+        it("call mapView.build with args2", function() {
+          return expect(spy1.calls[0].args[1]).toBe(entry.marker);
+        });
+        it("fire openInfo event", function() {
+          return expect(openInfo).toHaveBeenCalled();
+        });
+        it("fire openInfo event with argument", function() {
+          return expect(openInfo.calls[0].args[0]).toBe(entry);
+        });
+        it("fire openedInfo event", function() {
+          return expect(openedInfo).toHaveBeenCalled();
+        });
+        return it("fire openedInfo event with argument", function() {
+          return expect(openedInfo.calls[0].args[0]).toBe(entry);
+        });
+      });
+      describe("::closeInfo", function() {
+        var closeInfo, closedInfo, entry, spy1;
+
+        spy1 = entry = closeInfo = closedInfo = void 0;
+        beforeEach(function() {
+          app = new MapList(maplistArgs);
+          app.mapView = {
+            closeOpenedInfo: spy1 = createSpy("mapView:closeInfo")
+          };
+          app.on("closeInfo", closeInfo = createSpy("closeInfo"));
+          app.on("closedInfo", closedInfo = createSpy("closedInfo"));
+          entry = {};
+          return app.closeInfo(entry);
+        });
+        it("call mapView.closeOpenedInfo", function() {
+          return expect(spy1).toHaveBeenCalled();
+        });
+        it("fire closeInfo event", function() {
+          return expect(closeInfo).toHaveBeenCalled();
+        });
+        it("fire closeInfo event with argument", function() {
+          return expect(closeInfo.calls[0].args[0]).toBe(entry);
+        });
+        it("fire closeedInfo event", function() {
+          return expect(closedInfo).toHaveBeenCalled();
+        });
+        return it("fire closeedInfo event with argument", function() {
+          return expect(closedInfo.calls[0].args[0]).toBe(entry);
+        });
+      });
+      describe("::changeGenre", function() {
+        var changeGenre, changedGenre, prop, spy1;
+
+        spy1 = prop = changeGenre = changedGenre = void 0;
+        beforeEach(function() {
+          app = new MapList(maplistArgs);
+          app.rebuild = spy1 = createSpy("mapView:openInfo");
+          app.on("changeGenre", changeGenre = createSpy("changeGenre"));
+          app.on("changedGenre", changedGenre = createSpy("changedGenre"));
+          prop = "foo";
+          return app.changeGenre(prop);
+        });
+        it("call mapView.build", function() {
+          return expect(spy1).toHaveBeenCalled();
+        });
+        it("call mapView.build with entries", function() {
+          return expect(spy1.calls[0].args[0]).toBe(prop);
+        });
+        it("fire changeGenre event", function() {
+          return expect(changeGenre).toHaveBeenCalled();
+        });
+        it("fire changeGenre event with argument", function() {
+          return expect(changeGenre.calls[0].args[0]).toBe(prop);
+        });
+        it("fire changedGenre event", function() {
+          return expect(changedGenre).toHaveBeenCalled();
+        });
+        return it("fire changedGenre event with argument", function() {
+          return expect(changedGenre.calls[0].args[0]).toBe(prop);
+        });
+      });
+      describe("::rebuild", function() {
         var genreId;
 
         genreId = void 0;
