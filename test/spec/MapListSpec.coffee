@@ -775,17 +775,20 @@ describe "MapList", ->
       attributes = options = entry = undefined
       beforeEach ->
         attributes = {}
-        options = MapList::makeOptions {}
-        entry = new Entry(attributes,options)
 
-      it "instance check info",->
-        expect(entry.info instanceof google.maps.InfoWindow).toBeTruthy()
+      describe "yes template",->
+        beforeEach ->
+          options = MapList::makeOptions {infoTemplate:"bar", listTemplate:"bar"}
+          entry = new Entry(attributes,options)
 
-      it "instance check marker",->
-        expect(entry.marker instanceof google.maps.Marker).toBeTruthy()
+        it "instance check info",->
+          expect(entry.info instanceof google.maps.InfoWindow).toBeTruthy()
 
-      it "instance check list",->
-        expect(entry.list instanceof jQuery).toBeTruthy()
+        it "instance check marker",->
+          expect(entry.marker instanceof google.maps.Marker).toBeTruthy()
+
+        it "instance check list",->
+          expect(entry.list instanceof jQuery).toBeTruthy()
 
   #}}}
   describe ".Entries", -> #{{{
@@ -1032,7 +1035,7 @@ describe "MapList", ->
   describe ".ListView",-> #{{{
     listView = options = undefined
     beforeEach ->
-      options = MapList::makeOptions {}
+      options = MapList::makeOptions {listTemplate:"bar"}
       listView = new MapList.ListView(options)
 
     describe "constructor",->

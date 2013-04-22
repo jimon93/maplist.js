@@ -1186,18 +1186,25 @@
 
         attributes = options = entry = void 0;
         beforeEach(function() {
-          attributes = {};
-          options = MapList.prototype.makeOptions({});
-          return entry = new Entry(attributes, options);
+          return attributes = {};
         });
-        it("instance check info", function() {
-          return expect(entry.info instanceof google.maps.InfoWindow).toBeTruthy();
-        });
-        it("instance check marker", function() {
-          return expect(entry.marker instanceof google.maps.Marker).toBeTruthy();
-        });
-        return it("instance check list", function() {
-          return expect(entry.list instanceof jQuery).toBeTruthy();
+        return describe("yes template", function() {
+          beforeEach(function() {
+            options = MapList.prototype.makeOptions({
+              infoTemplate: "bar",
+              listTemplate: "bar"
+            });
+            return entry = new Entry(attributes, options);
+          });
+          it("instance check info", function() {
+            return expect(entry.info instanceof google.maps.InfoWindow).toBeTruthy();
+          });
+          it("instance check marker", function() {
+            return expect(entry.marker instanceof google.maps.Marker).toBeTruthy();
+          });
+          return it("instance check list", function() {
+            return expect(entry.list instanceof jQuery).toBeTruthy();
+          });
         });
       });
     });
@@ -1506,7 +1513,9 @@
 
       listView = options = void 0;
       beforeEach(function() {
-        options = MapList.prototype.makeOptions({});
+        options = MapList.prototype.makeOptions({
+          listTemplate: "bar"
+        });
         return listView = new MapList.ListView(options);
       });
       describe("constructor", function() {

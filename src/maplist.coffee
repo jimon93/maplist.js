@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.3.9
+MapList JavaScript Library v1.3.10
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -29,7 +29,7 @@ do ($=jQuery,global=this)->
       listSelector : "#list"
       listTemplate : null
       openInfoSelector : '.open-info'
-      # info Options
+      # Info Options
       infoTemplate : null
       # Genres Options
       genresSelector : '#genre'
@@ -128,9 +128,9 @@ do ($=jQuery,global=this)->
       return @
 
     # 地図とリストを初期化して，構築する
-    rebuild:(genreId)->
+    rebuild:(prop)->
       @entries.unselect()
-      @entries.select(genreId)
+      @entries.select(prop)
       return @
 
     # map objectを取得
