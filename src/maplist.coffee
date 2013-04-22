@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.3.8
+MapList JavaScript Library v1.3.9
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -63,6 +63,7 @@ do ($=jQuery,global=this)->
       Entries
         .getSource(data, @options.parser)
         .then (models)=> @entries.reset(models, @options)
+      return @
 
     makeOptions:(options)->
       @extendOptions @extendDefaultOptions options
@@ -84,6 +85,7 @@ do ($=jQuery,global=this)->
       @entries.on    "openinfo"     , @openInfo
       @entries.on    "closeinfo"    , @closeInfo
       @genresView.on "change:genre" , @changeGenre
+      return @
 
     # 地図とリストを構築する
     build:(entries)->
@@ -94,6 +96,7 @@ do ($=jQuery,global=this)->
       @listView.build(entries)
       @trigger('afterBuild',prop,entries)
       @options.afterBuild?(prop, entries) #Obsolete
+      return @
 
     # 地図とリストを初期化する
     clear:->
@@ -104,27 +107,31 @@ do ($=jQuery,global=this)->
       @listView.clear(entries)
       @trigger("afterClear",entries)
       @options.afterClear?() #Obsolete
+      return @
 
     openInfo: (entry)->
       @trigger('openInfo',entry)
       @mapView.openInfo(entry.info, entry.marker)
       @trigger('openedInfo', entry)
+      return @
 
     closeInfo: (entry)->
       @trigger('closeInfo',entry)
       @mapView.closeOpenedInfo()
       @trigger('closedInfo',entry)
+      return @
 
     changeGenre: (prop)->
       @trigger('changeGenre',prop)
       @rebuild(prop)
       @trigger('changedGenre',prop)
-
+      return @
 
     # 地図とリストを初期化して，構築する
     rebuild:(genreId)->
       @entries.unselect()
       @entries.select(genreId)
+      return @
 
     # map objectを取得
     getMap:->
