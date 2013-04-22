@@ -53,7 +53,10 @@ $(function(){
     infoTemplate: $("#tmpl-info-window").html()
   });
   */
-  var logF = function(log){ return _.bind(console.log, console, log); };
+  var logF = function(log){
+    if( console != null ){ return _.bind(console.log, console, log); }
+    else{ return function(){}; }
+  };
   MapList.new({
     listTemplate: $("#tmpl-list-elem").html(),
     infoTemplate: $("#tmpl-info-window").html()
