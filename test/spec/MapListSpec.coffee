@@ -746,17 +746,17 @@ describe "MapList", ->
         entry = new Backbone.Model
         expect(Entry::isSelect.call(entry,"foo")).toBeFalsy()
 
-      it "genreId equal '__all__", ->
+      it "properties equal {}", ->
         entry = new Backbone.Model {lat:35,lng:135}
-        expect(Entry::isSelect.call(entry,"__all__")).toBeTruthy()
+        expect(Entry::isSelect.call(entry,{})).toBeTruthy()
 
       it "by genreId true", ->
         entry = new Backbone.Model {lat:35,lng:135,genre:"foo"}
-        expect(Entry::isSelect.call(entry,"foo")).toBeTruthy()
+        expect(Entry::isSelect.call(entry,{genre:"foo"})).toBeTruthy()
 
       it "by genreId false", ->
         entry = new Backbone.Model {lat:35,lng:135,genre:"foo"}
-        expect(Entry::isSelect.call(entry,"bar")).toBeFalsy()
+        expect(Entry::isSelect.call(entry,{genre:"bar"})).toBeFalsy()
 
     describe "triger check",->
       entry = undefined
@@ -800,7 +800,7 @@ describe "MapList", ->
       obj = data.entries.object
       options = MapList::makeOptions {}
       entries = new Entries( obj, options )
-      prop = "関東"
+      prop = {genre:"関東"}
 
     describe "constructor", ->
 
@@ -817,7 +817,7 @@ describe "MapList", ->
 
       it "return selected List",->
         responce = entries.select(prop)
-        answer = _(obj).filter (entry)-> entry.genre == prop
+        answer = _(obj).where(prop)
         expect(_(responce).map (entry)->entry.toJSON()).toEqual(answer)
 
       it "chche selected List",->
@@ -1107,7 +1107,9 @@ describe "MapList", ->
     describe "::selectGenre",->
       $elem = spy = undefined
       beforeEach ->
-        e = { currentTarget : $("<div>").data(options.genreDataName, "foo")[0] }
+        wrap = $("<div id='genre'>").data(options.genreGroup,"group")
+        target = $("<div>").data(options.genreDataName, "foo").appendTo(wrap)
+        e = { currentTarget : target[0] }
         genreView.trigger = spy = createSpy("change:genre")
         genreView.selectGenre(e)
 
@@ -1117,6 +1119,16 @@ describe "MapList", ->
       it "fire change:genre event with 0:eventName",->
         expect(spy.calls[0].args[0]).toEqual("change:genre")
 
-      it "fire change:genre event with 1:genreId",->
-        expect(spy.calls[0].args[1]).toEqual("foo")
+      it "fire change:genre event with 1:properties",->
+        expect(spy.calls[0].args[1]).toEqual({group:"foo"})
+
+      it "fire change:genre event with 1:properties default key",->
+        genreView = new MapList.GenresView(options)
+        wrap = $("<div id='genre'>")
+        target = $("<div>").data(options.genreDataName, "foo").appendTo(wrap)
+        e = { currentTarget : target[0] }
+        genreView.trigger = spy = createSpy("change:genre")
+        genreView.selectGenre(e)
+        expect(spy.calls[0].args[1]).toEqual({genre:"foo"})
+
   #}}}

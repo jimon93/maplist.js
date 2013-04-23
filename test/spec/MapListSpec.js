@@ -1131,14 +1131,14 @@
           entry = new Backbone.Model;
           return expect(Entry.prototype.isSelect.call(entry, "foo")).toBeFalsy();
         });
-        it("genreId equal '__all__", function() {
+        it("properties equal {}", function() {
           var entry;
 
           entry = new Backbone.Model({
             lat: 35,
             lng: 135
           });
-          return expect(Entry.prototype.isSelect.call(entry, "__all__")).toBeTruthy();
+          return expect(Entry.prototype.isSelect.call(entry, {})).toBeTruthy();
         });
         it("by genreId true", function() {
           var entry;
@@ -1148,7 +1148,9 @@
             lng: 135,
             genre: "foo"
           });
-          return expect(Entry.prototype.isSelect.call(entry, "foo")).toBeTruthy();
+          return expect(Entry.prototype.isSelect.call(entry, {
+            genre: "foo"
+          })).toBeTruthy();
         });
         return it("by genreId false", function() {
           var entry;
@@ -1158,7 +1160,9 @@
             lng: 135,
             genre: "foo"
           });
-          return expect(Entry.prototype.isSelect.call(entry, "bar")).toBeFalsy();
+          return expect(Entry.prototype.isSelect.call(entry, {
+            genre: "bar"
+          })).toBeFalsy();
         });
       });
       describe("triger check", function() {
@@ -1218,7 +1222,9 @@
         obj = data.entries.object;
         options = MapList.prototype.makeOptions({});
         entries = new Entries(obj, options);
-        return prop = "関東";
+        return prop = {
+          genre: "関東"
+        };
       });
       describe("constructor", function() {
         it("is instanceof Backbone.Collection", function() {
@@ -1236,9 +1242,7 @@
           var answer, responce;
 
           responce = entries.select(prop);
-          answer = _(obj).filter(function(entry) {
-            return entry.genre === prop;
-          });
+          answer = _(obj).where(prop);
           return expect(_(responce).map(function(entry) {
             return entry.toJSON();
           })).toEqual(answer);
@@ -1609,10 +1613,12 @@
 
         $elem = spy = void 0;
         beforeEach(function() {
-          var e;
+          var e, target, wrap;
 
+          wrap = $("<div id='genre'>").data(options.genreGroup, "group");
+          target = $("<div>").data(options.genreDataName, "foo").appendTo(wrap);
           e = {
-            currentTarget: $("<div>").data(options.genreDataName, "foo")[0]
+            currentTarget: target[0]
           };
           genreView.trigger = spy = createSpy("change:genre");
           return genreView.selectGenre(e);
@@ -1623,8 +1629,25 @@
         it("fire change:genre event with 0:eventName", function() {
           return expect(spy.calls[0].args[0]).toEqual("change:genre");
         });
-        return it("fire change:genre event with 1:genreId", function() {
-          return expect(spy.calls[0].args[1]).toEqual("foo");
+        it("fire change:genre event with 1:properties", function() {
+          return expect(spy.calls[0].args[1]).toEqual({
+            group: "foo"
+          });
+        });
+        return it("fire change:genre event with 1:properties default key", function() {
+          var e, target, wrap;
+
+          genreView = new MapList.GenresView(options);
+          wrap = $("<div id='genre'>");
+          target = $("<div>").data(options.genreDataName, "foo").appendTo(wrap);
+          e = {
+            currentTarget: target[0]
+          };
+          genreView.trigger = spy = createSpy("change:genre");
+          genreView.selectGenre(e);
+          return expect(spy.calls[0].args[1]).toEqual({
+            genre: "foo"
+          });
         });
       });
     });

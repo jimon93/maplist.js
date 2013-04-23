@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.3.10
+MapList JavaScript Library v1.4.0
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -16,7 +16,7 @@ do ($=jQuery,global=this)->
     _.extend( @::, Backbone.Events )
     default:->{ #{{{
       # core
-      data             : []
+      data : []
       # Map Options
       mapSelector  : '#map_canvas'
       lat          : 35
@@ -34,8 +34,9 @@ do ($=jQuery,global=this)->
       # Genres Options
       genresSelector : '#genre'
       genreSelector  : 'a'
+      genreGroup     : "target-group"
       genreDataName  : "target-genre"
-      firstGenre     : '__all__'
+      firstGenre     : {}
       # general
       templateEngine : $.tmpl || _.template
       # parser
@@ -256,11 +257,11 @@ do ($=jQuery,global=this)->
       if content?
         $(content).addClass("__list").data("entry",@)
 
-    isSelect:(genreId)->
-      false unless @get('lat')? and @get('lng')?
-      switch genreId
-        when "__all__" then true
-        else genreId == @attributes.genre
+    isSelect:(properties)->
+      return false unless @get('lat')? and @get('lng')?
+      return true if _.isEmpty(properties)
+      return _([@toJSON()]).findWhere(properties)?
+
   #}}}
   class Entries extends Backbone.Collection #{{{
     model: Entry
@@ -268,7 +269,13 @@ do ($=jQuery,global=this)->
     initialize:(source, @options)->
       _.bindAll(@)
       @selectedList = []
-      @properties = @options.firstGenre
+      firstGenre = @options.firstGenre
+      @properties = if _.isObject(firstGenre)
+        firstGenre
+      else if _.isString(firstGenre)
+        switch firstGenre
+          when "__all__" then {}
+          else {genre:firstGenre}
       @on("reset", _.bind( @select, @, null ) )
 
     select: ( @properties = @properties )->
@@ -384,13 +391,18 @@ do ($=jQuery,global=this)->
     initialize:->
       # event
       _.bindAll(@)
-      @$el = $(@options.genresSelector)
-      @$el.on( "click", @options.genreSelector, @selectGenre )
+      @selector = @options.genresSelector
+      @$el = $(@selector)
+      @$el.on( "click", @selector, @selectGenre )
+      @properties = {}
 
     selectGenre:(e)->
       $target = $(e.currentTarget)
-      genreId = $target.data( @options.genreDataName )
-      @trigger("change:genre",genreId)
+      $group = $target.closest(@selector)
+      key = $group.data( @options.genreGroup ) || "genre"
+      val = $target.data( @options.genreDataName )
+      @properties[key] = val
+      @trigger("change:genre",@properties)
       return false
   #}}}
   global.MapList = _.extend App, { #{{{
