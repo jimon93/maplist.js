@@ -741,22 +741,29 @@ describe "MapList", ->
         expect(res.data("entry")).toBe(entry)
 
     describe "::isSelect",->
-      # 普通にentry作っちゃってよかったな...
+      MyEntry = undefined
+      beforeEach ->
+        class MyEntry extends Entry
+          makeInfo:->
+          makeMarker:->
+          makeList:->
+
       it "have not lat & lng",->
-        entry = new Backbone.Model
-        expect(Entry::isSelect.call(entry,"foo")).toBeFalsy()
+        entry = new MyEntry
+        expect(entry.isSelect({})).toBeFalsy()
 
       it "properties equal {}", ->
-        entry = new Backbone.Model {lat:35,lng:135}
-        expect(Entry::isSelect.call(entry,{})).toBeTruthy()
+        log MyEntry
+        entry = new MyEntry {lat:35,lng:135}
+        expect(entry.isSelect({})).toBeTruthy()
 
       it "by genreId true", ->
-        entry = new Backbone.Model {lat:35,lng:135,genre:"foo"}
-        expect(Entry::isSelect.call(entry,{genre:"foo"})).toBeTruthy()
+        entry = new MyEntry {lat:35,lng:135,genre:"foo"}
+        expect(entry.isSelect({genre:"foo"})).toBeTruthy()
 
       it "by genreId false", ->
-        entry = new Backbone.Model {lat:35,lng:135,genre:"foo"}
-        expect(Entry::isSelect.call(entry,{genre:"bar"})).toBeFalsy()
+        entry = new MyEntry {lat:35,lng:135,genre:"foo"}
+        expect(entry.isSelect({genre:"bar"})).toBeFalsy()
 
     describe "triger check",->
       entry = undefined

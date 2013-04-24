@@ -1125,42 +1125,67 @@
         });
       });
       describe("::isSelect", function() {
+        var MyEntry;
+
+        MyEntry = void 0;
+        beforeEach(function() {
+          var _ref;
+
+          return MyEntry = (function(_super) {
+            __extends(MyEntry, _super);
+
+            function MyEntry() {
+              _ref = MyEntry.__super__.constructor.apply(this, arguments);
+              return _ref;
+            }
+
+            MyEntry.prototype.makeInfo = function() {};
+
+            MyEntry.prototype.makeMarker = function() {};
+
+            MyEntry.prototype.makeList = function() {};
+
+            return MyEntry;
+
+          })(Entry);
+        });
         it("have not lat & lng", function() {
           var entry;
 
-          entry = new Backbone.Model;
-          return expect(Entry.prototype.isSelect.call(entry, "foo")).toBeFalsy();
+          entry = new MyEntry;
+          return expect(entry.isSelect({})).toBeFalsy();
         });
         it("properties equal {}", function() {
           var entry;
 
-          entry = new Backbone.Model({
+          log(MyEntry);
+          entry = new MyEntry({
             lat: 35,
             lng: 135
           });
-          return expect(Entry.prototype.isSelect.call(entry, {})).toBeTruthy();
+          return expect(entry.isSelect({})).toBeTruthy();
         });
         it("by genreId true", function() {
           var entry;
 
-          entry = new Backbone.Model({
+          entry = new MyEntry({
             lat: 35,
             lng: 135,
             genre: "foo"
           });
-          return expect(Entry.prototype.isSelect.call(entry, {
+          return expect(entry.isSelect({
             genre: "foo"
           })).toBeTruthy();
         });
         return it("by genreId false", function() {
           var entry;
 
-          entry = new Backbone.Model({
+          entry = new MyEntry({
             lat: 35,
             lng: 135,
             genre: "foo"
           });
-          return expect(Entry.prototype.isSelect.call(entry, {
+          return expect(entry.isSelect({
             genre: "bar"
           })).toBeFalsy();
         });

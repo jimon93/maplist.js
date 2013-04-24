@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.4.3
+MapList JavaScript Library v1.4.4
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -231,6 +231,9 @@ do ($=jQuery,global=this)->
   class Entry extends Backbone.Model #{{{
     initialize: (attributes, options)->
       _.bindAll(@)
+      attributes ||= {}
+      options ||= {}
+      @isPoint = not _.isNaN(parseFloat attributes.lat) and not _.isNaN(parseFloat attributes.lng)
       @info   = @makeInfo(options.infoHtmlFactory)
       @marker = @makeMarker()
       @list   = @makeList(options.listHtmlFactory)
@@ -260,7 +263,7 @@ do ($=jQuery,global=this)->
         $(content).addClass("__list").data("entry",@)
 
     isSelect:(properties)->
-      return false unless @get('lat')? and @get('lng')?
+      return false unless @isPoint
       return true if _.isEmpty(properties)
       return _([@toJSON()]).findWhere(properties)?
 
