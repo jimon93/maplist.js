@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.4.1
+MapList JavaScript Library v1.4.2
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -395,7 +395,7 @@ do ($=jQuery,global=this)->
       _.bindAll(@)
       @selector = @options.genresSelector
       @$el = $(@selector)
-      @$el.on( "click", @selector, @selectGenre )
+      @$el.on( "click", @options.genreSelector, @selectGenre )
       @properties = {}
 
     selectGenre:(e)->
