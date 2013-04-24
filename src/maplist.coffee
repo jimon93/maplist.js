@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.4.2
+MapList JavaScript Library v1.4.3
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -192,7 +192,7 @@ do ($=jQuery,global=this)->
 
     execute: (data)->
       $root = $(">*", data).eq(0)
-      ( @makePlace( $(place) ) for place in $root.find(@options.place).get() )
+      ( @makePlace( $(place) ) for place in $root.find(">#{@options.genre}>#{@options.place}").get() )
 
     makePlace:($place)->
       _({}).chain()
