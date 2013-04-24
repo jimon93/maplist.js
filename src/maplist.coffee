@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.4.0
+MapList JavaScript Library v1.4.1
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -41,6 +41,7 @@ do ($=jQuery,global=this)->
       templateEngine : $.tmpl || _.template
       # parser
       parser : null
+      afterParser : null
     }
 
     #}}}
@@ -62,7 +63,7 @@ do ($=jQuery,global=this)->
 
     data:( data )->
       Entries
-        .getSource(data, @options.parser)
+        .getSource(data, @options.parser, @options.afterParser)
         .then (models)=> @entries.reset(models, @options)
       return @
 
@@ -139,7 +140,7 @@ do ($=jQuery,global=this)->
       return @mapView.map
   #}}}
   class Parser #{{{
-    constructor:( @parser )->
+    constructor:( @parser, @afterParser )->
       _.bindAll(@)
       @parser = Parser.defaultParser unless @parser?
 
@@ -150,7 +151,8 @@ do ($=jQuery,global=this)->
         @parser.execute(data)
       else
         throw "parser is function or on object with the execute method"
-      Parser.finallyParser(result)
+      result = @afterParser(result) if _.isFunction(@afterParser)
+      result = Parser.finallyParser(result)
 
     @defaultParser:(data)->
       if $.isXMLDoc(data)
@@ -288,8 +290,8 @@ do ($=jQuery,global=this)->
       @selectedList = []
 
     # 長くてださい
-    @getSource: (data, parser)->
-      parser = new Parser(parser)
+    @getSource: (data, parser, afterParser)->
+      parser = new Parser(parser, afterParser)
       dfd = new $.Deferred
       if _.isArray(data)
         dfd.resolve(data)
