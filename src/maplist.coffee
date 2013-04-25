@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.4.4
+MapList JavaScript Library v1.4.5
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -42,6 +42,7 @@ do ($=jQuery,global=this)->
       # parser
       parser : null
       afterParser : null
+      xmlParserOptions: {}
     }
 
     #}}}
@@ -63,7 +64,7 @@ do ($=jQuery,global=this)->
 
     data:( data )->
       Entries
-        .getSource(data, @options.parser, @options.afterParser)
+        .getSource(data, @options)
         .then (models)=> @entries.reset(models, @options)
       return @
 
@@ -140,9 +141,10 @@ do ($=jQuery,global=this)->
       return @mapView.map
   #}}}
   class Parser #{{{
-    constructor:( @parser, @afterParser )->
+    constructor:( @options = {} )->
       _.bindAll(@)
-      @parser = Parser.defaultParser unless @parser?
+      @parser = @options.parser || @defaultParser
+      @afterParser = @options.afterParser
 
     execute:(data)->
       result = if _.isFunction(@parser)
@@ -152,11 +154,11 @@ do ($=jQuery,global=this)->
       else
         throw "parser is function or on object with the execute method"
       result = @afterParser(result) if _.isFunction(@afterParser)
-      result = Parser.finallyParser(result)
+      result = @finallyParser(result)
 
-    @defaultParser:(data)->
+    defaultParser:(data)->
       if $.isXMLDoc(data)
-        parser = new Parser.XMLParser
+        parser = new Parser.XMLParser(@options.xmlParserOptions)
         parser.execute(data)
       else if _.isObject(data)
         parser = new Parser.ObjectParser
@@ -164,12 +166,12 @@ do ($=jQuery,global=this)->
       else
         throw "Illegal Argument Error"
 
-    @finallyParser:(data)->
+    finallyParser:(data)->
       data.icon = @makeIcon(data.icon) if data.icon?
       data.shadow = @makeIcon(data.shadow) if data.shadow?
       return data
 
-    @makeIcon : (data)->
+    makeIcon : (data)->
       if _.isObject(data)
         data = _.clone data
         for key, val of data
@@ -192,7 +194,7 @@ do ($=jQuery,global=this)->
 
     execute: (data)->
       $root = $(">*", data).eq(0)
-      ( @makePlace( $(place) ) for place in $root.find(">#{@options.genre}>#{@options.place}").get() )
+      ( @makePlace( $(place) ) for place in $root.find(@options.place).get() )
 
     makePlace:($place)->
       _({}).chain()
@@ -293,8 +295,8 @@ do ($=jQuery,global=this)->
       @selectedList = []
 
     # 長くてださい
-    @getSource: (data, parser, afterParser)->
-      parser = new Parser(parser, afterParser)
+    @getSource: (data, options)->
+      parser = new Parser(options)
       dfd = new $.Deferred
       if _.isArray(data)
         dfd.resolve(data)

@@ -795,34 +795,47 @@
       beforeEach(function() {
         return Parser = MapList.Parser;
       });
-      it("第1引数(parser)を渡すと，@parserにその値が格納される", function() {
-        var obj, parser;
+      it("constructor , parser options", function() {
+        var options, parser;
 
-        obj = {};
-        parser = new Parser(obj);
-        return expect(parser.parser).toBe(obj);
+        options = {
+          parser: Object.create(null)
+        };
+        parser = new Parser(options);
+        return expect(parser.parser).toBe(options.parser);
+      });
+      it("constructor, afterParser options", function() {
+        var options, parser;
+
+        options = {
+          afterParser: Object.create(null)
+        };
+        parser = new Parser(options);
+        return expect(parser.afterParser).toBe(options.afterParser);
       });
       it("parserがない場合，デフォルトのものを使う", function() {
         var parser;
 
         parser = new Parser;
-        return expect(parser.parser).toBe(Parser.defaultParser);
+        return expect(parser.parser).toBe(parser.defaultParser);
       });
       describe(".execute", function() {
         it("parserに関数を渡した場合，executeでその関数を使う", function() {
-          var identity, parser;
+          var func, parser;
 
-          identity = function(val) {
+          func = function(val) {
             return _(val).map(function(v) {
               return v - 1;
             });
           };
-          parser = new Parser(identity);
+          parser = new Parser({
+            parser: func
+          });
           data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
           return expect(parser.execute(data)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
         });
         it("parserにObjectを渡した場合，Objectのexecuteメソッドを使う", function() {
-          var myPerser, parser;
+          var myPerser, options, parser;
 
           myPerser = {
             execute: function(val) {
@@ -831,7 +844,10 @@
               });
             }
           };
-          parser = new Parser(myPerser);
+          options = {
+            parser: myPerser
+          };
+          parser = new Parser(options);
           data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
           return expect(parser.execute(data)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
         });
@@ -839,7 +855,9 @@
           var myPerser, parser;
 
           myPerser = {};
-          parser = new Parser(myPerser);
+          parser = new Parser({
+            parser: myPerser
+          });
           data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
           return expect(function() {
             return parser.execute(data);
@@ -847,6 +865,12 @@
         });
       });
       describe(".defaultParser", function() {
+        var parser;
+
+        parser = void 0;
+        beforeEach(function() {
+          return parser = new Parser;
+        });
         it("arguments is array", function() {
           var _i, _results;
 
@@ -855,13 +879,19 @@
             for (_i = 1; _i <= 100; _i++){ _results.push(_i); }
             return _results;
           }).apply(this);
-          return expect(Parser.defaultParser(data)).toEqual(data);
+          return expect(parser.defaultParser(data)).toEqual(data);
         });
         return it("arguments is xml", function() {
-          return expect(Parser.defaultParser(data.entries.xml)).toEqual(data.entries.object);
+          return expect(parser.defaultParser(data.entries.xml)).toEqual(data.entries.object);
         });
       });
       describe(".makeIcon", function() {
+        var parser;
+
+        parser = void 0;
+        beforeEach(function() {
+          return parser = new Parser;
+        });
         it("with object", function() {
           var dst, src;
 
@@ -879,17 +909,23 @@
             size: new google.maps.Size(55, 55),
             scaledSize: new google.maps.Size(1, 1)
           };
-          return expect(Parser.makeIcon(src)).toEqual(dst);
+          return expect(parser.makeIcon(src)).toEqual(dst);
         });
         return it("with string", function() {
           var dst, src;
 
           src = "foo.png";
           dst = "foo.png";
-          return expect(Parser.makeIcon(src)).toEqual(dst);
+          return expect(parser.makeIcon(src)).toEqual(dst);
         });
       });
       describe("finallyParser", function() {
+        var parser;
+
+        parser = void 0;
+        beforeEach(function() {
+          return parser = new Parser;
+        });
         it("with icon data", function() {
           var dst, src;
 
@@ -927,7 +963,7 @@
               scaledSize: new google.maps.Size(1, 1)
             }
           };
-          return expect(Parser.finallyParser(src)).toEqual(dst);
+          return expect(parser.finallyParser(src)).toEqual(dst);
         });
         return it("no icon data", function() {
           var dst, src;
@@ -938,7 +974,7 @@
           dst = {
             name: "hoge"
           };
-          return expect(Parser.finallyParser(src)).toEqual(dst);
+          return expect(parser.finallyParser(src)).toEqual(dst);
         });
       });
       describe(".XMLParser", function() {

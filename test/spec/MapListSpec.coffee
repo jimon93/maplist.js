@@ -478,47 +478,59 @@ describe "MapList", ->
     beforeEach ->
       Parser = MapList.Parser
 
-    it "第1引数(parser)を渡すと，@parserにその値が格納される", ->
-      obj = {}
-      parser = new Parser(obj)
-      expect(parser.parser).toBe(obj)
+    it "constructor , parser options", ->
+      options = { parser: Object.create(null) }
+      parser = new Parser(options)
+      expect(parser.parser).toBe(options.parser)
+
+    it "constructor, afterParser options",->
+      options = { afterParser: Object.create(null) }
+      parser = new Parser(options)
+      expect(parser.afterParser).toBe(options.afterParser)
+
 
     it "parserがない場合，デフォルトのものを使う", ->
       parser = new Parser
-      expect(parser.parser).toBe(Parser.defaultParser)
+      expect(parser.parser).toBe(parser.defaultParser)
 
     describe ".execute", ->
       it "parserに関数を渡した場合，executeでその関数を使う", ->
-        identity = (val) -> _(val).map (v)->v-1
-        parser = new Parser(identity)
+        func = (val) -> _(val).map (v)->v-1
+        parser = new Parser({parser:func})
         data = [1..10]
         expect(parser.execute(data)).toEqual([0..9])
 
       it "parserにObjectを渡した場合，Objectのexecuteメソッドを使う", ->
-        myPerser = {
-          execute : (val) -> _(val).map (v)->v-1
-        }
-        parser = new Parser(myPerser)
+        myPerser = { execute : (val) -> _(val).map (v)->v-1 }
+        options = { parser: myPerser }
+        parser = new Parser(options)
         data = [1..10]
         expect(parser.execute(data)).toEqual([0..9])
 
       it "上記2つ以外のparserの場合, Errorを投げる",->
         myPerser = { }
-        parser = new Parser(myPerser)
+        parser = new Parser({parser:myPerser})
         data = [1..10]
         expect(-> parser.execute(data))
           .toThrow("parser is function or on object with the execute method")
 
     describe ".defaultParser", -> #{{{
+      parser = undefined
+      beforeEach ->
+        parser = new Parser
 
       it "arguments is array", ->
         data = [1..100]
-        expect(Parser.defaultParser(data)).toEqual(data)
+        expect(parser.defaultParser(data)).toEqual(data)
 
       it "arguments is xml", ->
-        expect(Parser.defaultParser(data.entries.xml)).toEqual(data.entries.object)
+        expect(parser.defaultParser(data.entries.xml)).toEqual(data.entries.object)
     #}}}
     describe ".makeIcon", ->
+      parser = undefined
+      beforeEach ->
+        parser = new Parser
+
       it "with object", ->
         src = {
           url: "foo.png"
@@ -535,14 +547,18 @@ describe "MapList", ->
           scaledSize: new google.maps.Size(1,1)
         }
 
-        expect(Parser.makeIcon(src)).toEqual(dst)
+        expect(parser.makeIcon(src)).toEqual(dst)
 
       it "with string", ->
         src = "foo.png"
         dst = "foo.png"
-        expect(Parser.makeIcon(src)).toEqual(dst)
+        expect(parser.makeIcon(src)).toEqual(dst)
 
     describe "finallyParser", ->
+      parser = undefined
+      beforeEach ->
+        parser = new Parser
+
       it "with icon data", ->
         src = {
           name : "hoge"
@@ -578,7 +594,7 @@ describe "MapList", ->
             scaledSize: new google.maps.Size(1,1)
           }
         }
-        expect(Parser.finallyParser(src)).toEqual(dst)
+        expect(parser.finallyParser(src)).toEqual(dst)
 
       it "no icon data", ->
         src = {
@@ -587,7 +603,7 @@ describe "MapList", ->
         dst = {
           name : "hoge"
         }
-        expect(Parser.finallyParser(src)).toEqual(dst)
+        expect(parser.finallyParser(src)).toEqual(dst)
 
     describe ".XMLParser", -> #{{{
       parser = undefined
