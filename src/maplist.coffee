@@ -166,10 +166,11 @@ do ($=jQuery,global=this)->
       else
         throw "Illegal Argument Error"
 
-    finallyParser:(data)->
-      data.icon = @makeIcon(data.icon) if data.icon?
-      data.shadow = @makeIcon(data.shadow) if data.shadow?
-      return data
+    finallyParser:(entries)->
+      for entry in entries
+        entry.icon = @makeIcon(entry.icon) if entry.icon?
+        entry.shadow = @makeIcon(entry.shadow) if entry.shadow?
+      entries
 
     makeIcon : (data)->
       if _.isObject(data)

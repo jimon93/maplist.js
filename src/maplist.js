@@ -220,14 +220,19 @@ MIT License
         }
       };
 
-      Parser.prototype.finallyParser = function(data) {
-        if (data.icon != null) {
-          data.icon = this.makeIcon(data.icon);
+      Parser.prototype.finallyParser = function(entries) {
+        var entry, _i, _len;
+
+        for (_i = 0, _len = entries.length; _i < _len; _i++) {
+          entry = entries[_i];
+          if (entry.icon != null) {
+            entry.icon = this.makeIcon(entry.icon);
+          }
+          if (entry.shadow != null) {
+            entry.shadow = this.makeIcon(entry.shadow);
+          }
         }
-        if (data.shadow != null) {
-          data.shadow = this.makeIcon(data.shadow);
-        }
-        return data;
+        return entries;
       };
 
       Parser.prototype.makeIcon = function(data) {
