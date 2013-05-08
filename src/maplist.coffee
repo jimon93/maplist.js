@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.4.7
+MapList JavaScript Library v1.4.8
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -274,7 +274,7 @@ do ($=jQuery,global=this)->
       latExist and lngExist
 
     isSelect:(properties)->
-      @isPoint and ( _.isEmpty(properties) or _([@toJSON]).findWhere(properties)? ) ? true : false
+      @isPoint and ( _.isEmpty(properties) or _([@toJSON()]).findWhere(properties)? ) ? true : false
 
   #}}}
   class Entries extends Backbone.Collection #{{{
