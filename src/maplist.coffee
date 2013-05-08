@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.4.8
+MapList JavaScript Library v1.4.9
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -25,6 +25,7 @@ do ($=jQuery,global=this)->
       mapTypeId    : google.maps.MapTypeId.ROADMAP
       canFitBounds : true
       fixedZoom    : false
+      maxFitZoom   : 16
       # List Options
       listSelector : "#list"
       listTemplate : null
@@ -54,6 +55,7 @@ do ($=jQuery,global=this)->
       @listView   = new ListView(@options)
       @genresView = new GenresView(@options)
       @entries    = new Entries(null,@options)
+      @properties = {}
 
       @delegateEvents()
       initFunc?( @ )
@@ -127,10 +129,22 @@ do ($=jQuery,global=this)->
       @trigger('closedInfo',entry)
       return @
 
-    changeGenre: (prop)->
-      @trigger('changeGenre',prop)
-      @rebuild(prop)
-      @trigger('changedGenre',prop)
+    changeGenre: (key, val)->
+      properties = {}
+      if _.isUndefined val
+        properties = _.omit( @properties, key )
+      else
+        properties[key] = val
+        properties = _.extend( @properties, properties )
+      @trigger('changeGenre', key, val)
+      @changeProperties( properties )
+      @trigger('changedGenre', key, val)
+      return @
+
+    changeProperties: (@properties)->
+      @trigger('changeProperties', @properties)
+      @rebuild( @properties )
+      @trigger('changedProperties', @properties )
       return @
 
     # 地図とリストを初期化して，構築する
@@ -142,6 +156,9 @@ do ($=jQuery,global=this)->
     # map objectを取得
     getMap:->
       return @mapView.map
+
+    getProperties:->
+      return @properties
   #}}}
   class Parser #{{{
     constructor:( @options = {} )->
@@ -358,14 +375,17 @@ do ($=jQuery,global=this)->
       @fitBounds(entries) if @options.canFitBounds
 
     fitBounds:(entries)->
-      bounds = new google.maps.LatLngBounds
-      for entry in entries
-        bounds.extend( entry.marker.getPosition() )
-      if @options.fixedZoom
-        @map.setCenter( bounds.getCenter() )
-        @map.setZoom( @options.zoom )
-      else
-        @map.fitBounds( bounds )
+      if entries.length > 0
+        bounds = new google.maps.LatLngBounds
+        for entry in entries
+          bounds.extend( entry.marker.getPosition() )
+        if @options.fixedZoom
+          @map.setCenter( bounds.getCenter() )
+          @map.setZoom( @options.zoom )
+        else
+          @map.fitBounds( bounds )
+          if( @map.getZoom() > @options.maxFitZoom )
+            @map.setZoom( @options.maxFitZoom )
 
     # マーカー, インフォ, リストを消す
     clear:(entries)->
@@ -409,15 +429,13 @@ do ($=jQuery,global=this)->
       @selector = @options.genresSelector
       @$el = $(@selector)
       @$el.on( "click", @options.genreSelector, @selectGenre )
-      @properties = {}
 
     selectGenre:(e)->
       $target = $(e.currentTarget)
       $group = $target.closest(@selector)
       key = $group.data( @options.genreGroup ) || "genre"
       val = $target.data( @options.genreDataName )
-      @properties[key] = val
-      @trigger("change:genre",@properties)
+      @trigger("change:genre", key, val)
       return false
   #}}}
   global.MapList = _.extend App, { #{{{
