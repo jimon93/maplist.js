@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.4.6
+MapList JavaScript Library v1.4.7
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -60,6 +60,9 @@ do ($=jQuery,global=this)->
       @data(@options.data) if @options.data?
 
     @new:(options,initFunc)->
+      App.create(options,initFunc)
+
+    @create:(options,initFunc)->
       new App( options, initFunc )
 
     data:( data )->
@@ -236,7 +239,7 @@ do ($=jQuery,global=this)->
       _.bindAll(@)
       attributes ||= {}
       options ||= {}
-      @isPoint = not _.isNaN(parseFloat attributes.lat) and not _.isNaN(parseFloat attributes.lng)
+      @isPoint = @getExistPoint()
       @info   = @makeInfo(options.infoHtmlFactory)
       @marker = @makeMarker()
       @list   = @makeList(options.listHtmlFactory)
@@ -265,10 +268,13 @@ do ($=jQuery,global=this)->
       if content?
         $(content).addClass("__list").data("entry",@)
 
+    getExistPoint:->
+      latExist = @has('lat') and _.isFinite(parseFloat @get 'lat')
+      lngExist = @has('lng') and _.isFinite(parseFloat @get 'lng')
+      latExist and lngExist
+
     isSelect:(properties)->
-      return false unless @isPoint
-      return true if _.isEmpty(properties)
-      return _([@toJSON()]).findWhere(properties)?
+      @isPoint and ( _.isEmpty(properties) or _([@toJSON]).findWhere(properties)? ) ? true : false
 
   #}}}
   class Entries extends Backbone.Collection #{{{
