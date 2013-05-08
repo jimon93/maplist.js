@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.4.5
+MapList JavaScript Library v1.4.6
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -60,7 +60,7 @@ do ($=jQuery,global=this)->
       @data(@options.data) if @options.data?
 
     @new:(options,initFunc)->
-      new @( options, initFunc )
+      new App( options, initFunc )
 
     data:( data )->
       Entries
@@ -178,9 +178,9 @@ do ($=jQuery,global=this)->
         for key, val of data
           switch key
             when "origin", "anchor"
-              data[key] = new google.maps.Point(val...)
+              data[key] = new google.maps.Point(val[0],val[1])
             when "size", "scaledSize"
-              data[key] = new google.maps.Size(val...)
+              data[key] = new google.maps.Size(val[0],val[1])
       return data
   #}}}
   class Parser.XMLParser #{{{
@@ -248,7 +248,7 @@ do ($=jQuery,global=this)->
       @trigger('closeinfo', @)
 
     makeInfo:(infoHtmlFactory)->
-      content = infoHtmlFactory.make( @toJSON() )
+      content = @get('__infoElement') || infoHtmlFactory.make( @toJSON() )
       if content?
         info = new google.maps.InfoWindow {content}
         google.maps.event.addListener( info, 'closeclick', @closeInfo )
@@ -275,7 +275,8 @@ do ($=jQuery,global=this)->
     model: Entry
 
     initialize:(source, @options)->
-      _.bindAll(@)
+      funcs = _(@).chain().functions().without("model").value()
+      _(@).bindAll.apply(funcs)
       @selectedList = []
       firstGenre = @options.firstGenre
       @properties = if _.isObject(firstGenre)
