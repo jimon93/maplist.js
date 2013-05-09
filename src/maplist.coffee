@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.4.9
+MapList JavaScript Library v1.4.10
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -11,7 +11,7 @@ Require Library
 MIT License
 ###
 do ($=jQuery,global=this)->
-  log = _.bind( console.log, console )
+  log = (args...)-> console?.log?(args...)
   class App #{{{
     _.extend( @::, Backbone.Events )
     default:->{ #{{{
