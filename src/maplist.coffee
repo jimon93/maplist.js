@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.4.10
+MapList JavaScript Library v1.4.11
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -269,7 +269,7 @@ do ($=jQuery,global=this)->
 
     makeInfo:(infoHtmlFactory)->
       content = @get('__infoElement') || infoHtmlFactory.make( @toJSON() )
-      if content?
+      if content? and !!content.replace(/\s/g,"")
         info = new google.maps.InfoWindow {content}
         google.maps.event.addListener( info, 'closeclick', @closeInfo )
         return info
@@ -282,7 +282,7 @@ do ($=jQuery,global=this)->
 
     makeList:(listHtmlFactory)->
       content = listHtmlFactory.make( @toJSON() )
-      if content?
+      if content? and !!content.replace(/\s/g,"")
         $(content).addClass("__list").data("entry",@)
 
     getExistPoint:->
