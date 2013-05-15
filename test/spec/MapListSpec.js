@@ -756,6 +756,7 @@
           return expect(changedGenre.calls[0].args[0]).toBe(prop);
         });
       });
+      describe("::changeProperties", function() {});
       describe("::rebuild", function() {
         var genreId;
 

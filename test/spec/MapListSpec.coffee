@@ -445,6 +445,7 @@ describe "MapList", ->
       it "fire changedGenre event with argument",->
         expect(changedGenre.calls[0].args[0]).toBe(prop)
     #}}}
+    describe "::changeProperties",->
     describe "::rebuild",-> #{{{
       genreId = undefined
       beforeEach ->

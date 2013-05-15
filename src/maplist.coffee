@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.4.11
+MapList JavaScript Library v1.5.0
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -14,7 +14,7 @@ do ($=jQuery,global=this)->
   log = (args...)-> console?.log?(args...)
   class App #{{{
     _.extend( @::, Backbone.Events )
-    default:->{ #{{{
+    defaults:->{ #{{{
       # core
       data : []
       # Map Options
@@ -59,25 +59,23 @@ do ($=jQuery,global=this)->
 
       @delegateEvents()
       initFunc?( @ )
-      @data(@options.data) if @options.data?
-
-    @new:(options,initFunc)->
-      App.create(options,initFunc)
+      @start(@options.data) if @options.data?
 
     @create:(options,initFunc)->
       new App( options, initFunc )
 
-    data:( data )->
+    start:( data )->
       Entries
         .getSource(data, @options)
         .then (models)=> @entries.reset(models, @options)
       return @
+    data: @::start
 
     makeOptions:(options)->
       @extendOptions @extendDefaultOptions options
 
     extendDefaultOptions:(options = {})->
-      options = _.extend( {}, _(@).result('default'), options )
+      options = _.extend( {}, _(@).result('defaults'), options )
 
     extendOptions:(options)->
       center = { center : new google.maps.LatLng( options.lat, options.lng ) }
@@ -98,12 +96,12 @@ do ($=jQuery,global=this)->
     # 地図とリストを構築する
     build:(entries)->
       prop = @entries.properties
-      @trigger('beforeBuild',prop,entries)
-      @options.beforeBuild?(prop,enrries) #Obsolete
+      @trigger('beforeBuild',entries,prop)
+      @options.beforeBuild?(entries,prop) #Obsolete
       @mapView .build(entries)
       @listView.build(entries)
-      @trigger('afterBuild',prop,entries)
-      @options.afterBuild?(prop, entries) #Obsolete
+      @trigger('afterBuild',entries,prop)
+      @options.afterBuild?(entries,prop) #Obsolete
       return @
 
     # 地図とリストを初期化する
@@ -204,14 +202,14 @@ do ($=jQuery,global=this)->
       return data
   #}}}
   class Parser.XMLParser #{{{
-    default: ->{
+    defaults: ->{
       place: "place"
       genre: "genre"
     }
 
     constructor: (options)->
       _.bindAll(@)
-      @options = _.extend( {}, _(@).result('default'), options)
+      @options = _.extend( {}, _(@).result('defaults'), options)
 
     execute: (data)->
       $root = $(">*", data).eq(0)
