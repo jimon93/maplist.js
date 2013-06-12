@@ -57,7 +57,7 @@ $(function(){
     if( console != null ){ return _.bind(console.log, console, log); }
     else{ return function(){}; }
   };
-  MapList.new({
+  MapList.create({
     listTemplate: $("#tmpl-list-elem").html(),
     infoTemplate: $("#tmpl-info-window").html()
   }).on("beforeBuild" , logF("beforeBuild"))

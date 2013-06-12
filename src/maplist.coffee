@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.5.0
+MapList JavaScript Library v1.5.3
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -129,7 +129,7 @@ do ($=jQuery,global=this)->
 
     changeGenre: (key, val)->
       properties = {}
-      if _.isUndefined val
+      if _.isUndefined(val) or val == "__all__"
         properties = _.omit( @properties, key )
       else
         properties[key] = val
@@ -162,17 +162,7 @@ do ($=jQuery,global=this)->
     constructor:( @options = {} )->
       _.bindAll(@)
       @parser = @options.parser || @defaultParser
-      @afterParser = @options.afterParser
-
-    execute:(data)->
-      result = if _.isFunction(@parser)
-        @parser(data)
-      else if @parser.execute?
-        @parser.execute(data)
-      else
-        throw "parser is function or on object with the execute method"
-      result = @afterParser(result) if _.isFunction(@afterParser)
-      result = @finallyParser(result)
+      @afterParser = @options.afterParser || _.identity
 
     defaultParser:(data)->
       if $.isXMLDoc(data)
@@ -184,7 +174,18 @@ do ($=jQuery,global=this)->
       else
         throw "Illegal Argument Error"
 
-    finallyParser:(entries)->
+    execute:(data)->
+      @finallyParse @afterParser @parse data
+
+    parse:(data)->
+      if _.isFunction(@parser)
+        @parser(data)
+      else if @parser.execute?
+        @parser.execute(data)
+      else
+        throw "parser is function or on object with the execute method"
+
+    finallyParse:(entries)->
       for entry in entries
         entry.icon = @makeIcon(entry.icon) if entry.icon?
         entry.shadow = @makeIcon(entry.shadow) if entry.shadow?
@@ -340,15 +341,15 @@ do ($=jQuery,global=this)->
         when "_.template"
           @engine = @templateEngine(@template)
         when "$.tmpl"
-          @template = "<wrap>#{@template}</wrap>"
-          @engine = _.bind( @templateEngine, @, @template )
+          @engine = _.bind( @templateEngine, $, @template )
         else
           @engine = _.bind( @templateEngine, @, @template )
 
     make:(object)->
       return null unless @templateEngine? and @template?
       res = @engine(object)
-      res = res.html() if res.html?
+      if @getTemplateEngineName() == "$.tmpl"
+        res = _(res).map( (dom) -> dom.outerHTML ).join('')
       return res
 
     getTemplateEngineName:->
