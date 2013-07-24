@@ -15,7 +15,6 @@ do ($=jQuery,global=this)->
   class App #{{{
     _.extend( @::, Backbone.Events )
 
-    #
     constructor:(options,initFunc)->
       @options    = new Options(options)
       @mapView    = new MapView(@options)
@@ -24,8 +23,11 @@ do ($=jQuery,global=this)->
       @entries    = new Entries(null,@options)
       @properties = {}
 
-      @delegateEvents()
-      initFunc?( @ )
+      #@delegateEvents()
+      delegator = new AppDelegator(@options)
+      delegator.execute(@)
+
+      initFunc?(@)
       @start(@options.data) if @options.data?
 
     @create:(options,initFunc)->
@@ -37,35 +39,25 @@ do ($=jQuery,global=this)->
         .then (models)=> @entries.reset(models, @options)
       return @
 
+    # Obsolete
     data: @::start
-
-    delegateEvents:=>
-      @entries.on    "select"       , @build
-      @entries.on    "unselect"     , @clear
-      @entries.on    "openinfo"     , @openInfo
-      @entries.on    "closeinfo"    , @closeInfo
-      @genresView.on "change:genre" , @changeGenre
 
     # 地図とリストを構築する
     build: (entries)=>
       prop = @entries.properties
       @trigger('beforeBuild',entries,prop)
-      @options.beforeBuild?(entries,prop) #Obsolete
       @mapView .build(entries)
       @listView.build(entries)
       @trigger('afterBuild',entries,prop)
-      @options.afterBuild?(entries,prop) #Obsolete
       return @
 
     # 地図とリストを初期化する
     clear:=>
       entries = @entries.selectedList
       @trigger("beforeClear",entries)
-      @options.beforeClear?() #Obsolete
       @mapView .clear(entries)
       @listView.clear(entries)
       @trigger("afterClear",entries)
-      @options.afterClear?() #Obsolete
       return @
 
     # インフォウィンドウを開く
@@ -162,6 +154,24 @@ do ($=jQuery,global=this)->
         listHtmlFactory : new HtmlFactory(options.templateEngine, options.listTemplate)
       }
       _.extend( center, options, templates )
+  #}}}
+  class AppDelegator #{{{
+    constructor: (@options)->
+
+    execute: (app)->
+      app.entries.on    "select"       , app.build
+      app.entries.on    "unselect"     , app.clear
+      app.entries.on    "openinfo"     , app.openInfo
+      app.entries.on    "closeinfo"    , app.closeInfo
+      app.genresView.on "change:genre" , app.changeGenre
+      @obsoleteDelegateEvents(app)
+
+    obsoleteDelegateEvents: (app)->
+      app.on 'beforeBuild', @options.beforeBuild if @options.beforeBuild?
+      app.on 'afterBuild' , @options.afterBuild  if @options.afterBuild?
+      app.on 'beforeClear', @options.beforeClear if @options.beforeClear?
+      app.on 'afterClear' , @options.afterClear  if @options.afterClear?
+
   #}}}
   class Parser #{{{
     constructor:( @options = {} )->

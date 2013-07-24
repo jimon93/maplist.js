@@ -20,7 +20,7 @@ MIT License
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   (function($, global) {
-    var App, Entries, Entry, GenresView, HtmlFactory, ListView, MapView, Options, Parser, log, _ref, _ref1, _ref2, _ref3, _ref4;
+    var App, AppDelegator, Entries, Entry, GenresView, HtmlFactory, ListView, MapView, Options, Parser, log, _ref, _ref1, _ref2, _ref3, _ref4;
 
     log = function() {
       var args;
@@ -41,14 +41,17 @@ MIT License
         this.openInfo = __bind(this.openInfo, this);
         this.clear = __bind(this.clear, this);
         this.build = __bind(this.build, this);
-        this.delegateEvents = __bind(this.delegateEvents, this);
-        this.start = __bind(this.start, this);        this.options = new Options(options);
+        this.start = __bind(this.start, this);
+        var delegator;
+
+        this.options = new Options(options);
         this.mapView = new MapView(this.options);
         this.listView = new ListView(this.options);
         this.genresView = new GenresView(this.options);
         this.entries = new Entries(null, this.options);
         this.properties = {};
-        this.delegateEvents();
+        delegator = new AppDelegator(this.options);
+        delegator.execute(this);
         if (typeof initFunc === "function") {
           initFunc(this);
         }
@@ -72,45 +75,25 @@ MIT License
 
       App.prototype.data = App.prototype.start;
 
-      App.prototype.delegateEvents = function() {
-        this.entries.on("select", this.build);
-        this.entries.on("unselect", this.clear);
-        this.entries.on("openinfo", this.openInfo);
-        this.entries.on("closeinfo", this.closeInfo);
-        return this.genresView.on("change:genre", this.changeGenre);
-      };
-
       App.prototype.build = function(entries) {
-        var prop, _base, _base1;
+        var prop;
 
         prop = this.entries.properties;
         this.trigger('beforeBuild', entries, prop);
-        if (typeof (_base = this.options).beforeBuild === "function") {
-          _base.beforeBuild(entries, prop);
-        }
         this.mapView.build(entries);
         this.listView.build(entries);
         this.trigger('afterBuild', entries, prop);
-        if (typeof (_base1 = this.options).afterBuild === "function") {
-          _base1.afterBuild(entries, prop);
-        }
         return this;
       };
 
       App.prototype.clear = function() {
-        var entries, _base, _base1;
+        var entries;
 
         entries = this.entries.selectedList;
         this.trigger("beforeClear", entries);
-        if (typeof (_base = this.options).beforeClear === "function") {
-          _base.beforeClear();
-        }
         this.mapView.clear(entries);
         this.listView.clear(entries);
         this.trigger("afterClear", entries);
-        if (typeof (_base1 = this.options).afterClear === "function") {
-          _base1.afterClear();
-        }
         return this;
       };
 
@@ -227,6 +210,38 @@ MIT License
       return Options;
 
     }).call(this);
+    AppDelegator = (function() {
+      function AppDelegator(options) {
+        this.options = options;
+      }
+
+      AppDelegator.prototype.execute = function(app) {
+        app.entries.on("select", app.build);
+        app.entries.on("unselect", app.clear);
+        app.entries.on("openinfo", app.openInfo);
+        app.entries.on("closeinfo", app.closeInfo);
+        app.genresView.on("change:genre", app.changeGenre);
+        return this.obsoleteDelegateEvents(app);
+      };
+
+      AppDelegator.prototype.obsoleteDelegateEvents = function(app) {
+        if (this.options.beforeBuild != null) {
+          app.on('beforeBuild', this.options.beforeBuild);
+        }
+        if (this.options.afterBuild != null) {
+          app.on('afterBuild', this.options.afterBuild);
+        }
+        if (this.options.beforeClear != null) {
+          app.on('beforeClear', this.options.beforeClear);
+        }
+        if (this.options.afterClear != null) {
+          return app.on('afterClear', this.options.afterClear);
+        }
+      };
+
+      return AppDelegator;
+
+    })();
     Parser = (function() {
       function Parser(options) {
         this.options = options != null ? options : {};
