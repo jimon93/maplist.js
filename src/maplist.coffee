@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.5.3
+MapList JavaScript Library v1.5.4
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -14,7 +14,113 @@ do ($=jQuery,global=this)->
   log = (args...)-> console?.log?(args...)
   class App #{{{
     _.extend( @::, Backbone.Events )
-    defaults:->{ #{{{
+
+    #
+    constructor:(options,initFunc)->
+      @options    = new Options(options)
+      @mapView    = new MapView(@options)
+      @listView   = new ListView(@options)
+      @genresView = new GenresView(@options)
+      @entries    = new Entries(null,@options)
+      @properties = {}
+
+      @delegateEvents()
+      initFunc?( @ )
+      @start(@options.data) if @options.data?
+
+    @create:(options,initFunc)->
+      new App( options, initFunc )
+
+    start:( data )=>
+      Entries
+        .getSource(data, @options)
+        .then (models)=> @entries.reset(models, @options)
+      return @
+
+    data: @::start
+
+    delegateEvents:=>
+      @entries.on    "select"       , @build
+      @entries.on    "unselect"     , @clear
+      @entries.on    "openinfo"     , @openInfo
+      @entries.on    "closeinfo"    , @closeInfo
+      @genresView.on "change:genre" , @changeGenre
+
+    # 地図とリストを構築する
+    build: (entries)=>
+      prop = @entries.properties
+      @trigger('beforeBuild',entries,prop)
+      @options.beforeBuild?(entries,prop) #Obsolete
+      @mapView .build(entries)
+      @listView.build(entries)
+      @trigger('afterBuild',entries,prop)
+      @options.afterBuild?(entries,prop) #Obsolete
+      return @
+
+    # 地図とリストを初期化する
+    clear:=>
+      entries = @entries.selectedList
+      @trigger("beforeClear",entries)
+      @options.beforeClear?() #Obsolete
+      @mapView .clear(entries)
+      @listView.clear(entries)
+      @trigger("afterClear",entries)
+      @options.afterClear?() #Obsolete
+      return @
+
+    # インフォウィンドウを開く
+    openInfo: (entry)=>
+      @trigger('openInfo',entry)
+      @mapView.openInfo(entry.info, entry.marker)
+      @trigger('openedInfo', entry)
+      return @
+
+    # インフォウィンドウを閉じる
+    closeInfo: (entry)=>
+      @trigger('closeInfo',entry)
+      @mapView.closeOpenedInfo()
+      @trigger('closedInfo',entry)
+      return @
+
+    # ジャンルを変更する
+    changeGenre: (key, val)=>
+      properties = {}
+      if _.isUndefined(val) or val == "__all__"
+        properties = _.omit( @properties, key )
+      else
+        properties[key] = val
+        properties = _.extend( @properties, properties )
+      @trigger('changeGenre', key, val)
+      @changeProperties( properties )
+      @trigger('changedGenre', key, val)
+      return @
+
+    # ジャンルプロパティを変更する
+    changeProperties: (@properties)=>
+      @trigger('changeProperties', @properties)
+      @rebuild( @properties )
+      @trigger('changedProperties', @properties )
+      return @
+
+    # 地図とリストを初期化して，構築する
+    rebuild:(prop)=>
+      @entries.unselect()
+      @entries.select(prop)
+      return @
+
+    # map objectを取得
+    getMap:=>
+      return @mapView.map
+
+    # entriesにpropertiesが重複している
+    getProperties:=>
+      return @properties
+  #}}}
+  class Options #{{{
+    constructor: (options)->
+      _.extend @, extendOptions extendDefaultOptions options
+
+    defaults = =>{ #
       # core
       data : []
       # Map Options
@@ -46,125 +152,23 @@ do ($=jQuery,global=this)->
       xmlParserOptions: {}
     }
 
-    #}}}
-    constructor:(options,initFunc)->
-      _.bindAll(@)
+    extendDefaultOptions = (options = {})=>
+      options = _.extend( {}, defaults(), options )
 
-      @options    = @makeOptions(options)
-      @mapView    = new MapView(@options)
-      @listView   = new ListView(@options)
-      @genresView = new GenresView(@options)
-      @entries    = new Entries(null,@options)
-      @properties = {}
-
-      @delegateEvents()
-      initFunc?( @ )
-      @start(@options.data) if @options.data?
-
-    @create:(options,initFunc)->
-      new App( options, initFunc )
-
-    start:( data )->
-      Entries
-        .getSource(data, @options)
-        .then (models)=> @entries.reset(models, @options)
-      return @
-    data: @::start
-
-    makeOptions:(options)->
-      @extendOptions @extendDefaultOptions options
-
-    extendDefaultOptions:(options = {})->
-      options = _.extend( {}, _(@).result('defaults'), options )
-
-    extendOptions:(options)->
+    extendOptions = (options)=>
       center = { center : new google.maps.LatLng( options.lat, options.lng ) }
       templates = {
         infoHtmlFactory : new HtmlFactory(options.templateEngine, options.infoTemplate)
         listHtmlFactory : new HtmlFactory(options.templateEngine, options.listTemplate)
       }
       _.extend( center, options, templates )
-
-    delegateEvents:->
-      @entries.on    "select"       , @build
-      @entries.on    "unselect"     , @clear
-      @entries.on    "openinfo"     , @openInfo
-      @entries.on    "closeinfo"    , @closeInfo
-      @genresView.on "change:genre" , @changeGenre
-      return @
-
-    # 地図とリストを構築する
-    build:(entries)->
-      prop = @entries.properties
-      @trigger('beforeBuild',entries,prop)
-      @options.beforeBuild?(entries,prop) #Obsolete
-      @mapView .build(entries)
-      @listView.build(entries)
-      @trigger('afterBuild',entries,prop)
-      @options.afterBuild?(entries,prop) #Obsolete
-      return @
-
-    # 地図とリストを初期化する
-    clear:->
-      entries = @entries.selectedList
-      @trigger("beforeClear",entries)
-      @options.beforeClear?() #Obsolete
-      @mapView .clear(entries)
-      @listView.clear(entries)
-      @trigger("afterClear",entries)
-      @options.afterClear?() #Obsolete
-      return @
-
-    openInfo: (entry)->
-      @trigger('openInfo',entry)
-      @mapView.openInfo(entry.info, entry.marker)
-      @trigger('openedInfo', entry)
-      return @
-
-    closeInfo: (entry)->
-      @trigger('closeInfo',entry)
-      @mapView.closeOpenedInfo()
-      @trigger('closedInfo',entry)
-      return @
-
-    changeGenre: (key, val)->
-      properties = {}
-      if _.isUndefined(val) or val == "__all__"
-        properties = _.omit( @properties, key )
-      else
-        properties[key] = val
-        properties = _.extend( @properties, properties )
-      @trigger('changeGenre', key, val)
-      @changeProperties( properties )
-      @trigger('changedGenre', key, val)
-      return @
-
-    changeProperties: (@properties)->
-      @trigger('changeProperties', @properties)
-      @rebuild( @properties )
-      @trigger('changedProperties', @properties )
-      return @
-
-    # 地図とリストを初期化して，構築する
-    rebuild:(prop)->
-      @entries.unselect()
-      @entries.select(prop)
-      return @
-
-    # map objectを取得
-    getMap:->
-      return @mapView.map
-
-    getProperties:->
-      return @properties
   #}}}
   class Parser #{{{
     constructor:( @options = {} )->
-      _.bindAll(@)
       @parser = @options.parser || @defaultParser
       @afterParser = @options.afterParser || _.identity
 
-    defaultParser:(data)->
+    defaultParser:(data)=>
       if $.isXMLDoc(data)
         parser = new Parser.XMLParser(@options.xmlParserOptions)
         parser.execute(data)
@@ -174,10 +178,10 @@ do ($=jQuery,global=this)->
       else
         throw "Illegal Argument Error"
 
-    execute:(data)->
+    execute:(data)=>
       @finallyParse @afterParser @parse data
 
-    parse:(data)->
+    parse:(data)=>
       if _.isFunction(@parser)
         @parser(data)
       else if @parser.execute?
@@ -185,13 +189,13 @@ do ($=jQuery,global=this)->
       else
         throw "parser is function or on object with the execute method"
 
-    finallyParse:(entries)->
+    finallyParse:(entries)=>
       for entry in entries
         entry.icon = @makeIcon(entry.icon) if entry.icon?
         entry.shadow = @makeIcon(entry.shadow) if entry.shadow?
       entries
 
-    makeIcon : (data)->
+    makeIcon : (data)=>
       if _.isObject(data)
         data = _.clone data
         for key, val of data
@@ -203,20 +207,19 @@ do ($=jQuery,global=this)->
       return data
   #}}}
   class Parser.XMLParser #{{{
-    defaults: ->{
+    defaults: =>{
       place: "place"
       genre: "genre"
     }
 
     constructor: (options)->
-      _.bindAll(@)
       @options = _.extend( {}, _(@).result('defaults'), options)
 
-    execute: (data)->
+    execute: (data)=>
       $root = $(">*", data).eq(0)
       ( @makePlace( $(place) ) for place in $root.find(@options.place).get() )
 
-    makePlace:($place)->
+    makePlace:($place)=>
       _({}).chain()
         .extend( @getGenre($place), @getContent($place), @getAttribute($place) )
         .tap( (obj)->
@@ -224,7 +227,7 @@ do ($=jQuery,global=this)->
           obj.lng = obj.longitude if not obj.lng? and obj.longitude?
         ).omit("latitude","longitude").value()
 
-    getGenre:($place)->
+    getGenre:($place)=>
       $genre = $place.closest(@options.genre)
       if $genre.size() == 1
         _(@getAttribute($genre)).chain().tap((obj)->
@@ -234,25 +237,24 @@ do ($=jQuery,global=this)->
       else
         {}
 
-    getContent:($place)->
+    getContent:($place)=>
       res = {}
       for elem in $place.children().get()
         res[elem.nodeName.toLowerCase()] = $(elem).text()
       return res
 
-    getAttribute:($place)->
+    getAttribute:($place)=>
       res = {}
       for attr in $place.get(0).attributes when attr != "id" and attr != "name"
         res[attr.name] = attr.value
       return res
   #}}}
   class Parser.ObjectParser #{{{
-    execute: (data)->
+    execute: (data)=>
       data
   #}}}
   class Entry extends Backbone.Model #{{{
-    initialize: (attributes, options)->
-      _.bindAll(@)
+    initialize: (attributes, options)=>
       attributes ||= {}
       options ||= {}
       @isPoint = @getExistPoint()
@@ -260,45 +262,43 @@ do ($=jQuery,global=this)->
       @marker = @makeMarker()
       @list   = @makeList(options.listHtmlFactory)
 
-    openInfo:->
+    openInfo:=>
       @trigger('openinfo', @)
 
-    closeInfo:->
+    closeInfo:=>
       @trigger('closeinfo', @)
 
-    makeInfo:(infoHtmlFactory)->
+    makeInfo:(infoHtmlFactory)=>
       content = @get('__infoElement') || infoHtmlFactory.make( @toJSON() )
       if content? and !!content.replace(/\s/g,"")
         info = new google.maps.InfoWindow {content}
         google.maps.event.addListener( info, 'closeclick', @closeInfo )
         return info
 
-    makeMarker:->
+    makeMarker:=>
       position = new google.maps.LatLng( @get('lat'), @get('lng') )
       marker = new google.maps.Marker { position, icon: @get('icon'), shadow: @get('shadow') }
       google.maps.event.addListener( marker, 'click', @openInfo ) if @info?
       return marker
 
-    makeList:(listHtmlFactory)->
+    makeList:(listHtmlFactory)=>
       content = listHtmlFactory.make( @toJSON() )
       if content? and !!content.replace(/\s/g,"")
         $(content).addClass("__list").data("entry",@)
 
-    getExistPoint:->
+    getExistPoint:=>
       latExist = @has('lat') and _.isFinite(parseFloat @get 'lat')
       lngExist = @has('lng') and _.isFinite(parseFloat @get 'lng')
       latExist and lngExist
 
-    isSelect:(properties)->
+    isSelect:(properties)=>
       @isPoint and ( _.isEmpty(properties) or _([@toJSON()]).findWhere(properties)? ) ? true : false
 
   #}}}
   class Entries extends Backbone.Collection #{{{
     model: Entry
 
-    initialize:(source, @options)->
-      funcs = _(@).chain().functions().without("model").value()
-      _(@).bindAll.apply(funcs)
+    initialize:(source, @options)=>
       @selectedList = []
       firstGenre = @options.firstGenre
       @properties = if _.isObject(firstGenre)
@@ -309,17 +309,17 @@ do ($=jQuery,global=this)->
           else {genre:firstGenre}
       @on("reset", _.bind( @select, @, null ) )
 
-    select: ( @properties = @properties )->
+    select: ( @properties = @properties )=>
       iterator = (entry) => entry.isSelect(@properties)
       @selectedList = _(super iterator)
         .tap (entries)=> @trigger("select", entries)
 
-    unselect: ->
+    unselect: =>
       @trigger("unselect")
       @selectedList = []
 
     # 長くてださい
-    @getSource: (data, options)->
+    @getSource: (data, options)=>
       parser = new Parser(options)
       dfd = new $.Deferred
       if _.isArray(data)
@@ -345,14 +345,14 @@ do ($=jQuery,global=this)->
         else
           @engine = _.bind( @templateEngine, @, @template )
 
-    make:(object)->
+    make:(object)=>
       return null unless @templateEngine? and @template?
       res = @engine(object)
       if @getTemplateEngineName() == "$.tmpl"
         res = _(res).map( (dom) -> dom.outerHTML ).join('')
       return res
 
-    getTemplateEngineName:->
+    getTemplateEngineName:=>
       if _?.template? and _.template == @templateEngine
         "_.template"
       else if $?.tmpl? and $.tmpl == @templateEngine
@@ -361,19 +361,18 @@ do ($=jQuery,global=this)->
         "other"
   #}}}
   class MapView extends Backbone.View # info and marker {{{
-    initialize: ->
-      _.bindAll(@)
+    initialize: =>
       canvas = $(@options.mapSelector).get(0)
       @map = new google.maps.Map( canvas, @options )
 
     # 構築
     # マーカー，インフォ，リストを構築
-    build:(entries)->
+    build:(entries)=>
       for entry in entries
         entry.marker.setMap(@map)
       @fitBounds(entries) if @options.canFitBounds
 
-    fitBounds:(entries)->
+    fitBounds:(entries)=>
       if entries.length > 0
         bounds = new google.maps.LatLngBounds
         for entry in entries
@@ -387,49 +386,47 @@ do ($=jQuery,global=this)->
             @map.setZoom( @options.maxFitZoom )
 
     # マーカー, インフォ, リストを消す
-    clear:(entries)->
+    clear:(entries)=>
       @closeOpenedInfo()
       for entry in entries
         entry.marker.setMap(null)
 
-    openInfo:(info,marker)->
+    openInfo:(info,marker)=>
       @closeOpenedInfo()
       info.open(@map,marker)
       @openedInfo = info
 
-    closeOpenedInfo:->
+    closeOpenedInfo:=>
       if @openedInfo?
         @openedInfo.close()
         @openedInfo = null
   #}}}
   class ListView extends Backbone.View #{{{
-    initialize:->
-      _.bindAll(@)
+    initialize:=>
       @$el = $(@options.listSelector)
       @$el.on( "click", @options.openInfoSelector, @openInfo )
 
-    build:(entries)->
+    build:(entries)=>
       for entry in entries
         entry.list?.appendTo(@$el)
 
-    clear:(entries)->
+    clear:(entries)=>
       for entry in entries
         entry.list?.detach()
 
-    openInfo:(e)->
+    openInfo:(e)=>
       $target = $(e.currentTarget)
       $target.closest(".__list").data("entry").openInfo()
       return false
   #}}}
   class GenresView extends Backbone.View #{{{
-    initialize:->
+    initialize:=>
       # event
-      _.bindAll(@)
       @selector = @options.genresSelector
       @$el = $(@selector)
       @$el.on( "click", @options.genreSelector, @selectGenre )
 
-    selectGenre:(e)->
+    selectGenre:(e)=>
       $target = $(e.currentTarget)
       $group = $target.closest(@selector)
       key = $group.data( @options.genreGroup ) || "genre"
