@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.5.5
+MapList JavaScript Library v1.5.6
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -36,8 +36,8 @@ do ($=jQuery,global=this)->
       new App( options, initFunc )
 
     start:( data )=>
-      Entries
-        .getSource(data, @options)
+      Source
+        .get(data, @options)
         .then (models)=> @entries.reset(models, @options)
       return @
 
@@ -174,6 +174,21 @@ do ($=jQuery,global=this)->
       app.on 'beforeClear', @options.beforeClear if @options.beforeClear?
       app.on 'afterClear' , @options.afterClear  if @options.afterClear?
 
+  #}}}
+  class Source #{{{
+    @get: (data, options)=>
+      parser = new Parser(options)
+      dfd = new $.Deferred
+      if _.isArray(data)
+        dfd.resolve(data)
+      else if _.isString(data)
+        $.ajax({url:data}).then(
+         (data)=> dfd.resolve( parser.execute(data) )
+         ()=> dfd.reject()
+        )
+      else
+        dfd.reject()
+      dfd.promise()
   #}}}
   class Parser #{{{
     constructor:( @options = {} )->
@@ -329,21 +344,6 @@ do ($=jQuery,global=this)->
     unselect: =>
       @trigger("unselect")
       @selectedList = []
-
-    # 長くてださい
-    @getSource: (data, options)=>
-      parser = new Parser(options)
-      dfd = new $.Deferred
-      if _.isArray(data)
-        dfd.resolve(data)
-      else if _.isString(data)
-        $.ajax({url:data}).then(
-         (data)=> dfd.resolve( parser.execute(data) )
-         ()=> dfd.reject()
-        )
-      else
-        dfd.reject()
-      dfd.promise()
   #}}}
   class HtmlFactory #{{{
     constructor:(@templateEngine, @template)->
