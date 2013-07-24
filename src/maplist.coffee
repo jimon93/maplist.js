@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.5.7
+MapList JavaScript Library v1.5.8
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -24,7 +24,6 @@ do ($=jQuery,global=this)->
       @listView   = new ListView(@options)
       @genresView = new GenresView(@options)
       @entries    = new Entries(null,@options)
-      @properties = {}
 
       # Event Delegate
       delegator = new AppDelegator(@options)
@@ -46,9 +45,19 @@ do ($=jQuery,global=this)->
     # Obsolete
     data: @::start
 
+    # Getter methods
+    # map objectを取得
+    getMap:=>
+      return @mapView.map
+
+    # entriesにpropertiesが重複している
+    getProperties:=>
+      return @entries.properties
+
+    # common methods
     # 地図とリストを構築する
     build: (entries)=>
-      prop = @entries.properties
+      prop = @getProperties()
       @trigger('beforeBuild',entries,prop)
       @mapView .build(entries)
       @listView.build(entries)
@@ -81,22 +90,21 @@ do ($=jQuery,global=this)->
 
     # ジャンルを変更する
     changeGenre: (key, val)=>
-      properties = {}
-      if _.isUndefined(val) or val == "__all__"
-        properties = _.omit( @properties, key )
-      else
-        properties[key] = val
-        properties = _.extend( @properties, properties )
+      prev = _.extend({}, @getProperties())
+      properties =
+        if _.isUndefined(val) or val == "__all__"
+        then _.omit(prev, key)
+        else _(prev).tap( (obj)->obj[key] = val )
       @trigger('changeGenre', key, val)
-      @changeProperties( properties )
+      @changeProperties(properties)
       @trigger('changedGenre', key, val)
       return @
 
     # ジャンルプロパティを変更する
-    changeProperties: (@properties)=>
-      @trigger('changeProperties', @properties)
-      @rebuild( @properties )
-      @trigger('changedProperties', @properties )
+    changeProperties: (properties)=>
+      @trigger('changeProperties', properties)
+      @rebuild( properties )
+      @trigger('changedProperties', properties )
       return @
 
     # 地図とリストを初期化して，構築する
@@ -104,20 +112,12 @@ do ($=jQuery,global=this)->
       @entries.unselect()
       @entries.select(prop)
       return @
-
-    # map objectを取得
-    getMap:=>
-      return @mapView.map
-
-    # entriesにpropertiesが重複している
-    getProperties:=>
-      return @properties
   #}}}
   class Options #{{{
     constructor: (options)->
       _.extend @, extendOptions extendDefaultOptions options
 
-    defaults = =>{ #
+    defaults = =>{
       # core
       data : []
       # Map Options
@@ -142,7 +142,7 @@ do ($=jQuery,global=this)->
       genreDataName  : "target-genre"
       firstGenre     : {}
       # general
-      templateEngine : $.tmpl || _.template
+      templateEngine : $.tmpl ? _.template
       # parser
       parser : null
       afterParser : null
@@ -331,15 +331,16 @@ do ($=jQuery,global=this)->
     initialize:(source, @options)=>
       @selectedList = []
       firstGenre = @options.firstGenre
-      @properties = if _.isObject(firstGenre)
-        firstGenre
-      else if _.isString(firstGenre)
-        switch firstGenre
-          when "__all__" then {}
-          else {genre:firstGenre}
+      @properties =
+        if _.isObject(firstGenre)
+          firstGenre
+        else if _.isString(firstGenre)
+          switch firstGenre
+            when "__all__" then {}
+            else {genre:firstGenre}
       @on("reset", _.bind( @select, @, null ) )
 
-    select: ( @properties = @properties )=>
+    select: (@properties = @properties)=>
       iterator = (entry) => entry.isSelect(@properties)
       @selectedList = _(super iterator)
         .tap (entries)=> @trigger("select", entries)
@@ -450,6 +451,9 @@ do ($=jQuery,global=this)->
       return false
   #}}}
   global.MapList = _.extend App, { #{{{
+    Options
+    AppDelegator
+    Source
     Parser
     Entry
     Entries

@@ -74,7 +74,6 @@ describe "MapList", ->
           _.isEqual(this.actual, expected)
       }
     } #}}}
-
   describe "App", -> #{{{
     beforeEach -> #{{{
       @maplist = new MapList
@@ -240,7 +239,7 @@ describe "MapList", ->
     #}}}
     describe "::getProperties",-> #{{{
       it "common",->
-        expect(@maplist.getProperties()).toBe(@maplist.properties)
+        expect(@maplist.getProperties()).toBe(@maplist.entries.properties)
     #}}}
   #}}}
   describe "Parser", -> #{{{

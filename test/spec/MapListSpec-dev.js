@@ -499,7 +499,7 @@
       });
       return describe("::getProperties", function() {
         return it("common", function() {
-          return expect(this.maplist.getProperties()).toBe(this.maplist.properties);
+          return expect(this.maplist.getProperties()).toBe(this.maplist.entries.properties);
         });
       });
     });
