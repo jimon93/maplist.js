@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.5.4
+MapList JavaScript Library v1.5.5
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -16,6 +16,7 @@ do ($=jQuery,global=this)->
     _.extend( @::, Backbone.Events )
 
     constructor:(options,initFunc)->
+      # Field initialize
       @options    = new Options(options)
       @mapView    = new MapView(@options)
       @listView   = new ListView(@options)
@@ -23,10 +24,11 @@ do ($=jQuery,global=this)->
       @entries    = new Entries(null,@options)
       @properties = {}
 
-      #@delegateEvents()
+      # Event Delegate
       delegator = new AppDelegator(@options)
       delegator.execute(@)
 
+      # start
       initFunc?(@)
       @start(@options.data) if @options.data?
 
