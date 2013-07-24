@@ -242,6 +242,27 @@ describe "MapList", ->
         expect(@maplist.getProperties()).toBe(@maplist.entries.properties)
     #}}}
   #}}}
+  describe "Options", -> #{{{
+    beforeEach -> #{{{
+      @Options = MapList.Options
+    #}}}
+    it "without my options", -> #{{{
+      options = new @Options
+      expect(options.mapSelector).toBe(@Options.defaults().mapSelector)
+    #}}}
+    it "with my options", -> #{{{
+      myOptions = {mapSelector: "#map"}
+      options = new @Options(myOptions)
+      expect(options.mapSelector).toBe(myOptions.mapSelector)
+    #}}}
+  #}}}
+  describe "AppDelegator", -> #{{{
+    beforeEach -> #{{{
+      @AppDelegator = MapList.AppDelegator
+    #}}}
+  #}}}
+  describe "Source", -> #{{{
+  #}}}
   describe "Parser", -> #{{{
     beforeEach ->
       @Parser = MapList.Parser

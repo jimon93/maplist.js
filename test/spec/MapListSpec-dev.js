@@ -503,6 +503,32 @@
         });
       });
     });
+    describe("Options", function() {
+      beforeEach(function() {
+        return this.Options = MapList.Options;
+      });
+      it("without my options", function() {
+        var options;
+
+        options = new this.Options;
+        return expect(options.mapSelector).toBe(this.Options.defaults().mapSelector);
+      });
+      return it("with my options", function() {
+        var myOptions, options;
+
+        myOptions = {
+          mapSelector: "#map"
+        };
+        options = new this.Options(myOptions);
+        return expect(options.mapSelector).toBe(myOptions.mapSelector);
+      });
+    });
+    describe("AppDelegator", function() {
+      return beforeEach(function() {
+        return this.AppDelegator = MapList.AppDelegator;
+      });
+    });
+    describe("Source", function() {});
     describe("Parser", function() {
       beforeEach(function() {
         return this.Parser = MapList.Parser;

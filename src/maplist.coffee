@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.5.8
+MapList JavaScript Library v1.5.9
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -50,7 +50,9 @@ do ($=jQuery,global=this)->
     getMap:=>
       return @mapView.map
 
-    # entriesにpropertiesが重複している
+    getSelectedEntries:=>
+      return @entries.selectedList
+
     getProperties:=>
       return @entries.properties
 
@@ -66,11 +68,12 @@ do ($=jQuery,global=this)->
 
     # 地図とリストを初期化する
     clear:=>
-      entries = @entries.selectedList
-      @trigger("beforeClear",entries)
+      entries = @getSelectedEntries()
+      properties = @getProperties()
+      @trigger("beforeClear",entries, properties)
       @mapView .clear(entries)
       @listView.clear(entries)
-      @trigger("afterClear",entries)
+      @trigger("afterClear",entries, properties)
       return @
 
     # インフォウィンドウを開く
@@ -115,9 +118,9 @@ do ($=jQuery,global=this)->
   #}}}
   class Options #{{{
     constructor: (options)->
-      _.extend @, extendOptions extendDefaultOptions options
+      _.extend @, Options.extendOptions Options.extendDefaultOptions options
 
-    defaults = =>{
+    @defaults = =>{
       # core
       data : []
       # Map Options
@@ -149,10 +152,10 @@ do ($=jQuery,global=this)->
       xmlParserOptions: {}
     }
 
-    extendDefaultOptions = (options = {})=>
-      options = _.extend( {}, defaults(), options )
+    @extendDefaultOptions = (options = {})=>
+      options = _.extend( {}, Options.defaults(), options )
 
-    extendOptions = (options)=>
+    @extendOptions = (options)=>
       center = { center : new google.maps.LatLng( options.lat, options.lng ) }
       templates = {
         infoHtmlFactory : new HtmlFactory(options.templateEngine, options.infoTemplate)
