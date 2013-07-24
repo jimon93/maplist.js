@@ -1,12 +1,14 @@
 ###
-MapList JavaScript Library v1.5.6
+MapList JavaScript Library v1.5.7
 http://github.com/jimon93/maplist.js
 
 Require Library
   jquery.js
-  jquery.tmpl.js
   underscore.js
   backbone.js
+
+Options Library
+  jquery.tmpl.js
 
 MIT License
 ###
@@ -65,12 +67,13 @@ do ($=jQuery,global=this)->
     # インフォウィンドウを開く
     openInfo: (entry)=>
       @trigger('openInfo',entry)
-      @mapView.openInfo(entry.info, entry.marker)
+      @mapView.openInfo(entry)
       @trigger('openedInfo', entry)
       return @
 
     # インフォウィンドウを閉じる
-    closeInfo: (entry)=>
+    closeInfo: =>
+      entry = @mapView.openedInfoEntry
       @trigger('closeInfo',entry)
       @mapView.closeOpenedInfo()
       @trigger('closedInfo',entry)
@@ -384,6 +387,22 @@ do ($=jQuery,global=this)->
         entry.marker.setMap(@map)
       @fitBounds(entries) if @options.canFitBounds
 
+    # マーカー, インフォ, リストを消す
+    clear:(entries)=>
+      @closeOpenedInfo()
+      for entry in entries
+        entry.marker.setMap(null)
+
+    openInfo:(entry)=>
+      @openedInfoEntry?.closeInfo()
+      entry.info.open(@map,entry.marker)
+      @openedInfoEntry = entry
+
+    closeOpenedInfo:=>
+      if @openedInfoEntry?
+        @openedInfoEntry.info.close()
+        @openedInfoEntry = null
+
     fitBounds:(entries)=>
       if entries.length > 0
         bounds = new google.maps.LatLngBounds
@@ -396,22 +415,6 @@ do ($=jQuery,global=this)->
           @map.fitBounds( bounds )
           if( @map.getZoom() > @options.maxFitZoom )
             @map.setZoom( @options.maxFitZoom )
-
-    # マーカー, インフォ, リストを消す
-    clear:(entries)=>
-      @closeOpenedInfo()
-      for entry in entries
-        entry.marker.setMap(null)
-
-    openInfo:(info,marker)=>
-      @closeOpenedInfo()
-      info.open(@map,marker)
-      @openedInfo = info
-
-    closeOpenedInfo:=>
-      if @openedInfo?
-        @openedInfo.close()
-        @openedInfo = null
   #}}}
   class ListView extends Backbone.View #{{{
     initialize:=>
