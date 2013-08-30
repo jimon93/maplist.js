@@ -74,7 +74,7 @@ describe "MapList", ->
           _.isEqual(this.actual, expected)
       }
     } #}}}
-  describe "App", -> #{{{
+  describe "App", -> #ok{{{
     beforeEach -> #{{{
       @maplist = new MapList
     #}}}
@@ -242,7 +242,7 @@ describe "MapList", ->
         expect(@maplist.getProperties()).toBe(@maplist.entries.properties)
     #}}}
   #}}}
-  describe "Options", -> #{{{
+  describe "Options", -> #ok{{{
     beforeEach -> #{{{
       @Options = MapList.Options
     #}}}
@@ -262,8 +262,42 @@ describe "MapList", ->
     #}}}
   #}}}
   describe "Source", -> #{{{
+    beforeEach -> #{{{
+      @Source = MapList.Source
+      @waitFunc = =>
+        @result.state() == "resolved"
+      @runFunc = =>
+        @result.then (data)=>
+          expect(data).toEqual(@data.entries.object)
+    #}}}
+    describe ".get",->
+      it "common",->
+        source = new @Source([], {})
+        result = source.get()
+        expect(_.isFunction result.then).toBeTruthy()
+        expect(_.isFunction result.done).toBeTruthy()
+        expect(_.isFunction result.fail).toBeTruthy()
+
+      it "data is Array",->
+        obj = @data.entries.object
+        source = new @Source(obj, {})
+        @result = source.get()
+        waitsFor(@waitFunc , "timeout", 100 )
+        runs(@runFunc)
+
+      it "data is URL String :json",->
+        source = new @Source("data/entries.json", {})
+        @result = source.get()
+        waitsFor(@waitFunc , "timeout", 100 )
+        runs(@runFunc)
+
+      it "data is URL String :xml",->
+        source = new @Source("data/entries.xml", {})
+        @result = source.get()
+        waitsFor(@waitFunc , "timeout", 100 )
+        runs(@runFunc)
   #}}}
-  describe "Parser", -> #{{{
+  describe "Parser", -> #ok{{{
     beforeEach -> #{{{
       @Parser = MapList.Parser
     #}}}

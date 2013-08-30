@@ -523,7 +523,52 @@
         return this.AppDelegator = MapList.AppDelegator;
       });
     });
-    describe("Source", function() {});
+    describe("Source", function() {
+      beforeEach(function() {
+        var _this = this;
+        this.Source = MapList.Source;
+        this.waitFunc = function() {
+          return _this.result.state() === "resolved";
+        };
+        return this.runFunc = function() {
+          return _this.result.then(function(data) {
+            return expect(data).toEqual(_this.data.entries.object);
+          });
+        };
+      });
+      return describe(".get", function() {
+        it("common", function() {
+          var result, source;
+          source = new this.Source([], {});
+          result = source.get();
+          expect(_.isFunction(result.then)).toBeTruthy();
+          expect(_.isFunction(result.done)).toBeTruthy();
+          return expect(_.isFunction(result.fail)).toBeTruthy();
+        });
+        it("data is Array", function() {
+          var obj, source;
+          obj = this.data.entries.object;
+          source = new this.Source(obj, {});
+          this.result = source.get();
+          waitsFor(this.waitFunc, "timeout", 100);
+          return runs(this.runFunc);
+        });
+        it("data is URL String :json", function() {
+          var source;
+          source = new this.Source("data/entries.json", {});
+          this.result = source.get();
+          waitsFor(this.waitFunc, "timeout", 100);
+          return runs(this.runFunc);
+        });
+        return it("data is URL String :xml", function() {
+          var source;
+          source = new this.Source("data/entries.xml", {});
+          this.result = source.get();
+          waitsFor(this.waitFunc, "timeout", 100);
+          return runs(this.runFunc);
+        });
+      });
+    });
     describe("Parser", function() {
       beforeEach(function() {
         return this.Parser = MapList.Parser;
