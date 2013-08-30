@@ -225,16 +225,17 @@ MIT License
       };
 
       AppDelegator.prototype.obsoleteDelegateEvents = function(app) {
-        if (this.options.beforeBuild != null) {
+        var _ref, _ref1, _ref2, _ref3;
+        if (((_ref = this.options) != null ? _ref.beforeBuild : void 0) != null) {
           app.on('beforeBuild', this.options.beforeBuild);
         }
-        if (this.options.afterBuild != null) {
+        if (((_ref1 = this.options) != null ? _ref1.afterBuild : void 0) != null) {
           app.on('afterBuild', this.options.afterBuild);
         }
-        if (this.options.beforeClear != null) {
+        if (((_ref2 = this.options) != null ? _ref2.beforeClear : void 0) != null) {
           app.on('beforeClear', this.options.beforeClear);
         }
-        if (this.options.afterClear != null) {
+        if (((_ref3 = this.options) != null ? _ref3.afterClear : void 0) != null) {
           return app.on('afterClear', this.options.afterClear);
         }
       };

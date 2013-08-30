@@ -175,10 +175,10 @@ do ($=jQuery,global=this)->
       @obsoleteDelegateEvents(app)
 
     obsoleteDelegateEvents: (app)->
-      app.on 'beforeBuild', @options.beforeBuild if @options.beforeBuild?
-      app.on 'afterBuild' , @options.afterBuild  if @options.afterBuild?
-      app.on 'beforeClear', @options.beforeClear if @options.beforeClear?
-      app.on 'afterClear' , @options.afterClear  if @options.afterClear?
+      app.on 'beforeBuild', @options.beforeBuild if @options?.beforeBuild?
+      app.on 'afterBuild' , @options.afterBuild  if @options?.afterBuild?
+      app.on 'beforeClear', @options.beforeClear if @options?.beforeClear?
+      app.on 'afterClear' , @options.afterClear  if @options?.afterClear?
 
   #}}}
   class Source #{{{

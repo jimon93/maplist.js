@@ -519,8 +519,18 @@
       });
     });
     describe("AppDelegator", function() {
-      return beforeEach(function() {
+      beforeEach(function() {
         return this.AppDelegator = MapList.AppDelegator;
+      });
+      return it("execute", function() {
+        var app, delegator;
+        delegator = new this.AppDelegator;
+        app = new MapList;
+        app.entries.on = this.createSpy("");
+        app.genresView.on = this.createSpy("");
+        delegator.execute(app);
+        expect(app.entries.on).toHaveBeenCalled();
+        return expect(app.genresView.on).toHaveBeenCalled();
       });
     });
     describe("Source", function() {

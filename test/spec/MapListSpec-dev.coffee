@@ -74,7 +74,7 @@ describe "MapList", ->
           _.isEqual(this.actual, expected)
       }
     } #}}}
-  describe "App", -> #ok{{{
+  describe "App", -> #{{{
     beforeEach -> #{{{
       @maplist = new MapList
     #}}}
@@ -242,7 +242,7 @@ describe "MapList", ->
         expect(@maplist.getProperties()).toBe(@maplist.entries.properties)
     #}}}
   #}}}
-  describe "Options", -> #ok{{{
+  describe "Options", -> #{{{
     beforeEach -> #{{{
       @Options = MapList.Options
     #}}}
@@ -260,6 +260,14 @@ describe "MapList", ->
     beforeEach -> #{{{
       @AppDelegator = MapList.AppDelegator
     #}}}
+    it "execute",->
+      delegator = new @AppDelegator
+      app = new MapList
+      app.entries.on =  @createSpy("")
+      app.genresView.on =  @createSpy("")
+      delegator.execute(app)
+      expect(app.entries.on).toHaveBeenCalled()
+      expect(app.genresView.on).toHaveBeenCalled()
   #}}}
   describe "Source", -> #{{{
     beforeEach -> #{{{
@@ -297,7 +305,7 @@ describe "MapList", ->
         waitsFor(@waitFunc , "timeout", 100 )
         runs(@runFunc)
   #}}}
-  describe "Parser", -> #ok{{{
+  describe "Parser", -> #{{{
     beforeEach -> #{{{
       @Parser = MapList.Parser
     #}}}
