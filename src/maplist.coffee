@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.5.11
+MapList JavaScript Library v1.5.12
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -37,9 +37,9 @@ do ($=jQuery,global=this)->
       new App( options, initFunc )
 
     start:( data )=>
-      Source
-        .get(data, @options)
-        .then (models)=> @entries.reset(models, @options)
+      func = (models) => @entries.reset(models, @options)
+      source = new Source(data, @options)
+      source.get().then(func)
       return @
 
     # Obsolete
@@ -182,19 +182,24 @@ do ($=jQuery,global=this)->
 
   #}}}
   class Source #{{{
-    @get: (data, options)=>
-      parser = new Parser(options)
-      dfd = new $.Deferred
-      if _.isArray(data)
-        dfd.resolve(data)
-      else if _.isString(data)
-        $.ajax({url:data}).then(
-         (data)=> dfd.resolve( parser.execute(data) )
-         ()=> dfd.reject()
-        )
-      else
-        dfd.reject()
-      dfd.promise()
+    constructor: (@data, @options)->
+
+    get: =>
+      @dfd if @dfd?
+      @dfd = new $.Deferred
+      @_dfdSetUp()
+      @dfd.promise()
+
+    _dfdSetUp: =>
+      switch
+        when _.isArray(@data) then @dfd.resolve(@data)
+        when _.isString(@data) then @_getRemoteData()
+        else @dfd.reject()
+
+    _getRemoteData: =>
+      parser = new Parser(@options)
+      resolve = (data) => @dfd.resolve(parser.execute(data))
+      $.ajax(@data).then(resolve, @dfd.reject)
   #}}}
   class Parser #{{{
     constructor:( @options = {} )->
