@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.5.9
+MapList JavaScript Library v1.5.10
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -198,46 +198,48 @@ do ($=jQuery,global=this)->
   #}}}
   class Parser #{{{
     constructor:( @options = {} )->
-      @parser = @options.parser || @defaultParser
-      @afterParser = @options.afterParser || _.identity
-
-    defaultParser:(data)=>
-      if $.isXMLDoc(data)
-        parser = new Parser.XMLParser(@options.xmlParserOptions)
-        parser.execute(data)
-      else if _.isObject(data)
-        parser = new Parser.ObjectParser
-        parser.execute(data)
-      else
-        throw "Illegal Argument Error"
 
     execute:(data)=>
-      @finallyParse @afterParser @parse data
+      sequence = []
+      sequence.push @options.parser ? new Parser.DefaultParser(@options)
+      sequence.push @options.afterParser ? _.identity
+      sequence.push new Parser.MapIconDecorator(@options)
+      _(sequence).reduce(@_parse, data)
 
-    parse:(data)=>
-      if _.isFunction(@parser)
-        @parser(data)
-      else if @parser.execute?
-        @parser.execute(data)
-      else
-        throw "parser is function or on object with the execute method"
+    _parse:(data, parser)=>
+      switch
+        when _.isFunction(parser) then parser(data)
+        when parser?.execute?     then parser.execute(data)
+        else throw "parser is function or on object with the execute method"
+  #}}}
+  class Parser.DefaultParser #{{{
+    constructor: (@options)->
 
-    finallyParse:(entries)=>
+    execute: (data)=>
+      switch
+        when $.isXMLDoc(data)
+          parser = new Parser.XMLParser(@options.xmlParserOptions)
+          parser.execute(data)
+        when _.isObject(data)
+          parser = new Parser.ObjectParser
+          parser.execute(data)
+        else throw "Illegal Argument Error"
+  #}}}
+  class Parser.MapIconDecorator #{{{
+    execute:(entries)=>
       for entry in entries
-        entry.icon = @makeIcon(entry.icon) if entry.icon?
-        entry.shadow = @makeIcon(entry.shadow) if entry.shadow?
-      entries
+        entry.icon   = @_makeIcon(entry.icon)   if entry.icon?
+        entry.shadow = @_makeIcon(entry.shadow) if entry.shadow?
+      return entries
 
-    makeIcon : (data)=>
-      if _.isObject(data)
-        data = _.clone data
-        for key, val of data
-          switch key
-            when "origin", "anchor"
-              data[key] = new google.maps.Point(val[0],val[1])
-            when "size", "scaledSize"
-              data[key] = new google.maps.Size(val[0],val[1])
-      return data
+    _makeIcon : (data)=>
+      result = _.clone data
+      for key, val of data
+        result[key] = switch key
+          when "origin", "anchor" then new google.maps.Point(val[0],val[1])
+          when "size", "scaledSize" then new google.maps.Size(val[0],val[1])
+          else val
+      return result
   #}}}
   class Parser.XMLParser #{{{
     defaults: =>{
