@@ -668,6 +668,75 @@
         });
       });
     });
+    describe("Parser.DefaultParser", function() {
+      beforeEach(function() {
+        return this.DefaultParser = MapList.Parser.DefaultParser;
+      });
+      return describe(".execute", function() {
+        it("xml data", function() {
+          var parser, result;
+          parser = new this.DefaultParser({});
+          result = parser.execute(this.data.entries.xml);
+          return expect(result).toEqual(this.data.entries.object);
+        });
+        it("object data", function() {
+          var parser, result;
+          parser = new this.DefaultParser({});
+          result = parser.execute(this.data.entries.object);
+          return expect(result).toEqual(this.data.entries.object);
+        });
+        return it("other data", function() {
+          var func, parser;
+          parser = new this.DefaultParser({});
+          func = function() {
+            return parser.execute(null);
+          };
+          return expect(func).toThrow();
+        });
+      });
+    });
+    describe("Parser.MapIconDecorator", function() {
+      beforeEach(function() {
+        this.MapIconDecorator = MapList.Parser.MapIconDecorator;
+        return this.decorator = new this.MapIconDecorator;
+      });
+      describe("execute", function() {
+        return it("common", function() {
+          var data;
+          this.decorator.makeIcon = this.createSpy("");
+          data = [
+            {
+              icon: true,
+              shadow: true
+            }, {
+              icon: true
+            }
+          ];
+          this.decorator.execute(data);
+          expect(this.decorator.makeIcon).toHaveBeenCalled();
+          return expect(this.decorator.makeIcon.calls.length).toEqual(3);
+        });
+      });
+      return describe("makeIcon", function() {
+        return it("common", function() {
+          var data, result;
+          data = {
+            origin: [1, 2],
+            anchor: [9, 9],
+            size: [4, 2],
+            scaledSize: [5, 7],
+            other: 42
+          };
+          result = this.decorator.makeIcon(data);
+          expect(result).not.toBe(data);
+          expect(result.origin instanceof google.maps.Point).toBeTruthy();
+          expect(result.anchor instanceof google.maps.Point).toBeTruthy();
+          expect(result.size instanceof google.maps.Size).toBeTruthy();
+          expect(result.scaledSize instanceof google.maps.Size).toBeTruthy();
+          return expect(result.other).toEqual(data.other);
+        });
+      });
+    });
     describe("Parser.XMLParser", function() {});
     describe("Parser.ObjectParser", function() {});
     describe("Entry", function() {});

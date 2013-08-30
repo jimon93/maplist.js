@@ -372,6 +372,56 @@ describe "MapList", ->
         expect(result).toBe(obj)
     #}}}
   #}}}
+  describe "Parser.DefaultParser", -> #{{{
+    beforeEach -> #{{{
+      @DefaultParser = MapList.Parser.DefaultParser
+    #}}}
+    describe ".execute",->
+      it "xml data",->
+        parser = new @DefaultParser({})
+        result = parser.execute(@data.entries.xml)
+        expect(result).toEqual(@data.entries.object)
+
+      it "object data",->
+        parser = new @DefaultParser({})
+        result = parser.execute(@data.entries.object)
+        expect(result).toEqual(@data.entries.object)
+
+      it "other data", ->
+        parser = new @DefaultParser({})
+        func = -> parser.execute(null)
+        expect(func).toThrow()
+  #}}}
+  describe "Parser.MapIconDecorator", -> #{{{
+    beforeEach -> #{{{
+      @MapIconDecorator = MapList.Parser.MapIconDecorator
+      @decorator = new @MapIconDecorator
+    #}}}
+
+    describe "execute",->
+      it "common",->
+        @decorator.makeIcon = @createSpy("")
+        data = [{icon:true, shadow:true},{icon:true}]
+        @decorator.execute(data)
+        expect(@decorator.makeIcon).toHaveBeenCalled()
+        expect(@decorator.makeIcon.calls.length).toEqual(3)
+
+    describe "makeIcon",->
+      it "common",->
+        data =
+          origin: [1,2]
+          anchor: [9,9]
+          size: [4,2]
+          scaledSize: [5,7]
+          other: 42
+        result = @decorator.makeIcon(data)
+        expect(result).not.toBe(data)
+        expect(result.origin instanceof google.maps.Point).toBeTruthy()
+        expect(result.anchor instanceof google.maps.Point).toBeTruthy()
+        expect(result.size instanceof google.maps.Size).toBeTruthy()
+        expect(result.scaledSize instanceof google.maps.Size).toBeTruthy()
+        expect(result.other).toEqual(data.other)
+  #}}}
   describe "Parser.XMLParser", -> #{{{
   #}}}
   describe "Parser.ObjectParser", -> #{{{
