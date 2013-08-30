@@ -737,8 +737,22 @@
         });
       });
     });
-    describe("Parser.XMLParser", function() {});
-    describe("Parser.ObjectParser", function() {});
+    describe("Parser.XMLParser", function() {
+      return it("execute", function() {
+        var parser, result;
+        parser = new MapList.Parser.XMLParser;
+        result = parser.execute(this.data.entries.xml);
+        return expect(result).toEqual(this.data.entries.object);
+      });
+    });
+    describe("Parser.ObjectParser", function() {
+      return it("execute", function() {
+        var parser, result;
+        parser = new MapList.Parser.ObjectParser;
+        result = parser.execute(this.data.entries.object);
+        return expect(result).toEqual(this.data.entries.object);
+      });
+    });
     describe("Entry", function() {});
     describe("Entries", function() {});
     describe("HTMLFactory", function() {});

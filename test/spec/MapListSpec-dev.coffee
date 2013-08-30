@@ -423,8 +423,16 @@ describe "MapList", ->
         expect(result.other).toEqual(data.other)
   #}}}
   describe "Parser.XMLParser", -> #{{{
+    it "execute",->
+      parser = new MapList.Parser.XMLParser
+      result = parser.execute(@data.entries.xml)
+      expect(result).toEqual(@data.entries.object)
   #}}}
   describe "Parser.ObjectParser", -> #{{{
+    it "execute",->
+      parser = new MapList.Parser.ObjectParser
+      result = parser.execute(@data.entries.object)
+      expect(result).toEqual(@data.entries.object)
   #}}}
   describe "Entry", -> #{{{
   #}}}
