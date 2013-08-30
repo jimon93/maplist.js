@@ -78,11 +78,11 @@ describe "MapList", ->
     beforeEach -> #{{{
       @maplist = new MapList
     #}}}
-    describe ".create",-> #{{{
-      it "common",->
+    describe "::create",-> #{{{
+      it "return MapList instance",->
         expect(MapList.create() instanceof MapList).toBeTruthy()
     #}}}
-    describe "::start",-> #{{{
+    describe ".start",-> #{{{
       beforeEach ->
         spyOn(@maplist.entries, "reset")
         @result = @maplist.start([])
@@ -93,7 +93,7 @@ describe "MapList", ->
       it "return value",->
         expect(@result).toBe(@maplist)
     #}}}
-    describe "::build",-> #{{{
+    describe ".build",-> #{{{
       beforeEach ->
         spyOn(@maplist.mapView, "build")
         spyOn(@maplist.listView, "build")
@@ -115,7 +115,7 @@ describe "MapList", ->
       it "return value",->
         expect(@result).toBe(@maplist)
     #}}}
-    describe "::clear",-> #{{{
+    describe ".clear",-> #{{{
       beforeEach ->
         spyOn(@maplist.mapView, "clear")
         spyOn(@maplist.listView, "clear")
@@ -134,7 +134,7 @@ describe "MapList", ->
       it "return value",->
         expect(@result).toBe(@maplist)
     #}}}
-    describe "::openInfo",-> #{{{
+    describe ".openInfo",-> #{{{
       beforeEach ->
         spyOn(@maplist.mapView, "openInfo")
         @maplist.on("openInfo", @before = @createSpy(""))
@@ -152,7 +152,7 @@ describe "MapList", ->
       it "return value",->
         expect(@result).toBe(@maplist)
     #}}}
-    describe "::closeInfo",-> #{{{
+    describe ".closeInfo",-> #{{{
       beforeEach ->
         spyOn(@maplist.mapView, "closeOpenedInfo")
         @maplist.on("closeInfo", @before = @createSpy(""))
@@ -169,7 +169,7 @@ describe "MapList", ->
       it "return value",->
         expect(@result).toBe(@maplist)
     #}}}
-    describe "::changeGenre",-> #{{{
+    describe ".changeGenre",-> #{{{
       beforeEach ->
         @maplist.changeGenre("key","init")
         @maplist.changeGenre("foo","bar")
@@ -200,7 +200,7 @@ describe "MapList", ->
         result = @maplist.changeGenre("key","val")
         expect(result).toBe(@maplist)
     #}}}
-    describe "::changeProperties",-> #{{{
+    describe ".changeProperties",-> #{{{
       beforeEach ->
         spyOn(@maplist, "rebuild")
         @maplist.on("changeProperties", @before = @createSpy(""))
@@ -218,7 +218,7 @@ describe "MapList", ->
       it "return value",->
         expect(@result).toBe(@maplist)
     #}}}
-    describe "::rebuild",-> #{{{
+    describe ".rebuild",-> #{{{
       beforeEach ->
         spyOn(@maplist.entries, "unselect")
         spyOn(@maplist.entries, "select")
@@ -232,12 +232,12 @@ describe "MapList", ->
       it "return value",->
         expect(@result).toBe(@maplist)
     #}}}
-    describe "::getMap",-> #{{{
+    describe ".getMap",-> #{{{
       it "common",->
         expect(@maplist.getMap()).toBe(@maplist.mapView.map)
         expect(@maplist.getMap() instanceof google.maps.Map).toBeTruthy()
     #}}}
-    describe "::getProperties",-> #{{{
+    describe ".getProperties",-> #{{{
       it "common",->
         expect(@maplist.getProperties()).toBe(@maplist.entries.properties)
     #}}}
@@ -264,54 +264,71 @@ describe "MapList", ->
   describe "Source", -> #{{{
   #}}}
   describe "Parser", -> #{{{
-    beforeEach ->
+    beforeEach -> #{{{
       @Parser = MapList.Parser
-
-    describe "::constructor",->
+    #}}}
+    describe "constructor",-> #{{{
       it "common", ->
-        options = {
-          parser: Object.create(null)
-          afterParser: Object.create(null)
-        }
+        options = Object.create(null)
         parser = new @Parser(options)
-        expect(parser.parser).toBe(options.parser)
-        expect(parser.afterParser).toBe(options.afterParser)
+        expect(parser.options).toBe(options)
 
-      it "non arguments",->
-        parser = new @Parser
-        expect(parser.parser).toBe(parser.defaultParser)
-        expect(parser.afterParser).toBe(_.identity)
-
-    describe "::execute",->
-      beforeEach ->
+    #}}}
+    describe ".execute",-> #{{{
+      it "return Object",->
         @parser = new @Parser
-        spyOn(@parser,'parse').andReturn(1)
-        spyOn(@parser,'afterParser').andReturn(2)
-        spyOn(@parser,'finallyParse').andReturn(3)
-        @result = @parser.execute(0)
+        result = @parser.execute({})
+        expect(result instanceof Object).toBeTruthy()
+    #}}}
+    describe ".parse",->#{{{
+      beforeEach ->#{{{
+        @parser = new @Parser
+      #}}}
+      it "when parser is function",-> #{{{
+        func = @createSpy("")
+        @parser.parse({}, func)
+        expect(func).toHaveBeenCalled()
+      #}}}
+      it "when parser is object with execute method",->#{{{
+        obj = {execute: @createSpy("")}
+        @parser.parse({}, obj)
+        expect(obj.execute).toHaveBeenCalled()
+      #}}}
+      it "when other parse",->#{{{
+        func = -> @parser.parse({}, null)
+        expect(func).toThrow()
+      #}}}
+    #}}}
+    describe ".getParserSequence",->#{{{
+      it "common",->
+        @parser = new @Parser
+        result = @parser.getParserSequence()
+        expect(_.isArray(result)).toBeTruthy()
+    #}}}
+    describe ".getCommonParser",->#{{{
+      it "common", ->
+        @parser = new @Parser
+        result = @parser.getCommonParser()
+        expect(result instanceof @Parser.DefaultParser).toBeTruthy()
 
-      afterEach ->
-        delete @parser
-        delete @result
+      it "with options", ->
+        obj = {}
+        @parser = new @Parser({parser: obj})
+        result = @parser.getCommonParser()
+        expect(result).toBe(obj)
+    #}}}
+    describe ".getAfterParser",->#{{{
+      it "common", ->
+        @parser = new @Parser
+        result = @parser.getAfterParser()
+        expect(result).toBe(_.identity)
 
-      it "call parse",->
-        expect(@parser.parse).toHaveBeenCalled()
-        expect(@parser.parse.calls[0].args[0]).toBe(0)
-
-      it "call afterParser",->
-        expect(@parser.afterParser).toHaveBeenCalled()
-        expect(@parser.afterParser.calls[0].args[0]).toBe(1)
-
-      it "call finallyParse",->
-        expect(@parser.finallyParse).toHaveBeenCalled()
-        expect(@parser.finallyParse.calls[0].args[0]).toBe(2)
-
-      it "return value",->
-        expect(@result).toBe(3)
-
-    describe "::defaultParser",->
-      it "data is XMLDoc",->
-
+      it "with options", ->
+        obj = {}
+        @parser = new @Parser({afterParser: obj})
+        result = @parser.getAfterParser()
+        expect(result).toBe(obj)
+    #}}}
   #}}}
   describe "Parser.XMLParser", -> #{{{
   #}}}

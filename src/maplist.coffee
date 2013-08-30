@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.5.10
+MapList JavaScript Library v1.5.11
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -200,17 +200,26 @@ do ($=jQuery,global=this)->
     constructor:( @options = {} )->
 
     execute:(data)=>
-      sequence = []
-      sequence.push @options.parser ? new Parser.DefaultParser(@options)
-      sequence.push @options.afterParser ? _.identity
-      sequence.push new Parser.MapIconDecorator(@options)
-      _(sequence).reduce(@_parse, data)
+      _(@getParserSequence()).reduce(@parse, data)
 
-    _parse:(data, parser)=>
+    parse:(data, parser)=>
       switch
         when _.isFunction(parser) then parser(data)
         when parser?.execute?     then parser.execute(data)
         else throw "parser is function or on object with the execute method"
+
+    getParserSequence: =>
+      sequence = []
+      sequence.push @getCommonParser()
+      sequence.push @getAfterParser()
+      sequence.push new Parser.MapIconDecorator(@options)
+      return sequence
+
+    getCommonParser:=>
+      @options.parser ? new Parser.DefaultParser(@options)
+
+    getAfterParser:=>
+      @options.afterParser ? _.identity
   #}}}
   class Parser.DefaultParser #{{{
     constructor: (@options)->
@@ -228,11 +237,11 @@ do ($=jQuery,global=this)->
   class Parser.MapIconDecorator #{{{
     execute:(entries)=>
       for entry in entries
-        entry.icon   = @_makeIcon(entry.icon)   if entry.icon?
-        entry.shadow = @_makeIcon(entry.shadow) if entry.shadow?
+        entry.icon   = @makeIcon(entry.icon)   if entry.icon?
+        entry.shadow = @makeIcon(entry.shadow) if entry.shadow?
       return entries
 
-    _makeIcon : (data)=>
+    makeIcon : (data)=>
       result = _.clone data
       for key, val of data
         result[key] = switch key
