@@ -842,7 +842,7 @@
       beforeEach(function() {
         this.options = new MapList.Options;
         this.ListView = MapList.ListView;
-        return this.listView = this.ListView(this.options);
+        return this.listView = new this.ListView(this.options);
       });
       describe("constructor", function() {
         it("$el is jQuey Object", function() {
