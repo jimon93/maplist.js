@@ -505,7 +505,7 @@ describe "MapList", ->
     beforeEach ->
       @options = new MapList.Options
       @ListView = MapList.ListView
-      @listView = @ListView(@options)
+      @listView = new @ListView(@options)
 
     describe "constructor",->
       it "$el is jQuey Object",->
