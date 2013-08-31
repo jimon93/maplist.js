@@ -372,7 +372,7 @@ describe "MapList", ->
         expect(result).toBe(obj)
     #}}}
   #}}}
-  describe "Parser.DefaultParser", -> #{{{
+  describe "Parser::DefaultParser", -> #{{{
     beforeEach -> #{{{
       @DefaultParser = MapList.Parser.DefaultParser
     #}}}
@@ -392,7 +392,7 @@ describe "MapList", ->
         func = -> parser.execute(null)
         expect(func).toThrow()
   #}}}
-  describe "Parser.MapIconDecorator", -> #{{{
+  describe "Parser::MapIconDecorator", -> #{{{
     beforeEach -> #{{{
       @MapIconDecorator = MapList.Parser.MapIconDecorator
       @decorator = new @MapIconDecorator
@@ -422,13 +422,13 @@ describe "MapList", ->
         expect(result.scaledSize instanceof google.maps.Size).toBeTruthy()
         expect(result.other).toEqual(data.other)
   #}}}
-  describe "Parser.XMLParser", -> #{{{
+  describe "Parser::XMLParser", -> #{{{
     it "execute",->
       parser = new MapList.Parser.XMLParser
       result = parser.execute(@data.entries.xml)
       expect(result).toEqual(@data.entries.object)
   #}}}
-  describe "Parser.ObjectParser", -> #{{{
+  describe "Parser::ObjectParser", -> #{{{
     it "execute",->
       parser = new MapList.Parser.ObjectParser
       result = parser.execute(@data.entries.object)
@@ -438,7 +438,66 @@ describe "MapList", ->
   #}}}
   describe "Entries", -> #{{{
   #}}}
-  describe "HTMLFactory", -> #{{{
+  describe "HtmlFactory", -> #{{{
+    beforeEach ->
+      @HtmlFactory = MapList.HtmlFactory
+
+    describe "::create",->
+      it "when template is undefined",->
+        result = @HtmlFactory.create()
+        expect(result instanceof @HtmlFactory.Null).toBeTruthy()
+
+      it "when templateEngine is _.template",->
+        result = @HtmlFactory.create(_.template, "")
+        expect(result instanceof @HtmlFactory.Underscore).toBeTruthy()
+
+      it "when templateEngine is $.tmpl",->
+        result = @HtmlFactory.create($.tmpl, "")
+        expect(result instanceof @HtmlFactory.Jquery).toBeTruthy()
+
+      it "when templateEngine is other",->
+        result = @HtmlFactory.create(null, "")
+        expect(result instanceof @HtmlFactory.Null).toBeTruthy()
+
+    describe "getTemplateEngineName",->
+      it "engine is _.template", ->
+        result = @HtmlFactory.getTemplateEngineName(_.template)
+        expect(result).toEqual("_.template")
+
+      it "engine is _.template", ->
+        result = @HtmlFactory.getTemplateEngineName($.tmpl)
+        expect(result).toEqual("$.tmpl")
+
+      it "engine is other", ->
+        result = @HtmlFactory.getTemplateEngineName(null)
+        expect(result).toEqual("other")
+
+  #}}}
+  describe "HtmlFactory::Null", -> #{{{
+    beforeEach ->
+      @factory = new MapList.HtmlFactory.Null
+
+    it ".make", ->
+      result = @factory.make()
+      expect(result).toBeNull()
+  #}}}
+  describe "HtmlFactory::Underscore", -> #{{{
+    beforeEach ->
+      template = "<div><%- name %></div>"
+      @factory = new MapList.HtmlFactory.Underscore(template)
+
+    it ".make", ->
+      result = @factory.make({name: "Bob"})
+      expect(result).toEqual("<div>Bob</div>")
+  #}}}
+  describe "HtmlFactory::Jquery", -> #{{{
+    beforeEach ->
+      template = "<div>${name}</div>"
+      @factory = new MapList.HtmlFactory.Jquery(template)
+
+    it ".make", ->
+      result = @factory.make({name: "Bob"})
+      expect(result).toEqual("<div>Bob</div>")
   #}}}
   describe "MapView", -> #{{{
   #}}}

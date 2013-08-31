@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.5.12
+MapList JavaScript Library v1.5.13
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -158,8 +158,8 @@ do ($=jQuery,global=this)->
     @extendOptions = (options)=>
       center = { center : new google.maps.LatLng( options.lat, options.lng ) }
       templates = {
-        infoHtmlFactory : new HtmlFactory(options.templateEngine, options.infoTemplate)
-        listHtmlFactory : new HtmlFactory(options.templateEngine, options.listTemplate)
+        infoHtmlFactory : HtmlFactory.create(options.templateEngine, options.infoTemplate)
+        listHtmlFactory : HtmlFactory.create(options.templateEngine, options.listTemplate)
       }
       _.extend( center, options, templates )
   #}}}
@@ -225,7 +225,6 @@ do ($=jQuery,global=this)->
 
     getAfterParser:=>
       @options.afterParser ? _.identity
-  #}}}
   class Parser.DefaultParser #{{{
     constructor: (@options)->
 
@@ -302,11 +301,12 @@ do ($=jQuery,global=this)->
     execute: (data)=>
       data
   #}}}
+  #}}}
   class Entry extends Backbone.Model #{{{
     initialize: (attributes, options)=>
       attributes ||= {}
       options ||= {}
-      @isPoint = @getExistPoint()
+      @isPoint = @isExistPoint()
       @info   = @makeInfo(options.infoHtmlFactory)
       @marker = @makeMarker()
       @list   = @makeList(options.listHtmlFactory)
@@ -335,7 +335,7 @@ do ($=jQuery,global=this)->
       if content? and !!content.replace(/\s/g,"")
         $(content).addClass("__list").data("entry",@)
 
-    getExistPoint:=>
+    isExistPoint:=>
       latExist = @has('lat') and _.isFinite(parseFloat @get 'lat')
       lngExist = @has('lng') and _.isFinite(parseFloat @get 'lng')
       latExist and lngExist
@@ -369,31 +369,37 @@ do ($=jQuery,global=this)->
       @selectedList = []
   #}}}
   class HtmlFactory #{{{
-    constructor:(@templateEngine, @template)->
-      if not @template?
-        @engine = -> null
-      else switch @getTemplateEngineName()
-        when "_.template"
-          @engine = @templateEngine(@template)
-        when "$.tmpl"
-          @engine = _.bind( @templateEngine, $, @template )
-        else
-          @engine = _.bind( @templateEngine, @, @template )
+    @create: (templateEngine, template)->
+      unless template?
+        new HtmlFactory.Null
+      else switch @getTemplateEngineName(templateEngine)
+        when "_.template" then new HtmlFactory.Underscore(template)
+        when "$.tmpl"     then new HtmlFactory.Jquery(template)
+        else new HtmlFactory.Null
 
-    make:(object)=>
-      return null unless @templateEngine? and @template?
-      res = @engine(object)
-      if @getTemplateEngineName() == "$.tmpl"
-        res = _(res).map( (dom) -> dom.outerHTML ).join('')
-      return res
+    @getTemplateEngineName: (engine)=>
+      switch
+        when _?.template? and _.template == engine then "_.template"
+        when $?.tmpl?     and $.tmpl == engine     then "$.tmpl"
+        else "other"
 
-    getTemplateEngineName:=>
-      if _?.template? and _.template == @templateEngine
-        "_.template"
-      else if $?.tmpl? and $.tmpl == @templateEngine
-        "$.tmpl"
-      else
-        "other"
+  class HtmlFactory.Null
+    make: =>
+      null
+
+  class HtmlFactory.Underscore
+    constructor:(template)->
+      @make = _.template(template)
+
+  class HtmlFactory.Jquery
+    constructor:(template)->
+      @engine = _.bind($.tmpl, $, template)
+
+    make: (object)=>
+      _(@engine object).map(@_getOuterHtml).join('')
+
+    _getOuterHtml: (dom)=>
+      dom.outerHTML
   #}}}
   class MapView extends Backbone.View # info and marker {{{
     initialize: =>

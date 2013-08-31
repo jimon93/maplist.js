@@ -668,7 +668,7 @@
         });
       });
     });
-    describe("Parser.DefaultParser", function() {
+    describe("Parser::DefaultParser", function() {
       beforeEach(function() {
         return this.DefaultParser = MapList.Parser.DefaultParser;
       });
@@ -695,7 +695,7 @@
         });
       });
     });
-    describe("Parser.MapIconDecorator", function() {
+    describe("Parser::MapIconDecorator", function() {
       beforeEach(function() {
         this.MapIconDecorator = MapList.Parser.MapIconDecorator;
         return this.decorator = new this.MapIconDecorator;
@@ -737,7 +737,7 @@
         });
       });
     });
-    describe("Parser.XMLParser", function() {
+    describe("Parser::XMLParser", function() {
       return it("execute", function() {
         var parser, result;
         parser = new MapList.Parser.XMLParser;
@@ -745,7 +745,7 @@
         return expect(result).toEqual(this.data.entries.object);
       });
     });
-    describe("Parser.ObjectParser", function() {
+    describe("Parser::ObjectParser", function() {
       return it("execute", function() {
         var parser, result;
         parser = new MapList.Parser.ObjectParser;
@@ -755,7 +755,88 @@
     });
     describe("Entry", function() {});
     describe("Entries", function() {});
-    describe("HTMLFactory", function() {});
+    describe("HtmlFactory", function() {
+      beforeEach(function() {
+        return this.HtmlFactory = MapList.HtmlFactory;
+      });
+      describe("::create", function() {
+        it("when template is undefined", function() {
+          var result;
+          result = this.HtmlFactory.create();
+          return expect(result instanceof this.HtmlFactory.Null).toBeTruthy();
+        });
+        it("when templateEngine is _.template", function() {
+          var result;
+          result = this.HtmlFactory.create(_.template, "");
+          return expect(result instanceof this.HtmlFactory.Underscore).toBeTruthy();
+        });
+        it("when templateEngine is $.tmpl", function() {
+          var result;
+          result = this.HtmlFactory.create($.tmpl, "");
+          return expect(result instanceof this.HtmlFactory.Jquery).toBeTruthy();
+        });
+        return it("when templateEngine is other", function() {
+          var result;
+          result = this.HtmlFactory.create(null, "");
+          return expect(result instanceof this.HtmlFactory.Null).toBeTruthy();
+        });
+      });
+      return describe("getTemplateEngineName", function() {
+        it("engine is _.template", function() {
+          var result;
+          result = this.HtmlFactory.getTemplateEngineName(_.template);
+          return expect(result).toEqual("_.template");
+        });
+        it("engine is _.template", function() {
+          var result;
+          result = this.HtmlFactory.getTemplateEngineName($.tmpl);
+          return expect(result).toEqual("$.tmpl");
+        });
+        return it("engine is other", function() {
+          var result;
+          result = this.HtmlFactory.getTemplateEngineName(null);
+          return expect(result).toEqual("other");
+        });
+      });
+    });
+    describe("HtmlFactory::Null", function() {
+      beforeEach(function() {
+        return this.factory = new MapList.HtmlFactory.Null;
+      });
+      return it(".make", function() {
+        var result;
+        result = this.factory.make();
+        return expect(result).toBeNull();
+      });
+    });
+    describe("HtmlFactory::Underscore", function() {
+      beforeEach(function() {
+        var template;
+        template = "<div><%- name %></div>";
+        return this.factory = new MapList.HtmlFactory.Underscore(template);
+      });
+      return it(".make", function() {
+        var result;
+        result = this.factory.make({
+          name: "Bob"
+        });
+        return expect(result).toEqual("<div>Bob</div>");
+      });
+    });
+    describe("HtmlFactory::Jquery", function() {
+      beforeEach(function() {
+        var template;
+        template = "<div>${name}</div>";
+        return this.factory = new MapList.HtmlFactory.Jquery(template);
+      });
+      return it(".make", function() {
+        var result;
+        result = this.factory.make({
+          name: "Bob"
+        });
+        return expect(result).toEqual("<div>Bob</div>");
+      });
+    });
     describe("MapView", function() {});
     describe("ListView", function() {});
     return describe("GenresView", function() {});
