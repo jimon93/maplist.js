@@ -332,16 +332,15 @@
       });
       describe(".build", function() {
         beforeEach(function() {
-          spyOn(this.maplist.mapView, "build");
-          spyOn(this.maplist.listView, "build");
+          spyOn(this.maplist.mainViews, "build");
           this.maplist.on("beforeBuild", this.before = this.createSpy(""));
           this.maplist.on("afterBuild", this.after = this.createSpy(""));
           this.prop = this.maplist.getProperties();
           return this.result = this.maplist.build(this.entries = "entries");
         });
         it("call other methods", function() {
-          expect(this.maplist.mapView.build).toHaveBeenCalled();
-          return expect(this.maplist.listView.build).toHaveBeenCalled();
+          expect(this.maplist.mainViews.build).toHaveBeenCalled();
+          return expect(this.maplist.mainViews.build.calls[0].args[0]).toBe(this.entries);
         });
         it("fire events", function() {
           expect(this.before).toHaveBeenCalled();
@@ -355,15 +354,13 @@
       });
       describe(".clear", function() {
         beforeEach(function() {
-          spyOn(this.maplist.mapView, "clear");
-          spyOn(this.maplist.listView, "clear");
+          spyOn(this.maplist.mainViews, "clear");
           this.maplist.on("beforeClear", this.before = this.createSpy(""));
           this.maplist.on("afterClear", this.after = this.createSpy(""));
           return this.result = this.maplist.clear();
         });
         it("call other methods", function() {
-          expect(this.maplist.mapView.clear).toHaveBeenCalled();
-          return expect(this.maplist.listView.clear).toHaveBeenCalled();
+          return expect(this.maplist.mainViews.clear).toHaveBeenCalled();
         });
         it("fire events", function() {
           expect(this.before).toHaveBeenCalled();
@@ -375,7 +372,7 @@
       });
       describe(".openInfo", function() {
         beforeEach(function() {
-          spyOn(this.maplist.mapView, "openInfo");
+          spyOn(this.maplist.mainViews, "openInfo");
           this.maplist.on("openInfo", this.before = this.createSpy(""));
           this.maplist.on("openedInfo", this.after = this.createSpy(""));
           this.entry = {
@@ -385,7 +382,7 @@
           return this.result = this.maplist.openInfo(this.entry);
         });
         it("call other methods", function() {
-          return expect(this.maplist.mapView.openInfo).toHaveBeenCalled();
+          return expect(this.maplist.mainViews.openInfo).toHaveBeenCalled();
         });
         it("fire events", function() {
           expect(this.before).toHaveBeenCalled();
@@ -397,13 +394,13 @@
       });
       describe(".closeInfo", function() {
         beforeEach(function() {
-          spyOn(this.maplist.mapView, "closeOpenedInfo");
+          spyOn(this.maplist.mainViews, "closeInfo");
           this.maplist.on("closeInfo", this.before = this.createSpy(""));
           this.maplist.on("closedInfo", this.after = this.createSpy(""));
           return this.result = this.maplist.closeInfo();
         });
         it("call other methods", function() {
-          return expect(this.maplist.mapView.closeOpenedInfo).toHaveBeenCalled();
+          return expect(this.maplist.mainViews.closeInfo).toHaveBeenCalled();
         });
         it("fire events", function() {
           expect(this.before).toHaveBeenCalled();
@@ -490,8 +487,7 @@
       });
       describe(".getMap", function() {
         return it("common", function() {
-          expect(this.maplist.getMap()).toBe(this.maplist.mapView.map);
-          return expect(this.maplist.getMap() instanceof google.maps.Map).toBeTruthy();
+          return expect(this.maplist.getMap()).toBe(this.maplist.mainViews.getMap());
         });
       });
       return describe(".getProperties", function() {
@@ -527,10 +523,10 @@
         delegator = new this.AppDelegator;
         app = new MapList;
         app.entries.on = this.createSpy("");
-        app.genresView.on = this.createSpy("");
+        app.mainViews.genresView.on = this.createSpy("");
         delegator.execute(app);
         expect(app.entries.on).toHaveBeenCalled();
-        return expect(app.genresView.on).toHaveBeenCalled();
+        return expect(app.mainViews.genresView.on).toHaveBeenCalled();
       });
     });
     describe("Source", function() {
@@ -837,12 +833,71 @@
         return expect(result).toEqual("<div>Bob</div>");
       });
     });
+    describe("MainViews", function() {
+      beforeEach(function() {
+        this.options = new MapList.Options;
+        return this.mainViews = new MapList.MainViews(this.options);
+      });
+      describe(".getMap", function() {
+        return it("common", function() {
+          var result;
+          result = this.mainViews.getMap();
+          expect(result).toBe(this.mainViews.mapView.map);
+          return expect(result instanceof google.maps.Map).toBeTruthy();
+        });
+      });
+      describe(".build", function() {
+        beforeEach(function() {
+          spyOn(this.mainViews.mapView, "build");
+          return spyOn(this.mainViews.listView, "build");
+        });
+        return it("call other methods", function() {
+          this.mainViews.build("entries");
+          expect(this.mainViews.mapView.build).toHaveBeenCalled();
+          expect(this.mainViews.mapView.build.calls[0].args[0]).toEqual("entries");
+          expect(this.mainViews.listView.build).toHaveBeenCalled();
+          return expect(this.mainViews.listView.build.calls[0].args[0]).toEqual("entries");
+        });
+      });
+      describe(".clear", function() {
+        beforeEach(function() {
+          spyOn(this.mainViews.mapView, "clear");
+          return spyOn(this.mainViews.listView, "clear");
+        });
+        return it("call other methods", function() {
+          this.mainViews.clear("entries");
+          expect(this.mainViews.mapView.clear).toHaveBeenCalled();
+          expect(this.mainViews.mapView.clear.calls[0].args[0]).toEqual("entries");
+          expect(this.mainViews.listView.clear).toHaveBeenCalled();
+          return expect(this.mainViews.listView.clear.calls[0].args[0]).toEqual("entries");
+        });
+      });
+      describe(".openInfo", function() {
+        beforeEach(function() {
+          return spyOn(this.mainViews.mapView, "openInfo");
+        });
+        return it("call other methods", function() {
+          this.mainViews.openInfo("entry");
+          expect(this.mainViews.mapView.openInfo).toHaveBeenCalled();
+          return expect(this.mainViews.mapView.openInfo.calls[0].args[0]).toEqual("entry");
+        });
+      });
+      return describe(".closeInfo", function() {
+        beforeEach(function() {
+          return spyOn(this.mainViews.mapView, "closeOpenedInfo");
+        });
+        return it("call other methods", function() {
+          this.mainViews.closeInfo();
+          return expect(this.mainViews.mapView.closeOpenedInfo).toHaveBeenCalled();
+        });
+      });
+    });
     describe("MapView", function() {});
     describe("ListView", function() {
       beforeEach(function() {
         this.options = new MapList.Options;
         this.ListView = MapList.ListView;
-        return this.listView = this.ListView(this.options);
+        return this.listView = new this.ListView(this.options);
       });
       describe("constructor", function() {
         it("$el is jQuey Object", function() {

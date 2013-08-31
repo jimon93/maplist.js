@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.5.13
+MapList JavaScript Library v1.6.0
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -20,9 +20,7 @@ do ($=jQuery,global=this)->
     constructor:(options,initFunc)->
       # Field initialize
       @options    = new Options(options)
-      @mapView    = new MapView(@options)
-      @listView   = new ListView(@options)
-      @genresView = new GenresView(@options)
+      @mainViews = new MainViews(@options)
       @entries    = new Entries(null,@options)
 
       # Event Delegate
@@ -48,7 +46,7 @@ do ($=jQuery,global=this)->
     # Getter methods
     # map objectを取得
     getMap:=>
-      return @mapView.map
+      return @mainViews.getMap()
 
     getSelectedEntries:=>
       return @entries.selectedList
@@ -61,8 +59,7 @@ do ($=jQuery,global=this)->
     build: (entries)=>
       prop = @getProperties()
       @trigger('beforeBuild',entries,prop)
-      @mapView .build(entries)
-      @listView.build(entries)
+      @mainViews.build(entries)
       @trigger('afterBuild',entries,prop)
       return @
 
@@ -71,23 +68,22 @@ do ($=jQuery,global=this)->
       entries = @getSelectedEntries()
       properties = @getProperties()
       @trigger("beforeClear",entries, properties)
-      @mapView .clear(entries)
-      @listView.clear(entries)
+      @mainViews.clear(entries)
       @trigger("afterClear",entries, properties)
       return @
 
     # インフォウィンドウを開く
     openInfo: (entry)=>
       @trigger('openInfo',entry)
-      @mapView.openInfo(entry)
+      @mainViews.openInfo(entry)
       @trigger('openedInfo', entry)
       return @
 
     # インフォウィンドウを閉じる
     closeInfo: =>
-      entry = @mapView.openedInfoEntry
+      entry = @mainViews.mapView.openedInfoEntry
       @trigger('closeInfo',entry)
-      @mapView.closeOpenedInfo()
+      @mainViews.closeInfo()
       @trigger('closedInfo',entry)
       return @
 
@@ -117,7 +113,7 @@ do ($=jQuery,global=this)->
       return @
   #}}}
   class Options #{{{
-    constructor: (options)->
+    constructor: (options = {})->
       _.extend @, Options.extendOptions Options.extendDefaultOptions options
 
     @defaults = =>{
@@ -167,11 +163,11 @@ do ($=jQuery,global=this)->
     constructor: (@options)->
 
     execute: (app)->
-      app.entries.on    "select"       , app.build
-      app.entries.on    "unselect"     , app.clear
-      app.entries.on    "openinfo"     , app.openInfo
-      app.entries.on    "closeinfo"    , app.closeInfo
-      app.genresView.on "change:genre" , app.changeGenre
+      app.entries.on "select"   , app.build
+      app.entries.on "unselect" , app.clear
+      app.entries.on "openinfo" , app.openInfo
+      app.entries.on "closeinfo", app.closeInfo
+      app.mainViews.genresView.on "change:genre" , app.changeGenre
       @obsoleteDelegateEvents(app)
 
     obsoleteDelegateEvents: (app)->
@@ -401,6 +397,31 @@ do ($=jQuery,global=this)->
     _getOuterHtml: (dom)=>
       dom.outerHTML
   #}}}
+  class MainViews
+    constructor:(@options)->
+      # Field initialize
+      @mapView    = new MapView(@options)
+      @listView   = new ListView(@options)
+      @genresView = new GenresView(@options)
+
+    getMap: =>
+      @mapView.map
+
+    build: (entries)=>
+      @mapView.build(entries)
+      @listView.build(entries)
+
+    clear: (entries)=>
+      @mapView.clear(entries)
+      @listView.clear(entries)
+
+    openInfo: (entry)=>
+      @mapView.openInfo(entry)
+
+    closeInfo: =>
+      @mapView.closeOpenedInfo()
+
+
   class MapView extends Backbone.View # info and marker {{{
     initialize: =>
       canvas = $(@options.mapSelector).get(0)
@@ -475,6 +496,7 @@ do ($=jQuery,global=this)->
       @trigger("change:genre", key, val)
       return false
   #}}}
+  class EntryViews
   global.MapList = _.extend App, { #{{{
     Options
     AppDelegator
@@ -483,7 +505,9 @@ do ($=jQuery,global=this)->
     Entry
     Entries
     HtmlFactory
+    MainViews
     MapView
     ListView
     GenresView
+    EntryViews
   } #}}}

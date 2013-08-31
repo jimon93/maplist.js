@@ -95,16 +95,15 @@ describe "MapList", ->
     #}}}
     describe ".build",-> #{{{
       beforeEach ->
-        spyOn(@maplist.mapView, "build")
-        spyOn(@maplist.listView, "build")
+        spyOn(@maplist.mainViews, "build")
         @maplist.on("beforeBuild", @before = @createSpy(""))
         @maplist.on("afterBuild" , @after  = @createSpy(""))
         @prop = @maplist.getProperties()
         @result = @maplist.build( @entries = "entries" )
 
       it "call other methods",->
-        expect(@maplist.mapView.build).toHaveBeenCalled()
-        expect(@maplist.listView.build).toHaveBeenCalled()
+        expect(@maplist.mainViews.build).toHaveBeenCalled()
+        expect(@maplist.mainViews.build.calls[0].args[0]).toBe(@entries)
 
       it "fire events",->
         expect(@before).toHaveBeenCalled()
@@ -117,15 +116,14 @@ describe "MapList", ->
     #}}}
     describe ".clear",-> #{{{
       beforeEach ->
-        spyOn(@maplist.mapView, "clear")
-        spyOn(@maplist.listView, "clear")
+        spyOn(@maplist.mainViews, "clear")
         @maplist.on("beforeClear", @before = @createSpy(""))
         @maplist.on("afterClear" , @after  = @createSpy(""))
         @result = @maplist.clear()
 
       it "call other methods",->
-        expect(@maplist.mapView.clear).toHaveBeenCalled()
-        expect(@maplist.listView.clear).toHaveBeenCalled()
+        expect(@maplist.mainViews.clear).toHaveBeenCalled()
+        #expect(@maplist.mainViews.build.calls[0].args[0]).toBe(@entries)
 
       it "fire events",->
         expect(@before).toHaveBeenCalled()
@@ -136,14 +134,14 @@ describe "MapList", ->
     #}}}
     describe ".openInfo",-> #{{{
       beforeEach ->
-        spyOn(@maplist.mapView, "openInfo")
+        spyOn(@maplist.mainViews, "openInfo")
         @maplist.on("openInfo", @before = @createSpy(""))
         @maplist.on("openedInfo", @after = @createSpy(""))
         @entry = { info: "info", marker: "marker" }
         @result = @maplist.openInfo(@entry)
 
       it "call other methods",->
-        expect(@maplist.mapView.openInfo).toHaveBeenCalled()
+        expect(@maplist.mainViews.openInfo).toHaveBeenCalled()
 
       it "fire events",->
         expect(@before).toHaveBeenCalled()
@@ -154,13 +152,13 @@ describe "MapList", ->
     #}}}
     describe ".closeInfo",-> #{{{
       beforeEach ->
-        spyOn(@maplist.mapView, "closeOpenedInfo")
+        spyOn(@maplist.mainViews, "closeInfo")
         @maplist.on("closeInfo", @before = @createSpy(""))
         @maplist.on("closedInfo", @after = @createSpy(""))
         @result = @maplist.closeInfo()
 
       it "call other methods",->
-        expect(@maplist.mapView.closeOpenedInfo).toHaveBeenCalled()
+        expect(@maplist.mainViews.closeInfo).toHaveBeenCalled()
 
       it "fire events",->
         expect(@before).toHaveBeenCalled()
@@ -234,8 +232,7 @@ describe "MapList", ->
     #}}}
     describe ".getMap",-> #{{{
       it "common",->
-        expect(@maplist.getMap()).toBe(@maplist.mapView.map)
-        expect(@maplist.getMap() instanceof google.maps.Map).toBeTruthy()
+        expect(@maplist.getMap()).toBe(@maplist.mainViews.getMap())
     #}}}
     describe ".getProperties",-> #{{{
       it "common",->
@@ -264,10 +261,10 @@ describe "MapList", ->
       delegator = new @AppDelegator
       app = new MapList
       app.entries.on =  @createSpy("")
-      app.genresView.on =  @createSpy("")
+      app.mainViews.genresView.on =  @createSpy("")
       delegator.execute(app)
       expect(app.entries.on).toHaveBeenCalled()
-      expect(app.genresView.on).toHaveBeenCalled()
+      expect(app.mainViews.genresView.on).toHaveBeenCalled()
   #}}}
   describe "Source", -> #{{{
     beforeEach -> #{{{
@@ -499,13 +496,66 @@ describe "MapList", ->
       result = @factory.make({name: "Bob"})
       expect(result).toEqual("<div>Bob</div>")
   #}}}
+  describe "MainViews",-> #{{{
+    beforeEach -> #{{{
+      @options = new MapList.Options
+      @mainViews = new MapList.MainViews(@options)
+    #}}}
+    describe ".getMap",-> #{{{
+      it "common",->
+        result = @mainViews.getMap()
+        expect(result).toBe(@mainViews.mapView.map)
+        expect(result instanceof google.maps.Map).toBeTruthy()
+    #}}}
+    describe ".build",-> #{{{
+      beforeEach ->
+        spyOn(@mainViews.mapView, "build")
+        spyOn(@mainViews.listView, "build")
+
+      it "call other methods",->
+        @mainViews.build("entries")
+        expect(@mainViews.mapView.build).toHaveBeenCalled()
+        expect(@mainViews.mapView.build.calls[0].args[0]).toEqual("entries")
+        expect(@mainViews.listView.build).toHaveBeenCalled()
+        expect(@mainViews.listView.build.calls[0].args[0]).toEqual("entries")
+    #}}}
+    describe ".clear",-> #{{{
+      beforeEach ->
+        spyOn(@mainViews.mapView, "clear")
+        spyOn(@mainViews.listView, "clear")
+
+      it "call other methods",->
+        @mainViews.clear("entries")
+        expect(@mainViews.mapView.clear).toHaveBeenCalled()
+        expect(@mainViews.mapView.clear.calls[0].args[0]).toEqual("entries")
+        expect(@mainViews.listView.clear).toHaveBeenCalled()
+        expect(@mainViews.listView.clear.calls[0].args[0]).toEqual("entries")
+    #}}}
+    describe ".openInfo",-> #{{{
+      beforeEach ->
+        spyOn(@mainViews.mapView, "openInfo")
+
+      it "call other methods",->
+        @mainViews.openInfo("entry")
+        expect(@mainViews.mapView.openInfo).toHaveBeenCalled()
+        expect(@mainViews.mapView.openInfo.calls[0].args[0]).toEqual("entry")
+    #}}}
+    describe ".closeInfo",-> #{{{
+      beforeEach ->
+        spyOn(@mainViews.mapView, "closeOpenedInfo")
+
+      it "call other methods",->
+        @mainViews.closeInfo()
+        expect(@mainViews.mapView.closeOpenedInfo).toHaveBeenCalled()
+    #}}}
+  #}}}
   describe "MapView", -> #{{{
   #}}}
   describe "ListView", -> #{{{
     beforeEach ->
       @options = new MapList.Options
       @ListView = MapList.ListView
-      @listView = @ListView(@options)
+      @listView = new @ListView(@options)
 
     describe "constructor",->
       it "$el is jQuey Object",->
