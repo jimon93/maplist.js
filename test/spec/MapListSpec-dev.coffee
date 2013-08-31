@@ -504,5 +504,58 @@ describe "MapList", ->
   describe "ListView", -> #{{{
   #}}}
   describe "GenresView", -> #{{{
+    beforeEach ->
+      @options = new MapList.Options
+      @genreView = new MapList.GenresView(@options)
+
+    describe "constructor",->
+      it "check @$el is jQuey object",->
+        expect(@genreView.$el instanceof jQuery).toBeTruthy()
+
+      it "check @$el.selector",->
+        expect(@genreView.$el.selector).toEqual(@options.genresSelector)
+
+    describe ".selectGenre",->
+      describe "custom genre key",->
+        beforeEach ->
+          wrap = $("<div id='genre'>").data(@options.genreGroup,"group")
+          target = $("<div>").data(@options.genreDataName, "foo").appendTo(wrap)
+          event = { currentTarget : target[0] }
+          @genreView.trigger = @spy = @createSpy("change:genre")
+          @genreView.selectGenre(event)
+
+        it "fire change:genre event",->
+          expect(@spy).toHaveBeenCalled()
+
+        it "fire change:genre event with 0:eventName",->
+          expect(@spy.calls[0].args[0]).toEqual("change:genre")
+
+        it "fire change:genre event with 1:properties",->
+          expect(@spy.calls[0].args[1]).toEqual("group")
+
+        it "fire change:genre event with 2:properties",->
+          expect(@spy.calls[0].args[2]).toEqual("foo")
+
+      describe "default genre key",->
+        beforeEach ->
+          wrap = $("<div id='genre'>")
+          target = $("<div>").data(@options.genreDataName, "foo").appendTo(wrap)
+          event = { currentTarget : target[0] }
+          @genreView.trigger = @spy = @createSpy("change:genre")
+          @genreView.selectGenre(event)
+
+        it "fire change:genre event",->
+          expect(@spy).toHaveBeenCalled()
+
+        it "fire change:genre event with 0:eventName",->
+          expect(@spy.calls[0].args[0]).toEqual("change:genre")
+
+
+        it "fire change:genre event with 1:properties",->
+          expect(@spy.calls[0].args[1]).toEqual("genre")
+
+        it "fire change:genre event with 2:properties",->
+          expect(@spy.calls[0].args[2]).toEqual("foo")
+
   #}}}
 

@@ -839,7 +839,70 @@
     });
     describe("MapView", function() {});
     describe("ListView", function() {});
-    return describe("GenresView", function() {});
+    return describe("GenresView", function() {
+      beforeEach(function() {
+        this.options = new MapList.Options;
+        return this.genreView = new MapList.GenresView(this.options);
+      });
+      describe("constructor", function() {
+        it("check @$el is jQuey object", function() {
+          return expect(this.genreView.$el instanceof jQuery).toBeTruthy();
+        });
+        return it("check @$el.selector", function() {
+          return expect(this.genreView.$el.selector).toEqual(this.options.genresSelector);
+        });
+      });
+      return describe(".selectGenre", function() {
+        describe("custom genre key", function() {
+          beforeEach(function() {
+            var event, target, wrap;
+            wrap = $("<div id='genre'>").data(this.options.genreGroup, "group");
+            target = $("<div>").data(this.options.genreDataName, "foo").appendTo(wrap);
+            event = {
+              currentTarget: target[0]
+            };
+            this.genreView.trigger = this.spy = this.createSpy("change:genre");
+            return this.genreView.selectGenre(event);
+          });
+          it("fire change:genre event", function() {
+            return expect(this.spy).toHaveBeenCalled();
+          });
+          it("fire change:genre event with 0:eventName", function() {
+            return expect(this.spy.calls[0].args[0]).toEqual("change:genre");
+          });
+          it("fire change:genre event with 1:properties", function() {
+            return expect(this.spy.calls[0].args[1]).toEqual("group");
+          });
+          return it("fire change:genre event with 2:properties", function() {
+            return expect(this.spy.calls[0].args[2]).toEqual("foo");
+          });
+        });
+        return describe("default genre key", function() {
+          beforeEach(function() {
+            var event, target, wrap;
+            wrap = $("<div id='genre'>");
+            target = $("<div>").data(this.options.genreDataName, "foo").appendTo(wrap);
+            event = {
+              currentTarget: target[0]
+            };
+            this.genreView.trigger = this.spy = this.createSpy("change:genre");
+            return this.genreView.selectGenre(event);
+          });
+          it("fire change:genre event", function() {
+            return expect(this.spy).toHaveBeenCalled();
+          });
+          it("fire change:genre event with 0:eventName", function() {
+            return expect(this.spy.calls[0].args[0]).toEqual("change:genre");
+          });
+          it("fire change:genre event with 1:properties", function() {
+            return expect(this.spy.calls[0].args[1]).toEqual("genre");
+          });
+          return it("fire change:genre event with 2:properties", function() {
+            return expect(this.spy.calls[0].args[2]).toEqual("foo");
+          });
+        });
+      });
+    });
   });
 
 }).call(this);
