@@ -502,6 +502,21 @@ describe "MapList", ->
   describe "MapView", -> #{{{
   #}}}
   describe "ListView", -> #{{{
+    beforeEach ->
+      @options = new MapList.Options
+      @ListView = MapList.ListView
+      @listView = @ListView(@options)
+
+    describe "constructor",->
+      it "$el is jQuey Object",->
+        expect(@listView.$el instanceof jQuery).toBeTruthy()
+
+      it "$el selector",->
+        expect(@listView.$el.selector).toEqual(@options.listSelector)
+
+    describe ".build",->
+    describe ".clear",->
+    describe ".openInfo",->
   #}}}
   describe "GenresView", -> #{{{
     beforeEach ->

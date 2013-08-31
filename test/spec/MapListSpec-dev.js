@@ -838,7 +838,24 @@
       });
     });
     describe("MapView", function() {});
-    describe("ListView", function() {});
+    describe("ListView", function() {
+      beforeEach(function() {
+        this.options = new MapList.Options;
+        this.ListView = MapList.ListView;
+        return this.listView = this.ListView(this.options);
+      });
+      describe("constructor", function() {
+        it("$el is jQuey Object", function() {
+          return expect(this.listView.$el instanceof jQuery).toBeTruthy();
+        });
+        return it("$el selector", function() {
+          return expect(this.listView.$el.selector).toEqual(this.options.listSelector);
+        });
+      });
+      describe(".build", function() {});
+      describe(".clear", function() {});
+      return describe(".openInfo", function() {});
+    });
     return describe("GenresView", function() {
       beforeEach(function() {
         this.options = new MapList.Options;
