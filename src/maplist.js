@@ -22,14 +22,22 @@ MIT License
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   (function($, global) {
-    var App, AppDelegator, Entries, Entry, EntryViews, GenresView, HtmlFactory, ListView, MainViews, MapView, Options, Parser, Source, log, _ref, _ref1, _ref2, _ref3, _ref4;
+    var App, AppDelegator, Entries, Entry, EntryInfo, EntryListItem, EntryMarker, EntryViews, EntryViewsCollection, Events, GenresView, HtmlFactory, ListView, MainViews, MapView, Options, Parser, Source, log, _ref, _ref1, _ref2, _ref3, _ref4;
     log = function() {
       var args;
       args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
       return typeof console !== "undefined" && console !== null ? typeof console.log === "function" ? console.log.apply(console, args) : void 0 : void 0;
     };
-    App = (function() {
-      _.extend(App.prototype, Backbone.Events);
+    Events = (function() {
+      function Events() {}
+
+      _.extend(Events.prototype, Backbone.Events);
+
+      return Events;
+
+    })();
+    App = (function(_super) {
+      __extends(App, _super);
 
       function App(options, initFunc) {
         this.rebuild = __bind(this.rebuild, this);
@@ -148,7 +156,7 @@ MIT License
 
       return App;
 
-    })();
+    })(Events);
     Options = (function() {
       var _this = this;
 
@@ -751,6 +759,7 @@ MIT License
         this.openInfo = __bind(this.openInfo, this);
         this.clear = __bind(this.clear, this);
         this.build = __bind(this.build, this);
+        this.getMap = __bind(this.getMap, this);
         this.initialize = __bind(this.initialize, this);
         _ref2 = MapView.__super__.constructor.apply(this, arguments);
         return _ref2;
@@ -760,6 +769,10 @@ MIT License
         var canvas;
         canvas = $(this.options.mapSelector).get(0);
         return this.map = new google.maps.Map(canvas, this.options);
+      };
+
+      MapView.prototype.getMap = function() {
+        return this.map;
       };
 
       MapView.prototype.build = function(entries) {
@@ -899,10 +912,197 @@ MIT License
       return GenresView;
 
     })(Backbone.View);
-    EntryViews = (function() {
-      function EntryViews() {}
+    EntryViews = (function(_super) {
+      __extends(EntryViews, _super);
+
+      /*
+      現在Entryの情報をもつEntryクラスがレンダリングなども行っているため
+      機能が分散し,非常にわかりにくいことになっている。
+      そこで、データそのものに関するものはEntryクラス
+      Viewに関するものはEntryViewsに分け
+      さらにEntryViewsはEntryInfoViewやEntryListItemViewに分解する。
+      メリットとしてDOMを必要な時に構築すれば良くなる。
+      どのEntryがInfoを出しているかなどは、EntryViewsCollectionが管理しなきゃいけないね
+      */
+
+
+      function EntryViews(options, entry) {
+        this.options = options;
+        this.entry = entry;
+        this._createListItem = __bind(this._createListItem, this);
+        this._getMarkerOptions = __bind(this._getMarkerOptions, this);
+        this._createMarker = __bind(this._createMarker, this);
+        this._createInfo = __bind(this._createInfo, this);
+        this.closeInfoQuery = __bind(this.closeInfoQuery, this);
+        this.openInfoQuery = __bind(this.openInfoQuery, this);
+        this.getListItem = __bind(this.getListItem, this);
+        this.getMarker = __bind(this.getMarker, this);
+        this.getInfo = __bind(this.getInfo, this);
+      }
+
+      EntryViews.prototype.getInfo = function() {
+        return this._info != null ? this._info : this._info = this._createInfo();
+      };
+
+      EntryViews.prototype.getMarker = function() {
+        return this._marker != null ? this._marker : this._marker = this._createMarker();
+      };
+
+      EntryViews.prototype.getListItem = function() {
+        return this._marker != null ? this._marker : this._marker = this._createListItem();
+      };
+
+      EntryViews.prototype.openInfoQuery = function(e) {
+        return this.trigger("openInfoQuery");
+      };
+
+      EntryViews.prototype.closeInfoQuery = function() {
+        return this.trigger("closeInfoQuery");
+      };
+
+      EntryViews.prototype._createInfo = function() {
+        var content, factory, info, _ref5;
+        factory = this.options.infoHtmlFactory;
+        content = (_ref5 = this.entry.get('__infoElement')) != null ? _ref5 : factory.make(this.entry.toJSON());
+        if ((content != null) && !!content.replace(/\s/g, "")) {
+          info = new google.maps.InfoWindow({
+            content: content
+          });
+          google.maps.event.addListener(info, 'closeclick', this.closeInfoQuery);
+          return info;
+        }
+      };
+
+      EntryViews.prototype._createMarker = function() {
+        var marker;
+        marker = new google.maps.Marker(this._getMarkerOptions());
+        google.maps.event.addListener(marker, 'click', this.openInfoQuery);
+        return marker;
+      };
+
+      EntryViews.prototype._getMarkerOptions = function() {
+        return {
+          position: new google.maps.LatLng(this.entry.get('lat'), this.entry.get('lng')),
+          icon: this.entry.get('icon'),
+          shadow: this.entry.get('shadow')
+        };
+      };
+
+      EntryViews.prototype._createListItem = function() {
+        var content, factory;
+        factory = this.options.listHtmlFactory;
+        content = factory.make(this.entry.toJSON());
+        return $(content).on("click", this.options.openInfoSelector, this.openInfoQuery);
+      };
 
       return EntryViews;
+
+    })(Events);
+    EntryInfo = (function(_super) {
+      __extends(EntryInfo, _super);
+
+      function EntryInfo(options) {
+        this.options = options;
+        this.closeInfoQuery = __bind(this.closeInfoQuery, this);
+        this.get = __bind(this.get, this);
+        this.entry = this.options.entry;
+      }
+
+      EntryInfo.prototype.get = function() {
+        var content, info, _ref5;
+        content = (_ref5 = this.entry.get('__infoElement')) != null ? _ref5 : infoHtmlFactory.make(this.entry.toJSON());
+        if ((content != null) && !!content.replace(/\s/g, "")) {
+          info = new google.maps.InfoWindow({
+            content: content
+          });
+          google.maps.event.addListener(info, 'closeclick', this.closeInfoQuery);
+          return info;
+        }
+      };
+
+      EntryInfo.prototype.closeInfoQuery = function() {
+        return this.trigger("closeInfoQuery");
+      };
+
+      return EntryInfo;
+
+    })(Events);
+    EntryMarker = (function(_super) {
+      __extends(EntryMarker, _super);
+
+      function EntryMarker(options) {
+        this.options = options;
+        this.openInfoQuery = __bind(this.openInfoQuery, this);
+        this.getMarkerOptions = __bind(this.getMarkerOptions, this);
+        this.get = __bind(this.get, this);
+        this.entry = this.options.entry;
+      }
+
+      EntryMarker.prototype.get = function() {
+        var marker;
+        marker = new google.maps.Marker(this.getMarkerOptions());
+        google.maps.event.addListener(marker, 'click', this.openInfoQuery);
+        return marker;
+      };
+
+      EntryMarker.prototype.getMarkerOptions = function() {
+        return {
+          position: new google.maps.LatLng(this.entry.get('lat'), this.entry.get('lng')),
+          icon: this.entry.get('icon'),
+          shadow: this.entry.get('shadow')
+        };
+      };
+
+      EntryMarker.prototype.openInfoQuery = function(e) {
+        return this.trigger("openInfoQuery");
+      };
+
+      return EntryMarker;
+
+    })(Events);
+    EntryListItem = (function(_super) {
+      __extends(EntryListItem, _super);
+
+      function EntryListItem(options) {
+        this.options = options;
+        this.openInfoQuery = __bind(this.openInfoQuery, this);
+        this.get = __bind(this.get, this);
+        this.entry = this.options.entry;
+      }
+
+      EntryListItem.prototype.get = function() {
+        var content;
+        content = listHtmlFactory.make(this.entry.toJSON());
+        return $(content).on("click", this.options.openInfoSelector, this.openInfoQuery);
+      };
+
+      EntryListItem.prototype.openInfoQuery = function(e) {
+        return this.trigger("openInfoQuery");
+      };
+
+      return EntryListItem;
+
+    })(Events);
+    EntryViewsCollection = (function() {
+      EntryViewsCollection.prototype.list = [];
+
+      function EntryViewsCollection(options, entries) {
+        var entry, _i, _len, _ref5;
+        this.options = options;
+        this.entries = entries;
+        _ref5 = this.entries.selectedList;
+        for (_i = 0, _len = _ref5.length; _i < _len; _i++) {
+          entry = _ref5[_i];
+          this.list.push(new EntryViews(entry));
+        }
+      }
+
+      /*
+      entriesのeventを監視して、listにEntryViewsを追加していく
+      */
+
+
+      return EntryViewsCollection;
 
     })();
     return global.MapList = _.extend(App, {

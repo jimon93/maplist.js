@@ -14,9 +14,10 @@ MIT License
 ###
 do ($=jQuery,global=this)->
   log = (args...)-> console?.log?(args...)
-  class App #{{{
+  class Events
     _.extend( @::, Backbone.Events )
 
+  class App extends Events #{{{
     constructor:(options,initFunc)->
       # Field initialize
       @options    = new Options(options)
@@ -175,7 +176,6 @@ do ($=jQuery,global=this)->
       app.on 'afterBuild' , @options.afterBuild  if @options?.afterBuild?
       app.on 'beforeClear', @options.beforeClear if @options?.beforeClear?
       app.on 'afterClear' , @options.afterClear  if @options?.afterClear?
-
   #}}}
   class Source #{{{
     constructor: (@data, @options)->
@@ -397,7 +397,7 @@ do ($=jQuery,global=this)->
     _getOuterHtml: (dom)=>
       dom.outerHTML
   #}}}
-  class MainViews
+  class MainViews #{{{
     constructor:(@options)->
       # Field initialize
       @mapView    = new MapView(@options)
@@ -420,12 +420,15 @@ do ($=jQuery,global=this)->
 
     closeInfo: =>
       @mapView.closeOpenedInfo()
-
-
+  #}}}
   class MapView extends Backbone.View # info and marker {{{
     initialize: =>
       canvas = $(@options.mapSelector).get(0)
       @map = new google.maps.Map( canvas, @options )
+
+    # getter
+    getMap: =>
+      @map
 
     # 構築
     # マーカー，インフォ，リストを構築
@@ -440,6 +443,7 @@ do ($=jQuery,global=this)->
       for entry in entries
         entry.marker.setMap(null)
 
+    # xxx openedinfoentry はMapViewで覚えておきたくない
     openInfo:(entry)=>
       @openedInfoEntry?.closeInfo()
       entry.info.open(@map,entry.marker)
@@ -450,6 +454,7 @@ do ($=jQuery,global=this)->
         @openedInfoEntry.info.close()
         @openedInfoEntry = null
 
+    # 別のクラスとしてまとめたい
     fitBounds:(entries)=>
       if entries.length > 0
         bounds = new google.maps.LatLngBounds
@@ -496,7 +501,120 @@ do ($=jQuery,global=this)->
       @trigger("change:genre", key, val)
       return false
   #}}}
-  class EntryViews
+  class EntryViews extends Events
+    ###
+    現在Entryの情報をもつEntryクラスがレンダリングなども行っているため
+    機能が分散し,非常にわかりにくいことになっている。
+    そこで、データそのものに関するものはEntryクラス
+    Viewに関するものはEntryViewsに分け
+    さらにEntryViewsはEntryInfoViewやEntryListItemViewに分解する。
+    メリットとしてDOMを必要な時に構築すれば良くなる。
+    どのEntryがInfoを出しているかなどは、EntryViewsCollectionが管理しなきゃいけないね
+    ###
+    constructor: (@options, @entry)->
+
+    getInfo:=>
+      @_info ?= @_createInfo()
+
+    getMarker:=>
+      @_marker ?= @_createMarker()
+
+    getListItem:=>
+      @_marker ?= @_createListItem()
+
+    # private
+    openInfoQuery: (e)=>
+      @trigger("openInfoQuery")
+
+    closeInfoQuery:=>
+      @trigger("closeInfoQuery")
+
+    _createInfo:=>
+      factory = @options.infoHtmlFactory
+      content = @entry.get('__infoElement') ? factory.make(@entry.toJSON())
+      if content? and !!content.replace(/\s/g,"")
+        info = new google.maps.InfoWindow {content}
+        google.maps.event.addListener(info, 'closeclick', @closeInfoQuery)
+        return info
+
+    _createMarker:=>
+      marker = new google.maps.Marker(@_getMarkerOptions())
+      google.maps.event.addListener(marker, 'click', @openInfoQuery)
+      return marker
+
+    _getMarkerOptions: =>
+      {
+        position : new google.maps.LatLng( @entry.get('lat'), @entry.get('lng') )
+        icon     : @entry.get('icon')
+        shadow   : @entry.get('shadow')
+      }
+
+    _createListItem: =>
+      factory = @options.listHtmlFactory
+      content = factory.make(@entry.toJSON())
+      $(content).on("click", @options.openInfoSelector, @openInfoQuery)
+
+      #{{{
+  class EntryInfo extends Events
+    constructor: (@options)->
+      @entry = @options.entry
+
+    # info instance
+    get: =>
+      content = @entry.get('__infoElement') ? infoHtmlFactory.make(@entry.toJSON())
+      if content? and !!content.replace(/\s/g,"")
+        info = new google.maps.InfoWindow {content}
+        google.maps.event.addListener(info, 'closeclick', @closeInfoQuery)
+        return info
+
+    closeInfoQuery:=>
+      @trigger("closeInfoQuery")
+
+  class EntryMarker extends Events
+    constructor: (@options)->
+      @entry = @options.entry
+
+    # marker instance
+    get: =>
+      marker = new google.maps.Marker(@getMarkerOptions())
+      google.maps.event.addListener(marker, 'click', @openInfoQuery)
+      return marker
+
+    getMarkerOptions: =>
+      {
+        position : new google.maps.LatLng( @entry.get('lat'), @entry.get('lng') )
+        icon     : @entry.get('icon')
+        shadow   : @entry.get('shadow')
+      }
+
+    openInfoQuery: (e)=>
+      @trigger("openInfoQuery")
+
+  class EntryListItem extends Events
+    constructor: (@options)->
+      @entry = @options.entry
+
+    # dom要素 もしくは jQueryObject
+    get: =>
+      content = listHtmlFactory.make(@entry.toJSON())
+      $(content).on("click", @options.openInfoSelector, @openInfoQuery)
+
+    openInfoQuery: (e)=>
+      @trigger("openInfoQuery")
+      #}}}
+
+  class EntryViewsCollection
+    list: []
+
+    constructor: (@options, @entries)->
+      for entry in @entries.selectedList
+        @list.push(new EntryViews(entry))
+
+    ###
+    entriesのeventを監視して、listにEntryViewsを追加していく
+    ###
+
+
   global.MapList = _.extend App, { #{{{
     Options
     AppDelegator
