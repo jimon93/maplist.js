@@ -31,7 +31,7 @@ MIT License
     App = (function() {
       _.extend(App.prototype, Backbone.Events);
 
-      function App(options, initFunc) {
+      function App(options, initializeFunction) {
         this.rebuild = __bind(this.rebuild, this);
         this.changeProperties = __bind(this.changeProperties, this);
         this.changeGenre = __bind(this.changeGenre, this);
@@ -51,8 +51,8 @@ MIT License
         this.entries = new Entries(null, this.options);
         delegator = new AppDelegator(this.options);
         delegator.execute(this);
-        if (typeof initFunc === "function") {
-          initFunc(this);
+        if (typeof initializeFunction === "function") {
+          initializeFunction(this);
         }
         if (this.options.data != null) {
           this.start(this.options.data);
@@ -513,9 +513,12 @@ MIT License
       }
 
       Entry.prototype.initialize = function(attributes, options) {
-        attributes || (attributes = {});
-        options || (options = {});
-        this.isPoint = this.isExistPoint();
+        if (attributes == null) {
+          attributes = {};
+        }
+        if (options == null) {
+          options = {};
+        }
         this.info = this.makeInfo(options.infoHtmlFactory);
         this.marker = this.makeMarker();
         return this.list = this.makeList(options.listHtmlFactory);
@@ -564,15 +567,18 @@ MIT License
       };
 
       Entry.prototype.isExistPoint = function() {
-        var latExist, lngExist;
-        latExist = this.has('lat') && _.isFinite(parseFloat(this.get('lat')));
-        lngExist = this.has('lng') && _.isFinite(parseFloat(this.get('lng')));
-        return latExist && lngExist;
+        var _this = this;
+        return this._isExistPoint != null ? this._isExistPoint : this._isExistPoint = (function() {
+          var latExist, lngExist;
+          latExist = _this.has('lat') && _.isFinite(parseFloat(_this.get('lat')));
+          lngExist = _this.has('lng') && _.isFinite(parseFloat(_this.get('lng')));
+          return latExist && lngExist;
+        })();
       };
 
       Entry.prototype.isSelect = function(properties) {
         var _ref1;
-        return (_ref1 = this.isPoint && (_.isEmpty(properties) || (_([this.toJSON()]).findWhere(properties) != null))) != null ? _ref1 : {
+        return (_ref1 = this.isExistPoint() && (_.isEmpty(properties) || (_([this.toJSON()]).findWhere(properties) != null))) != null ? _ref1 : {
           "true": false
         };
       };

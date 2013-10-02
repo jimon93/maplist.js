@@ -435,6 +435,142 @@ describe "MapList", ->
       expect(result).toEqual(@data.entries.object)
   #}}}
   describe "Entry", -> #{{{
+    beforeEach ->
+      @Entry = MapList.Entry
+
+    describe ".makeInfo", ->
+      beforeEach ->
+        @entry = new Backbone.Model({title:"FooBar"})
+        @entry.closeInfo = @createSpy("closeInfo")
+        @factory = MapList.HtmlFactory.create(_.template,"<%- title %>")
+        @info = @Entry::makeInfo.call(@entry,@factory)
+
+      it "instanceof InfoWindow",->
+        expect(@info instanceof google.maps.InfoWindow).toBeTruthy()
+
+      it "make sure that info has content", ->
+        expect(@info.getContent()).toEqual("FooBar")
+
+      it "fires the closeclick event and execute @closeInfo",->
+        google.maps.event.trigger(@info,"closeclick")
+        expect(@entry.closeInfo).toHaveBeenCalled()
+
+    describe ".makeMarker",->
+      beforeEach ->
+        @entry = new Backbone.Model({lat:35,lng:135,icon:"icon.png",shadow:"shadow.png"})
+        @entry.openInfo = @createSpy("openInfo")
+        @entry.info = true
+        @marker = @Entry::makeMarker.call(@entry)
+
+      it "instance of Marker",->
+        expect(@marker instanceof google.maps.Marker).toBeTruthy()
+
+      it "position instanceof LatLng",->
+        expect(@marker.getPosition() instanceof google.maps.LatLng).toBeTruthy()
+
+      it "check lat",->
+        expect(@marker.getPosition().lat()).toEqual(35)
+
+      it "check lng",->
+        expect(@marker.getPosition().lng()).toEqual(135)
+
+      it "check icon",->
+        expect(@marker.getIcon()).toEqual("icon.png")
+
+      it "check shadow",->
+        expect(@marker.getShadow()).toEqual("shadow.png")
+
+      it "fires the click event and execute @openInfo",->
+        google.maps.event.trigger(@marker,"click")
+        expect(@entry.openInfo).toHaveBeenCalled()
+
+    describe ".makeList", ->
+      beforeEach ->
+        @entry = new Backbone.Model({title:"FooBar"})
+        @factory = MapList.HtmlFactory.create(_.template,"<div><%- title %></div>")
+        @res = @Entry::makeList.call(@entry,@factory)
+
+      it "responce itstanceof jQuery",->
+        expect(@res instanceof jQuery).toBeTruthy()
+
+      it "class is '__list'",->
+        expect(@res.attr("class")).toEqual("__list")
+
+      it "have entry",->
+        expect(@res.data("entry")).toBe(@entry)
+
+    describe ".isExistPoint",->
+      beforeEach ->
+        class @MyEntry extends @Entry
+          makeInfo:->
+          makeMarker:->
+          makeList:->
+
+      it "true case", ->
+        entry = new @MyEntry {lat:35,lng:135}
+        expect(entry.isExistPoint()).toBeTruthy()
+
+      it "false case", ->
+        entry = new @MyEntry {}
+        expect(entry.isExistPoint()).toBeFalsy()
+        entry = new @MyEntry {lat:0}
+        expect(entry.isExistPoint()).toBeFalsy()
+        entry = new @MyEntry {lat:35,lng:NaN}
+        expect(entry.isExistPoint()).toBeFalsy()
+
+
+    describe ".isSelect",->
+      MyEntry = undefined
+      beforeEach ->
+        class MyEntry extends @Entry
+          makeInfo:->
+          makeMarker:->
+          makeList:->
+
+      it "have not lat & lng",->
+        entry = new MyEntry
+        expect(entry.isSelect({})).toBeFalsy()
+
+      it "properties equal {}", ->
+        entry = new MyEntry {lat:35,lng:135}
+        expect(entry.isSelect({})).toBeTruthy()
+
+      it "by genreId true", ->
+        entry = new MyEntry {lat:35,lng:135,genre:"foo"}
+        expect(entry.isSelect({genre:"foo"})).toBeTruthy()
+
+      it "by genreId false", ->
+        entry = new MyEntry {lat:35,lng:135,genre:"foo"}
+        expect(entry.isSelect({genre:"bar"})).toBeFalsy()
+
+    describe "triger check",->
+      entry = undefined
+      beforeEach ->
+        entry = new Backbone.Model
+
+      it "::openInfo",->
+        entry.on "openinfo",(args)-> expect(args).toBe(entry)
+        @Entry::openInfo.call(entry)
+
+      it "::closeInfo",->
+        entry.on "closeinfo",(args)-> expect(args).toBe(entry)
+        @Entry::closeInfo.call(entry)
+
+    describe "constructor",->
+      describe "yes template",->
+        beforeEach ->
+          options = new MapList.Options {infoTemplate:"<div>foo</div>", listTemplate:"<div>bar</div>"}
+          @entry = new @Entry({},options)
+
+        it "instance check info",->
+          expect(@entry.info instanceof google.maps.InfoWindow).toBeTruthy()
+
+        it "instance check marker",->
+          expect(@entry.marker instanceof google.maps.Marker).toBeTruthy()
+
+        it "instance check list",->
+          expect(@entry.list instanceof jQuery).toBeTruthy()
+
   #}}}
   describe "Entries", -> #{{{
   #}}}

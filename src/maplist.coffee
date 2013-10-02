@@ -303,10 +303,7 @@ do ($=jQuery,global=this)->
   #}}}
   #}}}
   class Entry extends Backbone.Model #{{{
-    initialize: (attributes, options)=>
-      attributes ||= {}
-      options ||= {}
-      @isPoint = @isExistPoint()
+    initialize: (attributes = {}, options = {})=>
       @info   = @makeInfo(options.infoHtmlFactory)
       @marker = @makeMarker()
       @list   = @makeList(options.listHtmlFactory)
@@ -336,12 +333,13 @@ do ($=jQuery,global=this)->
         $(content).addClass("__list").data("entry",@)
 
     isExistPoint:=>
-      latExist = @has('lat') and _.isFinite(parseFloat @get 'lat')
-      lngExist = @has('lng') and _.isFinite(parseFloat @get 'lng')
-      latExist and lngExist
+      return @_isExistPoint ?= do=>
+        latExist = @has('lat') and _.isFinite(parseFloat @get 'lat')
+        lngExist = @has('lng') and _.isFinite(parseFloat @get 'lng')
+        latExist and lngExist
 
     isSelect:(properties)=>
-      @isPoint and ( _.isEmpty(properties) or _([@toJSON()]).findWhere(properties)? ) ? true : false
+      @isExistPoint() and ( _.isEmpty(properties) or _([@toJSON()]).findWhere(properties)? ) ? true : false
 
   #}}}
   class Entries extends Backbone.Collection #{{{
