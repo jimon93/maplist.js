@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.5.14
+MapList JavaScript Library v1.6.0
 http://github.com/jimon93/maplist.js
 
 Require Library
