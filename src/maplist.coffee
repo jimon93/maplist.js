@@ -17,7 +17,7 @@ do ($=jQuery,global=this)->
   class App #{{{
     _.extend( @::, Backbone.Events )
 
-    constructor:(options,initFunc)->
+    constructor:(options,initializeFunction)->
       # Field initialize
       @options    = new Options(options)
       @mapView    = new MapView(@options)
@@ -30,13 +30,13 @@ do ($=jQuery,global=this)->
       delegator.execute(@)
 
       # start
-      initFunc?(@)
+      initializeFunction?(@)
       @start(@options.data) if @options.data?
 
     @create:(options,initFunc)->
       new App( options, initFunc )
 
-    start:( data )=>
+    start:(data)=>
       func = (models) => @entries.reset(models, @options)
       source = new Source(data, @options)
       source.get().then(func)
@@ -60,20 +60,20 @@ do ($=jQuery,global=this)->
     # 地図とリストを構築する
     build: (entries)=>
       prop = @getProperties()
-      @trigger('beforeBuild',entries,prop)
+      @trigger('beforeBuild', entries, prop)
       @mapView .build(entries)
       @listView.build(entries)
-      @trigger('afterBuild',entries,prop)
+      @trigger('afterBuild', entries, prop)
       return @
 
     # 地図とリストを初期化する
     clear:=>
       entries = @getSelectedEntries()
       properties = @getProperties()
-      @trigger("beforeClear",entries, properties)
+      @trigger("beforeClear", entries, properties)
       @mapView .clear(entries)
       @listView.clear(entries)
-      @trigger("afterClear",entries, properties)
+      @trigger("afterClear", entries, properties)
       return @
 
     # インフォウィンドウを開く
