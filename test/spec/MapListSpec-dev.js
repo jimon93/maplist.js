@@ -982,7 +982,63 @@
         });
       });
     });
-    describe("Entries", function() {});
+    describe("Entries", function() {
+      beforeEach(function() {
+        var options;
+        options = new MapList.Options;
+        this.entries = new MapList.Entries(this.data.entries.object, options);
+        return this.prop = {
+          genre: "関東"
+        };
+      });
+      describe(".select", function() {
+        it("return selected List", function() {
+          var ans, res;
+          res = this.entries.select(this.prop);
+          ans = _(this.data.entries.object).where(this.prop);
+          return expect(_(res).map(function(entry) {
+            return entry.toJSON();
+          })).toEqual(ans);
+        });
+        it("Cache selected list", function() {
+          var res;
+          res = this.entries.select(this.prop);
+          return expect(this.entries.selectedList).toBe(res);
+        });
+        it("Cache propertirs", function() {
+          var res;
+          res = this.entries.select(this.prop);
+          return expect(this.entries.properties).toBe(this.prop);
+        });
+        it("fires the select event", function() {
+          var spy;
+          spy = this.createSpy("select");
+          this.entries.on("select", spy);
+          this.entries.select(this.prop);
+          return expect(spy).toHaveBeenCalled();
+        });
+        return it("fires the select event with arguments:0", function() {
+          var responce, spy;
+          spy = this.createSpy("select");
+          this.entries.on("select", spy);
+          responce = this.entries.select(this.prop);
+          return expect(spy.calls[0].args[0]).toBe(responce);
+        });
+      });
+      return describe(".unselect", function() {
+        it("fires the unselect event", function() {
+          var spy;
+          spy = this.createSpy("unselect");
+          this.entries.on("unselect", spy);
+          this.entries.unselect();
+          return expect(spy).toHaveBeenCalled();
+        });
+        return it("cache selectedList is clear", function() {
+          this.entries.unselect();
+          return expect(this.entries.selectedList).toEqual([]);
+        });
+      });
+    });
     describe("HtmlFactory", function() {
       beforeEach(function() {
         return this.HtmlFactory = MapList.HtmlFactory;

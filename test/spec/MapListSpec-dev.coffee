@@ -577,6 +577,48 @@ describe "MapList", ->
         expect(@res.data("entry")).toBe(@entry)
   #}}}
   describe "Entries", -> #{{{
+    beforeEach ->
+      options = new MapList.Options #{infoTemplate:"<div>info</div>", listTemplate:"<div>list</div>"}
+      @entries = new MapList.Entries @data.entries.object, options
+      @prop = {genre: "関東"}
+
+    describe ".select",->
+      it "return selected List", ->
+        res = @entries.select @prop
+        ans = _(@data.entries.object).where(@prop)
+        expect(_(res).map (entry)->entry.toJSON()).toEqual(ans)
+
+      it "Cache selected list", ->
+        res = @entries.select @prop
+        expect(@entries.selectedList).toBe(res)
+
+      it "Cache propertirs", ->
+        res = @entries.select @prop
+        expect(@entries.properties).toBe(@prop)
+
+      it "fires the select event",->
+        spy = @createSpy("select")
+        @entries.on "select", spy
+        @entries.select(@prop)
+        expect(spy).toHaveBeenCalled()
+
+      it "fires the select event with arguments:0",->
+        spy = @createSpy("select")
+        @entries.on "select", spy
+        responce = @entries.select(@prop)
+        expect(spy.calls[0].args[0]).toBe(responce)
+
+    describe ".unselect",->
+      it "fires the unselect event",->
+        spy = @createSpy("unselect")
+        @entries.on "unselect", spy
+        @entries.unselect()
+        expect(spy).toHaveBeenCalled()
+
+      it "cache selectedList is clear",->
+        @entries.unselect()
+        expect(@entries.selectedList).toEqual([])
+
   #}}}
   describe "HtmlFactory", -> #{{{
     beforeEach ->
