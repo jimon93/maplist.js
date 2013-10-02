@@ -1,10 +1,9 @@
-log = -> console.log(arguments...)
+log = (args...)-> console?.log?(args...)
 describe "MapList", ->
-  data = createSpy = createSpyObj = undefined
   beforeEach ->
-    createSpy = jasmine.createSpy
-    createSpyObj = jasmine.createSpyObj
-    data = { #{{{
+    @createSpy = jasmine.createSpy
+    @createSpyObj = jasmine.createSpyObj
+    @data = { #{{{
       entries : {
         object: [
           {"states":"北海道","capitals":"札幌市","lat":"43.0646147","lng":"141.3468074","genre":"北海道"}
@@ -75,692 +74,409 @@ describe "MapList", ->
           _.isEqual(this.actual, expected)
       }
     } #}}}
-
-  describe "= APP",->
-    app = maplistArgs = undefined
-    beforeEach ->
-      maplistArgs = { data: data.entries.object }
-
-    describe "constructor",-> #{{{
-      options = delegateEvents = dataFunc = undefined
-      beforeEach ->
-        options = MapList::makeOptions()
-        delegateEvents = createSpy("delegateEvents")
-        dataFunc = createSpy("data")
-        class MyMapList extends MapList
-          makeOptions: createSpy("makeOptions").andReturn(options)
-          delegateEvents : delegateEvents
-          data : dataFunc
-          #rebuild: rebuild
-        app = new MyMapList { data: data.entries.object }
-
-      it "check options",->
-        expect(app.options).toBe(options)
-
-      it "check mapView",->
-        expect(app.mapView instanceof MapList.MapView).toBeTruthy()
-
-      it "check listView", ->
-        expect(app.listView instanceof MapList.ListView).toBeTruthy()
-
-      it "check genresView", ->
-        expect(app.genresView instanceof MapList.GenresView).toBeTruthy()
-
-      it "check entries", ->
-        expect(app.entries instanceof MapList.Entries).toBeTruthy()
-
-      it "called delegateEvents",->
-        expect(delegateEvents).toHaveBeenCalled()
-
-      it "called data",->
-        expect(dataFunc).toHaveBeenCalled()
+  describe "App", -> #{{{
+    beforeEach -> #{{{
+      @maplist = new MapList
     #}}}
-    describe ".new",-> #{{{
-      beforeEach ->
-        app = MapList.new()
-
-      it "create instance",->
-        expect(app instanceof MapList).toBeTruthy()
+    describe "::create",-> #{{{
+      it "return MapList instance",->
+        expect(MapList.create() instanceof MapList).toBeTruthy()
     #}}}
-    describe "::data",-> #{{{
+    describe ".start",-> #{{{
       beforeEach ->
-        app = new MapList
+        spyOn(@maplist.entries, "reset")
+        @result = @maplist.start([])
 
-      it "none data",->
-        expect(app.entries.toJSON()).not.toEqual(data.entries.object)
+      it "call @entries.reset",->
+        expect(@maplist.entries.reset).toHaveBeenCalled()
 
-      it "data set",->
-        app.data(data.entries.object)
-        expect(app.entries.toJSON()).toEqual(data.entries.object)
+      it "return value",->
+        expect(@result).toBe(@maplist)
     #}}}
-    describe "::makeOptions",-> #{{{
+    describe ".build",-> #{{{
       beforeEach ->
-        app = new MapList maplistArgs
-        spyOn(app,"extendDefaultOptions").andCallThrough()
-        app.extendOptions = createSpy("extendOptions")
+        spyOn(@maplist.mapView, "build")
+        spyOn(@maplist.listView, "build")
+        @maplist.on("beforeBuild", @before = @createSpy(""))
+        @maplist.on("afterBuild" , @after  = @createSpy(""))
+        @prop = @maplist.getProperties()
+        @result = @maplist.build( @entries = "entries" )
 
-      it "call @extendDefaultOptions",->
-        app.makeOptions({})
-        expect(app.extendDefaultOptions).toHaveBeenCalled()
+      it "call other methods",->
+        expect(@maplist.mapView.build).toHaveBeenCalled()
+        expect(@maplist.listView.build).toHaveBeenCalled()
 
-      it "call @extendOptions",->
-        app.makeOptions({})
-        expect(app.extendOptions).toHaveBeenCalled()
+      it "fire events",->
+        expect(@before).toHaveBeenCalled()
+        expect(@before.calls[0].args).toEqual([@entries,@prop])
+        expect(@after).toHaveBeenCalled()
+        expect(@after.calls[0].args).toEqual([@entries,@prop])
 
-      it "compose extendDefaultOptions and extendOptions",->
-        obj = app.extendDefaultOptions()
-        app.extendDefaultOptions = createSpy("extendDefaultOptions").andReturn(obj)
-        app.makeOptions({})
-        expect(app.extendOptions.calls[0].args[0]).toBe(obj)
+      it "return value",->
+        expect(@result).toBe(@maplist)
     #}}}
-    describe "::extendDefaultOptions",-> #{{{
-      defaultData = undefined
+    describe ".clear",-> #{{{
       beforeEach ->
-        defaultData = _(app).result('default')
+        spyOn(@maplist.mapView, "clear")
+        spyOn(@maplist.listView, "clear")
+        @maplist.on("beforeClear", @before = @createSpy(""))
+        @maplist.on("afterClear" , @after  = @createSpy(""))
+        @result = @maplist.clear()
 
-      it "return default value without arguments",->
-        expect(app.extendDefaultOptions()).toEqual(defaultData)
+      it "call other methods",->
+        expect(@maplist.mapView.clear).toHaveBeenCalled()
+        expect(@maplist.listView.clear).toHaveBeenCalled()
 
-      it "return default value with {}",->
-        expect(app.extendDefaultOptions({})).toEqual(defaultData)
+      it "fire events",->
+        expect(@before).toHaveBeenCalled()
+        expect(@after).toHaveBeenCalled()
 
-      it "return value is not default",->
-        expect(app.extendDefaultOptions()).not.toBe(defaultData)
-
-      it "return value default + options",->
-        options = { lat: 0, lng: 0 }
-        answer = _.extend {}, defaultData, options
-        expect(app.extendDefaultOptions(options)).toEqual(answer)
+      it "return value",->
+        expect(@result).toBe(@maplist)
     #}}}
-    describe "::extendOptions",-> #{{{
-      options = res = undefined
+    describe ".openInfo",-> #{{{
       beforeEach ->
-        options = {
-          lat: 35
-          lng: 135
-          templateEngine: _.template
-          infoTemplate: "infoTemplate"
-          listTemplate: "listTemplate"
-        }
-        res = MapList::extendOptions(options)
+        spyOn(@maplist.mapView, "openInfo")
+        @maplist.on("openInfo", @before = @createSpy(""))
+        @maplist.on("openedInfo", @after = @createSpy(""))
+        @entry = { info: "info", marker: "marker" }
+        @result = @maplist.openInfo(@entry)
 
+      it "call other methods",->
+        expect(@maplist.mapView.openInfo).toHaveBeenCalled()
 
-      it "return value is not options",->
-        expect(res).not.toEqual(options)
+      it "fire events",->
+        expect(@before).toHaveBeenCalled()
+        expect(@after).toHaveBeenCalled()
 
-      it "has center object",->
-        expect(res.center instanceof google.maps.LatLng).toBeTruthy()
-
-      it "check lat",->
-        expect(res.center.lat()).toBe(options.lat)
-
-      it "check lng",->
-        expect(res.center.lng()).toBe(options.lng)
-
-      it "has infoHtmlFactory object",->
-        expect(res.infoHtmlFactory instanceof MapList.HtmlFactory).toBeTruthy()
-
-      it "check infoHtmlFactory.templateEngine",->
-        expect(res.infoHtmlFactory.templateEngine).toBe(options.templateEngine)
-
-      it "check infoHtmlFactory.template",->
-        expect(res.infoHtmlFactory.template).toBe(options.infoTemplate)
-
-      it "has listHtmlFactory object",->
-        expect(res.listHtmlFactory instanceof MapList.HtmlFactory).toBeTruthy()
-
-      it "check listHtmlFactory.templateEngine",->
-        expect(res.listHtmlFactory.templateEngine).toBe(options.templateEngine)
-
-      it "check listHtmlFactory.template",->
-        expect(res.listHtmlFactory.template).toBe(options.listTemplate)
+      it "return value",->
+        expect(@result).toBe(@maplist)
     #}}}
-    describe "::delegateEvents",-> #{{{
-      method = obj = obj2 = undefined
+    describe ".closeInfo",-> #{{{
       beforeEach ->
-        app = new MapList maplistArgs
-        app.entries.off()
-        app.mapView.off()
-        app.genresView.off()
-        _.extend app, {
-          build       : createSpy("build")
-          clear       : createSpy("clear")
-          openInfo    : createSpy("openInfo")
-          closeInfo   : createSpy("closeInfo")
-          changeGenre : createSpy("changeGenre")
-        }
-        app.delegateEvents()
+        spyOn(@maplist.mapView, "closeOpenedInfo")
+        @maplist.on("closeInfo", @before = @createSpy(""))
+        @maplist.on("closedInfo", @after = @createSpy(""))
+        @result = @maplist.closeInfo()
 
-      describe "on select event",->
-        beforeEach ->
-          method = app.build
-          obj = []
-          app.entries.trigger( "select", obj )
+      it "call other methods",->
+        expect(@maplist.mapView.closeOpenedInfo).toHaveBeenCalled()
 
-        it "called",->
-          expect(method).toHaveBeenCalled()
+      it "fire events",->
+        expect(@before).toHaveBeenCalled()
+        expect(@after).toHaveBeenCalled()
 
-        it "catch args",->
-          expect(method.calls[0].args[0]).toBe(obj)
-
-      describe "on unselect event",->
-        beforeEach ->
-          method = app.clear
-          obj = []
-          app.entries.trigger "unselect", obj
-
-        it "called",->
-          expect(method).toHaveBeenCalled()
-
-        it "catch args",->
-          expect(method.calls[0].args[0]).toBe(obj)
-
-      describe "on openinfo event",->
-        beforeEach ->
-          method = app.openInfo
-          obj = []
-          app.entries.trigger "openinfo", obj
-
-        it "called",->
-          expect(method).toHaveBeenCalled()
-
-        it "catch args",->
-          expect(method.calls[0].args[0]).toBe(obj)
-
-      describe "on closeinfo event",->
-        beforeEach ->
-          method = app.closeInfo
-          obj = []
-          app.entries.trigger "closeinfo", obj
-
-        it "called",->
-          expect(method).toHaveBeenCalled()
-
-        it "catch args",->
-          expect(method.calls[0].args[0]).toBe(obj)
-
-      describe "on change:genre event",->
-        beforeEach ->
-          method = app.changeGenre
-          obj = []
-          app.genresView.trigger "change:genre", obj
-
-        it "called",->
-          expect(method).toHaveBeenCalled()
-
-        it "catch args",->
-          expect(method.calls[0].args[0]).toBe(obj)
+      it "return value",->
+        expect(@result).toBe(@maplist)
     #}}}
-    describe "::build",-> #{{{
-      entries = prop = spy1 = spy2 = beforeBuild = afterBuild = undefined
+    describe ".changeGenre",-> #{{{
       beforeEach ->
-        app = new MapList maplistArgs
-        prop = app.entries.properties
-        app.mapView  = { build : spy1 = createSpy("mapView:build") }
-        app.listView = { build : spy2 = createSpy("listView:build") }
-        app.on("beforeBuild",beforeBuild = createSpy("beforeBuild"))
-        app.on("afterBuild" ,afterBuild  = createSpy("afterBuild"))
-        app.build(entries = {})
+        @maplist.changeGenre("key","init")
+        @maplist.changeGenre("foo","bar")
+        spyOn(@maplist, "changeProperties")
 
-      it "call mapView.build",->
-        expect(spy1).toHaveBeenCalled()
+      it "common",->
+        @maplist.changeGenre("key","val")
+        expect(@maplist.changeProperties).toHaveBeenCalled()
+        expect(@maplist.changeProperties.calls[0].args[0]).toEqual( {key:"val", foo:"bar"} )
 
-      it "call mapView.build with entries",->
-        expect(spy1.calls[0].args[0]).toBe(entries)
+      it "fire events",->
+        @maplist.on("changeGenre", before = @createSpy(""))
+        @maplist.on("changedGenre", after = @createSpy(""))
+        @maplist.changeGenre("key","val")
+        expect(before).toHaveBeenCalled()
+        expect(after).toHaveBeenCalled()
 
-      it "call mapView.build",->
-        expect(spy2).toHaveBeenCalled()
+      it "when val is undefined",->
+        @maplist.changeGenre("key")
+        expect(@maplist.changeProperties.calls[0].args[0]).toEqual( {foo:"bar"} )
 
-      it "call mapView.build with entries",->
-        expect(spy2.calls[0].args[0]).toBe(entries)
+      it "when val is '__all__'",->
+      it "when val is undefined",->
+        @maplist.changeGenre("key","__all__")
+        expect(@maplist.changeProperties.calls[0].args[0]).toEqual( {foo:"bar"} )
 
-      it "fire beforeBuild event",->
-        expect(beforeBuild).toHaveBeenCalled()
-
-      it "fire beforeBuild event with arguments:0",->
-        expect(beforeBuild.calls[0].args[0]).toBe(prop)
-
-      it "fire beforeBuild event with arguments:1",->
-        expect(beforeBuild.calls[0].args[1]).toBe(entries)
-
-      it "fire afterBuild event",->
-        expect(afterBuild).toHaveBeenCalled()
-
-      it "fire afterBuild event with arguments:0",->
-        expect(afterBuild.calls[0].args[0]).toBe(prop)
-
-      it "fire afterBuild event with arguments:1",->
-        expect(afterBuild.calls[0].args[1]).toBe(entries)
+      it "return value",->
+        result = @maplist.changeGenre("key","val")
+        expect(result).toBe(@maplist)
     #}}}
-    describe "::clear",-> #{{{
-      entries = spy1 = spy2 = beforeClear = afterClear = undefined
+    describe ".changeProperties",-> #{{{
       beforeEach ->
-        app = new MapList maplistArgs
-        entries = app.entries.selectedList
-        app.mapView  = { clear : spy1 = createSpy("mapView:clear") }
-        app.listView = { clear : spy2 = createSpy("listView:clear") }
-        app.on("beforeClear",beforeClear = createSpy("beforeClear"))
-        app.on("afterClear" ,afterClear  = createSpy("afterClear"))
-        app.clear()
+        spyOn(@maplist, "rebuild")
+        @maplist.on("changeProperties", @before = @createSpy(""))
+        @maplist.on("changedProperties", @after = @createSpy(""))
+        @result = @maplist.changeProperties(@obj = {})
 
-      it "call mapView.clear",->
-        expect(spy1).toHaveBeenCalled()
+      it "call other methods",->
+        expect(@maplist.rebuild).toHaveBeenCalled()
+        expect(@maplist.rebuild.calls[0].args[0]).toBe(@obj)
 
-      it "call mapView.clear",->
-        expect(spy2).toHaveBeenCalled()
+      it "fire events",->
+        expect(@before).toHaveBeenCalled()
+        expect(@after).toHaveBeenCalled()
 
-      it "fire beforeClear event",->
-        expect(beforeClear).toHaveBeenCalled()
-
-      it "fire beforeClear event with arguments",->
-        expect(beforeClear.calls[0].args[0]).toBe(entries)
-
-      it "fire afterClear event",->
-        expect(afterClear).toHaveBeenCalled()
-
-      it "fire afterClear event with arguments",->
-        expect(afterClear.calls[0].args[0]).toBe(entries)
+      it "return value",->
+        expect(@result).toBe(@maplist)
     #}}}
-    describe "::openInfo",-> #{{{
-      spy1 = entry = openInfo = openedInfo = undefined
+    describe ".rebuild",-> #{{{
       beforeEach ->
-        app = new MapList maplistArgs
-        app.mapView  = { openInfo : spy1 = createSpy("mapView:openInfo") }
-        entry = { info : "info", marker: "marker" }
-        app.on("openInfo", openInfo = createSpy("openInfo"))
-        app.on("openedInfo", openedInfo = createSpy("openedInfo"))
-        app.openInfo(entry)
+        spyOn(@maplist.entries, "unselect")
+        spyOn(@maplist.entries, "select")
+        @result = @maplist.rebuild(@prop = {})
 
-      it "call mapView.build",->
-        expect(spy1).toHaveBeenCalled()
+      it "call other methods",->
+        expect(@maplist.entries.unselect).toHaveBeenCalled()
+        expect(@maplist.entries.select).toHaveBeenCalled()
+        expect(@maplist.entries.select.calls[0].args[0]).toBe(@prop)
 
-      it "call mapView.build with args1",->
-        expect(spy1.calls[0].args[0]).toBe(entry.info)
-
-      it "call mapView.build with args2",->
-        expect(spy1.calls[0].args[1]).toBe(entry.marker)
-
-      it "fire openInfo event",->
-        expect(openInfo).toHaveBeenCalled()
-
-      it "fire openInfo event with argument",->
-        expect(openInfo.calls[0].args[0]).toBe(entry)
-
-      it "fire openedInfo event",->
-        expect(openedInfo).toHaveBeenCalled()
-
-      it "fire openedInfo event with argument",->
-        expect(openedInfo.calls[0].args[0]).toBe(entry)
+      it "return value",->
+        expect(@result).toBe(@maplist)
     #}}}
-    describe "::closeInfo",-> #{{{
-      spy1 = entry = closeInfo = closedInfo = undefined
-      beforeEach ->
-        app = new MapList maplistArgs
-        app.mapView  = { closeOpenedInfo : spy1 = createSpy("mapView:closeInfo") }
-        app.on("closeInfo" , closeInfo  = createSpy("closeInfo"))
-        app.on("closedInfo", closedInfo = createSpy("closedInfo"))
-        entry = {}
-        app.closeInfo(entry)
-
-      it "call mapView.closeOpenedInfo",->
-        expect(spy1).toHaveBeenCalled()
-
-      it "fire closeInfo event",->
-        expect(closeInfo).toHaveBeenCalled()
-
-      it "fire closeInfo event with argument",->
-        expect(closeInfo.calls[0].args[0]).toBe(entry)
-
-      it "fire closeedInfo event",->
-        expect(closedInfo).toHaveBeenCalled()
-
-      it "fire closeedInfo event with argument",->
-        expect(closedInfo.calls[0].args[0]).toBe(entry)
+    describe ".getMap",-> #{{{
+      it "common",->
+        expect(@maplist.getMap()).toBe(@maplist.mapView.map)
+        expect(@maplist.getMap() instanceof google.maps.Map).toBeTruthy()
     #}}}
-    describe "::changeGenre",-> #{{{
-      spy1 = prop = changeGenre = changedGenre = undefined
-      beforeEach ->
-        app = new MapList maplistArgs
-        app.rebuild = spy1 = createSpy("mapView:openInfo")
-        app.on("changeGenre",changeGenre = createSpy("changeGenre"))
-        app.on("changedGenre",changedGenre = createSpy("changedGenre"))
-        prop = "foo"
-        app.changeGenre(prop)
-
-      it "call mapView.build",->
-        expect(spy1).toHaveBeenCalled()
-
-      it "call mapView.build with entries",->
-        expect(spy1.calls[0].args[0]).toBe(prop)
-
-      it "fire changeGenre event",->
-        expect(changeGenre).toHaveBeenCalled()
-
-      it "fire changeGenre event with argument",->
-        expect(changeGenre.calls[0].args[0]).toBe(prop)
-
-      it "fire changedGenre event",->
-        expect(changedGenre).toHaveBeenCalled()
-
-      it "fire changedGenre event with argument",->
-        expect(changedGenre.calls[0].args[0]).toBe(prop)
-    #}}}
-    describe "::changeProperties",->
-    describe "::rebuild",-> #{{{
-      genreId = undefined
-      beforeEach ->
-        app = new MapList maplistArgs
-        app.entries = {
-          unselect: createSpy("unselect")
-          select: createSpy("select")
-        }
-        genreId = "__all__"
-        app.rebuild(genreId)
-
-      it "call unselect",->
-        expect(app.entries.unselect).toHaveBeenCalled()
-
-      it "call select",->
-        expect(app.entries.select).toHaveBeenCalled()
-
-      it "call select with genreId",->
-        expect(app.entries.select.calls[0].args[0]).toBe(genreId)
-    #}}}
-    describe "getMap",-> #{{{
-      beforeEach ->
-        app = new MapList maplistArgs
-
-      it "return map",->
-        expect(app.getMap()).toBe(app.mapView.map)
-    #}}}
-  describe ".Parser", -> #{{{
-    Parser = undefined
-
-    beforeEach ->
-      Parser = MapList.Parser
-
-    it "constructor , parser options", ->
-      options = { parser: Object.create(null) }
-      parser = new Parser(options)
-      expect(parser.parser).toBe(options.parser)
-
-    it "constructor, afterParser options",->
-      options = { afterParser: Object.create(null) }
-      parser = new Parser(options)
-      expect(parser.afterParser).toBe(options.afterParser)
-
-
-    it "parserがない場合，デフォルトのものを使う", ->
-      parser = new Parser
-      expect(parser.parser).toBe(parser.defaultParser)
-
-    describe ".execute", ->
-      it "parserに関数を渡した場合，executeでその関数を使う", ->
-        func = (val) -> _(val).map (v)->v-1
-        parser = new Parser({parser:func})
-        data = [1..10]
-        expect(parser.execute(data)).toEqual([0..9])
-
-      it "parserにObjectを渡した場合，Objectのexecuteメソッドを使う", ->
-        myPerser = { execute : (val) -> _(val).map (v)->v-1 }
-        options = { parser: myPerser }
-        parser = new Parser(options)
-        data = [1..10]
-        expect(parser.execute(data)).toEqual([0..9])
-
-      it "上記2つ以外のparserの場合, Errorを投げる",->
-        myPerser = { }
-        parser = new Parser({parser:myPerser})
-        data = [1..10]
-        expect(-> parser.execute(data))
-          .toThrow("parser is function or on object with the execute method")
-
-    describe ".defaultParser", -> #{{{
-      parser = undefined
-      beforeEach ->
-        parser = new Parser
-
-      it "arguments is array", ->
-        data = [1..100]
-        expect(parser.defaultParser(data)).toEqual(data)
-
-      it "arguments is xml", ->
-        expect(parser.defaultParser(data.entries.xml)).toEqual(data.entries.object)
-    #}}}
-    describe ".makeIcon", ->
-      parser = undefined
-      beforeEach ->
-        parser = new Parser
-
-      it "with object", ->
-        src = {
-          url: "foo.png"
-          anchor:[10,20]
-          origin:[44,42]
-          size:[55,55]
-          scaledSize:[1,1]
-        }
-        dst = {
-          url: "foo.png"
-          anchor: new google.maps.Point(10,20)
-          origin: new google.maps.Point(44,42)
-          size: new google.maps.Size(55,55)
-          scaledSize: new google.maps.Size(1,1)
-        }
-
-        expect(parser.makeIcon(src)).toEqual(dst)
-
-      it "with string", ->
-        src = "foo.png"
-        dst = "foo.png"
-        expect(parser.makeIcon(src)).toEqual(dst)
-
-    describe "finallyParser", ->
-      parser = undefined
-      beforeEach ->
-        parser = new Parser
-
-      it "with icon data", ->
-        src = {
-          name : "hoge"
-          icon :{
-            url: "foo.png"
-            anchor:[10,20]
-            origin:[44,42]
-            size:[55,55]
-            scaledSize:[1,1]
-          }
-          shadow :{
-            url: "foo.png"
-            anchor:[10,20]
-            origin:[44,42]
-            size:[55,55]
-            scaledSize:[1,1]
-          }
-        }
-        dst = {
-          name : "hoge"
-          icon :{
-            url: "foo.png"
-            anchor: new google.maps.Point(10,20)
-            origin: new google.maps.Point(44,42)
-            size: new google.maps.Size(55,55)
-            scaledSize: new google.maps.Size(1,1)
-          }
-          shadow :{
-            url: "foo.png"
-            anchor: new google.maps.Point(10,20)
-            origin: new google.maps.Point(44,42)
-            size: new google.maps.Size(55,55)
-            scaledSize: new google.maps.Size(1,1)
-          }
-        }
-        expect(parser.finallyParser(src)).toEqual(dst)
-
-      it "no icon data", ->
-        src = {
-          name : "hoge"
-        }
-        dst = {
-          name : "hoge"
-        }
-        expect(parser.finallyParser(src)).toEqual(dst)
-
-    describe ".XMLParser", -> #{{{
-      parser = undefined
-      xml = undefined
-      beforeEach ->
-        parser = new Parser.XMLParser
-        xml = $.parseXML """
-        <?xml version="1.0" encoding="UTF-8"?>
-        <places>
-          <genre id="fruits" name="フルーツ" icon="/fruits.png">
-            <place latitude="123" longitude="321" icon="/apple.png">
-              <name>A</name>
-              <longName>Apple</longName>
-            </place>
-            <place latitude="111" longitude="222">
-              <name>B</name>
-              <longName>Banana</longName>
-            </place>
-          </genre>
-        </places>
-        """
-
-      it ".getAttribute", ->
-        $place = $("place",xml).eq(0)
-        ans = {latitude: "123", longitude: "321", icon: "/apple.png"}
-        expect(parser.getAttribute($place)).toEqual(ans)
-
-      it ".getContent", ->
-        $place = $("place",xml).eq(0)
-        ans = {name: "A", longname: "Apple"}
-        expect(parser.getContent($place)).toEqual(ans)
-
-      it ".getGenre", ->
-        $place = $("place",xml).eq(0)
-        ans = {genre: "fruits", genreName: "フルーツ", icon: "/fruits.png"}
-        expect(parser.getGenre($place)).toEqual(ans)
-
-      it ".makePlace", ->
-        $place = $("place",xml).eq(0)
-        ans = {
-          genre: "fruits"
-          genreName: "フルーツ"
-          name: "A"
-          longname: "Apple"
-          lat: "123"
-          lng: "321"
-          icon: "/apple.png"
-        }
-        expect(parser.makePlace($place)).toEqual(ans)
-
-      it ".execute", ->
-        ans = [
-          {
-            genre: "fruits"
-            genreName: "フルーツ"
-            name: "A"
-            longname: "Apple"
-            lat: "123"
-            lng: "321"
-            icon: "/apple.png"
-          }
-          {
-            genre: "fruits"
-            genreName: "フルーツ"
-            name: "B"
-            longname: "Banana"
-            lat: "111"
-            lng: "222"
-            icon: "/fruits.png"
-          }
-        ]
-        expect(parser.execute(xml)).toEqual(ans)
-    #}}}
-    describe ".ObjectParser", -> #{{{
-      parser = undefined
-      beforeEach ->
-        parser = new Parser.ObjectParser
-
-      it ".execute", ->
-        data = [0..10]
-        expect(parser.execute(data)).toBe(data)
+    describe ".getProperties",-> #{{{
+      it "common",->
+        expect(@maplist.getProperties()).toBe(@maplist.entries.properties)
     #}}}
   #}}}
-  describe ".Entry", -> #{{{
-    Entry = undefined
+  describe "Options", -> #{{{
+    beforeEach -> #{{{
+      @Options = MapList.Options
+    #}}}
+    it "without my options", -> #{{{
+      options = new @Options
+      expect(options.mapSelector).toBe(@Options.defaults().mapSelector)
+    #}}}
+    it "with my options", -> #{{{
+      myOptions = {mapSelector: "#map"}
+      options = new @Options(myOptions)
+      expect(options.mapSelector).toBe(myOptions.mapSelector)
+    #}}}
+  #}}}
+  describe "AppDelegator", -> #{{{
+    beforeEach -> #{{{
+      @AppDelegator = MapList.AppDelegator
+    #}}}
+    it "execute",->
+      delegator = new @AppDelegator
+      app = new MapList
+      app.entries.on =  @createSpy("")
+      app.genresView.on =  @createSpy("")
+      delegator.execute(app)
+      expect(app.entries.on).toHaveBeenCalled()
+      expect(app.genresView.on).toHaveBeenCalled()
+  #}}}
+  describe "Source", -> #{{{
+    beforeEach -> #{{{
+      @Source = MapList.Source
+      @waitFunc = =>
+        @result.state() == "resolved"
+      @runFunc = =>
+        @result.then (data)=>
+          expect(data).toEqual(@data.entries.object)
+    #}}}
+    describe ".get",->
+      it "common",->
+        source = new @Source([], {})
+        result = source.get()
+        expect(_.isFunction result.then).toBeTruthy()
+        expect(_.isFunction result.done).toBeTruthy()
+        expect(_.isFunction result.fail).toBeTruthy()
+
+      it "data is Array",->
+        obj = @data.entries.object
+        source = new @Source(obj, {})
+        @result = source.get()
+        waitsFor(@waitFunc , "timeout", 100 )
+        runs(@runFunc)
+
+      it "data is URL String :json",->
+        source = new @Source("data/entries.json", {})
+        @result = source.get()
+        waitsFor(@waitFunc , "timeout", 100 )
+        runs(@runFunc)
+
+      it "data is URL String :xml",->
+        source = new @Source("data/entries.xml", {})
+        @result = source.get()
+        waitsFor(@waitFunc , "timeout", 100 )
+        runs(@runFunc)
+  #}}}
+  describe "Parser", -> #{{{
+    beforeEach -> #{{{
+      @Parser = MapList.Parser
+    #}}}
+    describe "constructor",-> #{{{
+      it "common", ->
+        options = Object.create(null)
+        parser = new @Parser(options)
+        expect(parser.options).toBe(options)
+
+    #}}}
+    describe ".execute",-> #{{{
+      it "return Object",->
+        @parser = new @Parser
+        result = @parser.execute({})
+        expect(result instanceof Object).toBeTruthy()
+    #}}}
+    describe ".parse",->#{{{
+      beforeEach ->#{{{
+        @parser = new @Parser
+      #}}}
+      it "when parser is function",-> #{{{
+        func = @createSpy("")
+        @parser.parse({}, func)
+        expect(func).toHaveBeenCalled()
+      #}}}
+      it "when parser is object with execute method",->#{{{
+        obj = {execute: @createSpy("")}
+        @parser.parse({}, obj)
+        expect(obj.execute).toHaveBeenCalled()
+      #}}}
+      it "when other parse",->#{{{
+        func = -> @parser.parse({}, null)
+        expect(func).toThrow()
+      #}}}
+    #}}}
+    describe ".getParserSequence",->#{{{
+      it "common",->
+        @parser = new @Parser
+        result = @parser.getParserSequence()
+        expect(_.isArray(result)).toBeTruthy()
+    #}}}
+    describe ".getCommonParser",->#{{{
+      it "common", ->
+        @parser = new @Parser
+        result = @parser.getCommonParser()
+        expect(result instanceof @Parser.DefaultParser).toBeTruthy()
+
+      it "with options", ->
+        obj = {}
+        @parser = new @Parser({parser: obj})
+        result = @parser.getCommonParser()
+        expect(result).toBe(obj)
+    #}}}
+    describe ".getAfterParser",->#{{{
+      it "common", ->
+        @parser = new @Parser
+        result = @parser.getAfterParser()
+        expect(result).toBe(_.identity)
+
+      it "with options", ->
+        obj = {}
+        @parser = new @Parser({afterParser: obj})
+        result = @parser.getAfterParser()
+        expect(result).toBe(obj)
+    #}}}
+  #}}}
+  describe "Parser::DefaultParser", -> #{{{
+    beforeEach -> #{{{
+      @DefaultParser = MapList.Parser.DefaultParser
+    #}}}
+    describe ".execute",->
+      it "xml data",->
+        parser = new @DefaultParser({})
+        result = parser.execute(@data.entries.xml)
+        expect(result).toEqual(@data.entries.object)
+
+      it "object data",->
+        parser = new @DefaultParser({})
+        result = parser.execute(@data.entries.object)
+        expect(result).toEqual(@data.entries.object)
+
+      it "other data", ->
+        parser = new @DefaultParser({})
+        func = -> parser.execute(null)
+        expect(func).toThrow()
+  #}}}
+  describe "Parser::MapIconDecorator", -> #{{{
+    beforeEach -> #{{{
+      @MapIconDecorator = MapList.Parser.MapIconDecorator
+      @decorator = new @MapIconDecorator
+    #}}}
+
+    describe "execute",->
+      it "common",->
+        @decorator.makeIcon = @createSpy("")
+        data = [{icon:true, shadow:true},{icon:true}]
+        @decorator.execute(data)
+        expect(@decorator.makeIcon).toHaveBeenCalled()
+        expect(@decorator.makeIcon.calls.length).toEqual(3)
+
+    describe "makeIcon",->
+      it "common",->
+        data =
+          origin: [1,2]
+          anchor: [9,9]
+          size: [4,2]
+          scaledSize: [5,7]
+          other: 42
+        result = @decorator.makeIcon(data)
+        expect(result).not.toBe(data)
+        expect(result.origin instanceof google.maps.Point).toBeTruthy()
+        expect(result.anchor instanceof google.maps.Point).toBeTruthy()
+        expect(result.size instanceof google.maps.Size).toBeTruthy()
+        expect(result.scaledSize instanceof google.maps.Size).toBeTruthy()
+        expect(result.other).toEqual(data.other)
+  #}}}
+  describe "Parser::XMLParser", -> #{{{
+    it "execute",->
+      parser = new MapList.Parser.XMLParser
+      result = parser.execute(@data.entries.xml)
+      expect(result).toEqual(@data.entries.object)
+  #}}}
+  describe "Parser::ObjectParser", -> #{{{
+    it "execute",->
+      parser = new MapList.Parser.ObjectParser
+      result = parser.execute(@data.entries.object)
+      expect(result).toEqual(@data.entries.object)
+  #}}}
+  describe "Entry", -> #{{{
     beforeEach ->
-      Entry = MapList.Entry
+      @Entry = MapList.Entry
 
-    describe "::makeInfo", ->
-      entry = factory = info = undefined
+    describe ".view",->
       beforeEach ->
-        entry = new Backbone.Model({title:"FooBar"})
-        entry.closeInfo = createSpy("closeInfo")
-        factory = new MapList.HtmlFactory(_.template,"<%- title %>")
-        info = Entry::makeInfo.call(entry,factory)
+        options = new MapList.Options {infoTemplate:"<div>info</div>", listTemplate:"<div>list</div>"}
+        @entry = new @Entry {}, options
 
-      it "instanceof InfoWindow",->
-        expect(info instanceof google.maps.InfoWindow).toBeTruthy()
+      it "info",->
+        expect(@entry.view('info') instanceof google.maps.InfoWindow).toBeTruthy()
 
-      it "make sure that info has content", ->
-        expect(info.getContent()).toEqual("FooBar")
+      it "marker",->
+        expect(@entry.view('marker') instanceof google.maps.Marker).toBeTruthy()
 
-      it "fires the closeclick event and execute @closeInfo",->
-        google.maps.event.trigger(info,"closeclick")
-        expect(entry.closeInfo).toHaveBeenCalled()
+      it "list",->
+        expect(@entry.view('list') instanceof jQuery).toBeTruthy()
 
-    describe "::makeMarker",->
-      entry = marker = undefined
+
+    describe ".isExistPoint",->
       beforeEach ->
-        entry = new Backbone.Model({lat:35,lng:135,icon:"icon.png",shadow:"shadow.png"})
-        entry.openInfo = createSpy("openInfo")
-        entry.info = true
-        marker = Entry::makeMarker.call(entry)
+        class @MyEntry extends @Entry
+          makeInfo:->
+          makeMarker:->
+          makeList:->
 
-      it "instance of Marker",->
-        expect(marker instanceof google.maps.Marker).toBeTruthy()
+      it "true case", ->
+        entry = new @MyEntry {lat:35,lng:135}
+        expect(entry.isExistPoint()).toBeTruthy()
 
-      it "position instanceof LatLng",->
-        expect(marker.getPosition() instanceof google.maps.LatLng).toBeTruthy()
+      it "false case", ->
+        entry = new @MyEntry {}
+        expect(entry.isExistPoint()).toBeFalsy()
+        entry = new @MyEntry {lat:0}
+        expect(entry.isExistPoint()).toBeFalsy()
+        entry = new @MyEntry {lat:35,lng:NaN}
+        expect(entry.isExistPoint()).toBeFalsy()
 
-      it "check lat",->
-        expect(marker.getPosition().lat()).toEqual(35)
 
-      it "check lng",->
-        expect(marker.getPosition().lng()).toEqual(135)
-
-      it "check icon",->
-        expect(marker.getIcon()).toEqual("icon.png")
-
-      it "check shadow",->
-        expect(marker.getShadow()).toEqual("shadow.png")
-
-      it "fires the click event and execute @openInfo",->
-        google.maps.event.trigger(marker,"click")
-        expect(entry.openInfo).toHaveBeenCalled()
-
-    describe "::makeList", ->
-      entry = factory = res = undefined
-      beforeEach ->
-        entry = new Backbone.Model({title:"FooBar"})
-        factory = new MapList.HtmlFactory(_.template,"<div><%- title %></div>")
-        res = Entry::makeList.call(entry,factory)
-
-      it "responce itstanceof jQuery",->
-        expect(res instanceof jQuery).toBeTruthy()
-
-      it "class is '__list'",->
-        expect(res.attr("class")).toEqual("__list")
-
-      it "have entry",->
-        expect(res.data("entry")).toBe(entry)
-
-    describe "::isSelect",->
+    describe ".isSelect",->
       MyEntry = undefined
       beforeEach ->
-        class MyEntry extends Entry
+        class MyEntry extends @Entry
           makeInfo:->
           makeMarker:->
           makeList:->
@@ -770,7 +486,6 @@ describe "MapList", ->
         expect(entry.isSelect({})).toBeFalsy()
 
       it "properties equal {}", ->
-        log MyEntry
         entry = new MyEntry {lat:35,lng:135}
         expect(entry.isSelect({})).toBeTruthy()
 
@@ -789,370 +504,344 @@ describe "MapList", ->
 
       it "::openInfo",->
         entry.on "openinfo",(args)-> expect(args).toBe(entry)
-        Entry::openInfo.call(entry)
+        @Entry::openInfo.call(entry)
 
       it "::closeInfo",->
         entry.on "closeinfo",(args)-> expect(args).toBe(entry)
-        Entry::closeInfo.call(entry)
+        @Entry::closeInfo.call(entry)
 
     describe "constructor",->
-      attributes = options = entry = undefined
-      beforeEach ->
-        attributes = {}
-
-      describe "yes template",->
-        beforeEach ->
-          options = MapList::makeOptions {infoTemplate:"bar", listTemplate:"bar"}
-          entry = new Entry(attributes,options)
-
-        it "instance check info",->
-          expect(entry.info instanceof google.maps.InfoWindow).toBeTruthy()
-
-        it "instance check marker",->
-          expect(entry.marker instanceof google.maps.Marker).toBeTruthy()
-
-        it "instance check list",->
-          expect(entry.list instanceof jQuery).toBeTruthy()
-
+      it "instance check views",->
+        entry = new @Entry
+        expect(entry.views instanceof MapList.EntryViews).toBeTruthy()
   #}}}
-  describe ".Entries", -> #{{{
-    Entries = undefined
-    obj = options = entries = prop = undefined
-
+  describe "EntryViews",-> #{{{
     beforeEach ->
-      Entries = MapList.Entries
-      obj = data.entries.object
-      options = MapList::makeOptions {}
-      entries = new Entries( obj, options )
-      prop = {genre:"関東"}
+      @entry = new MapList.Entry {lat: 35, lng: 135, icon: "icon.png", shadow: "shadow.png"}
+      @entry.closeInfo = @createSpy('closeInfo')
+      @entry.openInfo = @createSpy('openInfo')
+      options = new MapList.Options {infoTemplate:"<div>info</div>", listTemplate:"<div>list</div>"}
+      @views = new MapList.EntryViews( @entry, options )
 
-    describe "constructor", ->
+    describe ".createInfo", ->
+      beforeEach ->
+        @info = @views.createInfo()
 
-      it "is instanceof Backbone.Collection", ->
-        expect(entries instanceof Backbone.Collection).toBeTruthy()
+      it "instanceof InfoWindow",->
+        expect(@info instanceof google.maps.InfoWindow).toBeTruthy()
 
-      it "attributes check",->
-        expect(entries.toJSON()).toEqual(obj)
+      it "make sure that info has content", ->
+        expect(@info.getContent()).toEqual("<div>info</div>")
 
-      it "make sure that selectedList is empty",->
-        expect(entries.selectedList).toEqual([])
+      it "fires the closeclick event and execute @closeInfo",->
+        google.maps.event.trigger(@info,"closeclick")
+        expect(@entry.closeInfo).toHaveBeenCalled()
 
-    describe "::select",->
+    describe ".createMarker",->
+      beforeEach ->
+        @marker = @views.createMarker()
 
-      it "return selected List",->
-        responce = entries.select(prop)
-        answer = _(obj).where(prop)
-        expect(_(responce).map (entry)->entry.toJSON()).toEqual(answer)
+      it "instance of Marker",->
+        expect(@marker instanceof google.maps.Marker).toBeTruthy()
 
-      it "chche selected List",->
-        responce = entries.select(prop)
-        expect(entries.selectedList).toBe(responce)
+      it "position instanceof LatLng",->
+        expect(@marker.getPosition() instanceof google.maps.LatLng).toBeTruthy()
+
+      it "check lat",->
+        expect(@marker.getPosition().lat()).toEqual(35)
+
+      it "check lng",->
+        expect(@marker.getPosition().lng()).toEqual(135)
+
+      it "check icon",->
+        expect(@marker.getIcon()).toEqual("icon.png")
+
+      it "check shadow",->
+        expect(@marker.getShadow()).toEqual("shadow.png")
+
+      it "fires the click event and execute @openInfo",->
+        google.maps.event.trigger(@marker,"click")
+        expect(@entry.openInfo).toHaveBeenCalled()
+
+    describe ".createList", ->
+      beforeEach ->
+        @res = @views.createList()
+
+      it "responce itstanceof jQuery",->
+        expect(@res instanceof jQuery).toBeTruthy()
+
+      it "class is '__list'",->
+        expect(@res.attr("class")).toEqual("__list")
+
+      it "have entry",->
+        expect(@res.data("entry")).toBe(@entry)
+  #}}}
+  describe "Entries", -> #{{{
+    beforeEach ->
+      options = new MapList.Options
+      @entries = new MapList.Entries @data.entries.object, options
+      @prop = {genre: "関東"}
+
+    describe ".select",->
+      it "return selected List", ->
+        res = @entries.select @prop
+        ans = _(@data.entries.object).where(@prop)
+        expect(_(res).map (entry)->entry.toJSON()).toEqual(ans)
+
+      it "Cache selected list", ->
+        res = @entries.select @prop
+        expect(@entries.selectedList).toBe(res)
+
+      it "Cache propertirs", ->
+        res = @entries.select @prop
+        expect(@entries.properties).toBe(@prop)
 
       it "fires the select event",->
-        spy = createSpy("select")
-        entries.on "select", spy
-        responce = entries.select(prop)
+        spy = @createSpy("select")
+        @entries.on "select", spy
+        @entries.select(@prop)
         expect(spy).toHaveBeenCalled()
 
       it "fires the select event with arguments:0",->
-        spy = createSpy("select")
-        entries.on "select", spy
-        responce = entries.select(prop)
+        spy = @createSpy("select")
+        @entries.on "select", spy
+        responce = @entries.select(@prop)
         expect(spy.calls[0].args[0]).toBe(responce)
 
-    describe "::unselect",->
-      it "return empty array",->
-        expect(entries.unselect()).toEqual([])
-
-      it "chche selected List to empty",->
-        entries.select(prop) # make non empty chche
-        expect(entries.unselect()).toBe(entries.selectedList)
-
+    describe ".unselect",->
       it "fires the unselect event",->
-        spy = createSpy('unselect')
-        entries.on "unselect", spy
-        responce = entries.unselect()
+        spy = @createSpy("unselect")
+        @entries.on "unselect", spy
+        @entries.unselect()
         expect(spy).toHaveBeenCalled()
 
-    ###
-    describe "::selected",->
-      it "return cached selectedList",->
-        responce = entries.select(prop)
-        expect(entries.selected()).toBe(responce)
-    ###
+      it "cache selectedList is clear",->
+        @entries.unselect()
+        expect(@entries.selectedList).toEqual([])
 
-    describe ".getSource", ->
-      it "array", ->
-        source = Entries.getSource(obj)
-        source.then (data)->
-          expect(data).toEqual(obj)
-
-      it "url:json", ->
-        source = Entries.getSource("data/entries.json")
-        waitsFor( =>
-          source.state() == "resolved"
-        , "timeout", 1000 )
-        runs =>
-          source.then (data)=>
-            expect(data).toEqual(obj)
-
-      it "url:xml", ->
-        source = Entries.getSource("data/entries.xml")
-        waitsFor( =>
-          source.state() == "resolved"
-        , "timeout", 1000 )
-        runs =>
-          source.then (data)->
-            expect(data).toEqual(obj)
   #}}}
-  describe ".HtmlFactory", -> #{{{
-    obj = template = factory = HtmlFactory = undefined
+  describe "HtmlFactory", -> #{{{
     beforeEach ->
-      HtmlFactory = MapList.HtmlFactory
-      obj = { title: "FooBar" }
+      @HtmlFactory = MapList.HtmlFactory
 
-    describe "by _.template;",->
-      beforeEach ->
-        template = "<p><%- title %></p>"
-        factory = new HtmlFactory(_.template,template)
+    describe "::create",->
+      it "when template is undefined",->
+        result = @HtmlFactory.create()
+        expect(result instanceof @HtmlFactory.Null).toBeTruthy()
 
-      it "template unchange",->
-        expect(factory.template).toEqual(template)
+      it "when templateEngine is _.template",->
+        result = @HtmlFactory.create(_.template, "")
+        expect(result instanceof @HtmlFactory.Underscore).toBeTruthy()
 
-      it "getTemplateEngineName", ->
-        expect(factory.getTemplateEngineName()).toEqual("_.template")
+      it "when templateEngine is $.tmpl",->
+        result = @HtmlFactory.create($.tmpl, "")
+        expect(result instanceof @HtmlFactory.Jquery).toBeTruthy()
 
-      it "template chche",->
-        backup = _.template
-        spyOn(_,'template').andCallThrough()
-        factory = new HtmlFactory(_.template,template)
-        factory.make(obj)
-        factory.make(obj)
-        expect(_.template.calls.length).toEqual(1)
-        _.template = backup
+      it "when templateEngine is other",->
+        result = @HtmlFactory.create(null, "")
+        expect(result instanceof @HtmlFactory.Null).toBeTruthy()
 
-      it "make", ->
-        answer = "<p>FooBar</p>"
-        expect(factory.make(obj)).toEqual(answer)
+    describe "getTemplateEngineName",->
+      it "engine is _.template", ->
+        result = @HtmlFactory.getTemplateEngineName(_.template)
+        expect(result).toEqual("_.template")
 
-    describe "by $.tmpl;", ->
-      beforeEach ->
-        template = "<p>${title}</p>"
-        factory = new HtmlFactory($.tmpl,template)
+      it "engine is _.template", ->
+        result = @HtmlFactory.getTemplateEngineName($.tmpl)
+        expect(result).toEqual("$.tmpl")
 
-      it "template wrap",->
-        answer = "<wrap>#{template}</wrap>"
-        expect(factory.template).toEqual(answer)
+      it "engine is other", ->
+        result = @HtmlFactory.getTemplateEngineName(null)
+        expect(result).toEqual("other")
 
-      it "getTemplateEngineName", ->
-        expect(factory.getTemplateEngineName()).toEqual("$.tmpl")
-
-      #it "template nochche",->
-      #  backup = $.tmpl
-      #  spyOn($,'tmpl').andCallThrough()
-      #  factory = new HtmlFactory($.tmpl,template)
-      #  factory.make(obj)
-      #  factory.make(obj)
-      #  expect($.tmpl.calls.length).toEqual(2)
-      #  $.tmpl = backup
-
-      it "make", ->
-        answer = "<p>FooBar</p>"
-        expect(factory.make(obj)).toEqual(answer)
   #}}}
-  describe ".MapView",-> #{{{
-    options = mapView = entries = undefined
+  describe "HtmlFactory::Null", -> #{{{
     beforeEach ->
-      options = MapList::makeOptions {}
-      mapView = new MapList.MapView(options)
-      entries = new MapList.Entries(data.entries.object,options)
+      @factory = new MapList.HtmlFactory.Null
+
+    it ".make", ->
+      result = @factory.make()
+      expect(result).toBeNull()
+  #}}}
+  describe "HtmlFactory::Underscore", -> #{{{
+    beforeEach ->
+      template = "<div><%- name %></div>"
+      @factory = new MapList.HtmlFactory.Underscore(template)
+
+    it ".make", ->
+      result = @factory.make({name: "Bob"})
+      expect(result).toEqual("<div>Bob</div>")
+  #}}}
+  describe "HtmlFactory::Jquery", -> #{{{
+    beforeEach ->
+      template = "<div>${name}</div>"
+      @factory = new MapList.HtmlFactory.Jquery(template)
+
+    it ".make", ->
+      result = @factory.make({name: "Bob"})
+      expect(result).toEqual("<div>Bob</div>")
+  #}}}
+  describe "MapView", -> #{{{
+    beforeEach ->
+      @options = new MapList.Options {infoTemplate:"<div>info</div>", listTemplate:"<div>list</div>"}
+      @mapView = new MapList.MapView(@options)
+      @entries = new MapList.Entries(@data.entries.object, @options)
 
     afterEach ->
       $("#map_canvas").children().remove()
 
     describe "constructor",->
       it "instance of Backbone.View",->
-        expect(mapView instanceof Backbone.View).toBeTruthy()
+        expect(@mapView instanceof Backbone.View).toBeTruthy()
 
       it "google maps create",->
-        expect(mapView.map instanceof google.maps.Map).toBeTruthy()
+        expect(@mapView.map instanceof google.maps.Map).toBeTruthy()
 
-    describe "::build",->
-      setMap = undefined
+    describe ".build",->
       beforeEach ->
-        setMap = createSpy("setMap")
-        entries.each (entry) -> entry.marker.setMap = setMap
-        mapView.fitBounds = createSpy("fitBounds")
+        @setMap = @createSpy("setMap")
+        @entries.each (entry) => entry.view('marker').setMap = @setMap
+        @mapView.fitBounds = @createSpy("fitBounds")
 
       it "execute entry.marker.setMap",->
-        mapView.build(entries.models)
-        expect(setMap.calls.length).toEqual(entries.length)
+        @mapView.build(@entries.models)
+        expect(@setMap.calls.length).toEqual(@entries.length)
 
       it "execute entry.marker.setMap with @map",->
-        mapView.build(entries.models)
-        expect(setMap.calls[0].args[0]).toBe(mapView.map)
+        @mapView.build(@entries.models)
+        expect(@setMap.calls[0].args[0]).toBe(@mapView.map)
 
       it "execute @fitBounds if @options.doFit == true",->
-        mapView.build(entries.models)
-        expect(mapView.fitBounds).toHaveBeenCalled()
+        @mapView.build(@entries.models)
+        expect(@mapView.fitBounds).toHaveBeenCalled()
 
       it "execute @fitBounds with entries",->
-        mapView.build(entries.models)
-        expect(mapView.fitBounds.calls[0].args[0]).toBe(entries.models)
+        @mapView.build(@entries.models)
+        expect(@mapView.fitBounds.calls[0].args[0]).toBe(@entries.models)
 
-    describe "::fitBounds",->
-      # あとで実装
-
-    describe "::clear",->
-      setMap = undefined
+    describe ".clear",->
       beforeEach ->
-        setMap = createSpy("setMap")
-        entries.each (entry) -> entry.marker.setMap = setMap
-        mapView.closeOpenedInfo = createSpy("closeOpenedInfo")
-        mapView.clear(entries.models)
+        @setMap = @createSpy("setMap")
+        @entries.each (entry) => entry.view('marker').setMap = @setMap
+        @mapView.closeOpenedInfo = @createSpy("closeOpenedInfo")
+        @mapView.clear(@entries.models)
 
       it "execute @closeOpenedInfo",->
-        expect(mapView.closeOpenedInfo).toHaveBeenCalled()
+        expect(@mapView.closeOpenedInfo).toHaveBeenCalled()
 
       it "execute entry.marker.setMap",->
-        expect(setMap.calls.length).toEqual(entries.length)
+        expect(@setMap.calls.length).toEqual(@entries.length)
 
       it "execute entry.marker.setMap with null",->
-        expect(setMap.calls[0].args[0]).toBe(null)
+        expect(@setMap.calls[0].args[0]).toBe(null)
 
-    describe "::openInfo",->
-      info = marker = eventSpy = undefined
+    describe ".openInfo",->
       beforeEach ->
-        mapView.closeOpenedInfo = createSpy("closeOpenedInfo")
-        info = { open: createSpy("open") }
-        marker = 'marker'
-        mapView.openInfo(info,marker)
-
-      it "execute @closeOpenedInfo",->
-        expect(mapView.closeOpenedInfo).toHaveBeenCalled()
+        @info = { open: @createSpy("open") }
+        @marker = 'marker'
+        @entry = {
+          view: (type)=>
+            switch type
+              when "info" then @info
+              when "marker" then @marker
+        }
+        @mapView.openInfo(@entry)
 
       it "execute info.open", ->
-        expect(info.open).toHaveBeenCalled()
+        expect(@info.open).toHaveBeenCalled()
 
       it "execute info.open with 0:@map", ->
-        expect(info.open.calls[0].args[0]).toBe(mapView.map)
+        expect(@info.open.calls[0].args[0]).toBe(@mapView.map)
 
       it "execute info.open with 1:marker", ->
-        expect(info.open.calls[0].args[1]).toBe(marker)
+        expect(@info.open.calls[0].args[1]).toBe(@marker)
 
       it "chche @openedInfo",->
-        expect(mapView.openedInfo).toBe(info)
+        expect(@mapView.openedInfoEntry).toBe(@entry)
 
-    describe "closeOpenedInfo",->
-      close = undefined
+    describe ".closeOpenedInfo",->
       beforeEach ->
-        close = createSpy("close")
-        mapView.openedInfo = { close }
-        mapView.closeOpenedInfo()
+        @close = @createSpy("close")
+        @mapView.openedInfoEntry = new MapList.Entry({}, @options)
+        @mapView.openedInfoEntry.view('info').close = @close
+        @mapView.closeOpenedInfo()
 
       it "execute openedInfo.close",->
-        expect(close).toHaveBeenCalled()
+        expect(@close).toHaveBeenCalled()
 
       it "nonchche openedInfo", ->
-        expect(mapView.openedInfo).toBe(null)
+        expect(@mapView.openedInfoEntry).toBe(null)
   #}}}
-  describe ".ListView",-> #{{{
-    listView = options = undefined
+  describe "ListView", -> #{{{
     beforeEach ->
-      options = MapList::makeOptions {listTemplate:"bar"}
-      listView = new MapList.ListView(options)
+      @options = new MapList.Options
+      @ListView = MapList.ListView
+      @listView = new @ListView(@options)
 
     describe "constructor",->
-      it "is instanceof Backbone.View",->
-        expect(listView instanceof Backbone.View).toBeTruthy()
+      it "$el is jQuey Object",->
+        expect(@listView.$el instanceof jQuery).toBeTruthy()
 
-      it "check @$el is jQuey object",->
-        expect(listView.$el instanceof jQuery).toBeTruthy()
+      it "$el selector",->
+        expect(@listView.$el.selector).toEqual(@options.listSelector)
 
-      it "check @$el.selector",->
-        expect(listView.$el.selector).toEqual(options.listSelector)
-
-    describe "build",->
-      entries = appendTo = undefined
-      beforeEach ->
-        entries = new MapList.Entries(data.entries.object,options)
-        appendTo = createSpy("appendTo")
-        entries.each (entry)-> entry.list.appendTo = appendTo
-        listView.build(entries.models)
-
-      it "execute entry.list.appendTo",->
-        expect(appendTo).toHaveBeenCalled()
-
-      it "execute entry.list.appendTo width @$el",->
-        expect(appendTo.calls[0].args[0]).toBe(listView.$el)
-
-    describe "clear",->
-      entries = detach = undefined
-      beforeEach ->
-        entries = new MapList.Entries(data.entries.object,options)
-        detach = createSpy("detach")
-        entries.each (entry)-> entry.list.appendTo = detach
-        listView.build(entries.models)
-
-      it "execute entry.list.appendTo",->
-        expect(detach).toHaveBeenCalled()
-
-    describe "openInfo",->
-      $elem = spy = undefined
-      beforeEach ->
-        selector = options.openInfoSelector
-        spy = createSpy("openInfo")
-        e = { currentTarget : $("<div>").data(options.genreDataName, "foo")[0] }
-        $elem = $("<div class='__list'><a class='#{selector[1..-1]}'></a></div>")
-          .on("click",selector, listView.openInfo)
-          .data("entry",{ openInfo: spy })
-          .find(selector)
-          .trigger("click")
-
-      it "execute openInfo of entry",->
-        expect(spy).toHaveBeenCalled()
+    describe ".build",->
+    describe ".clear",->
+    describe ".openInfo",->
   #}}}
-  describe ".GenreView",-> #{{{
-    genreView = options = undefined
+  describe "GenresView", -> #{{{
     beforeEach ->
-      options = MapList::makeOptions {}
-      genreView = new MapList.GenresView(options)
+      @options = new MapList.Options
+      @genreView = new MapList.GenresView(@options)
 
     describe "constructor",->
-      it "is instanceof Backbone.View",->
-        expect(genreView instanceof Backbone.View).toBeTruthy()
-
       it "check @$el is jQuey object",->
-        expect(genreView.$el instanceof jQuery).toBeTruthy()
+        expect(@genreView.$el instanceof jQuery).toBeTruthy()
 
       it "check @$el.selector",->
-        expect(genreView.$el.selector).toEqual(options.genresSelector)
+        expect(@genreView.$el.selector).toEqual(@options.genresSelector)
 
-    describe "::selectGenre",->
-      $elem = spy = undefined
-      beforeEach ->
-        wrap = $("<div id='genre'>").data(options.genreGroup,"group")
-        target = $("<div>").data(options.genreDataName, "foo").appendTo(wrap)
-        e = { currentTarget : target[0] }
-        genreView.trigger = spy = createSpy("change:genre")
-        genreView.selectGenre(e)
+    describe ".selectGenre",->
+      describe "custom genre key",->
+        beforeEach ->
+          wrap = $("<div id='genre'>").data(@options.genreGroup,"group")
+          target = $("<div>").data(@options.genreDataName, "foo").appendTo(wrap)
+          event = { currentTarget : target[0] }
+          @genreView.trigger = @spy = @createSpy("change:genre")
+          @genreView.selectGenre(event)
 
-      it "fire change:genre event",->
-        expect(spy).toHaveBeenCalled()
+        it "fire change:genre event",->
+          expect(@spy).toHaveBeenCalled()
 
-      it "fire change:genre event with 0:eventName",->
-        expect(spy.calls[0].args[0]).toEqual("change:genre")
+        it "fire change:genre event with 0:eventName",->
+          expect(@spy.calls[0].args[0]).toEqual("change:genre")
 
-      it "fire change:genre event with 1:properties",->
-        expect(spy.calls[0].args[1]).toEqual({group:"foo"})
+        it "fire change:genre event with 1:properties",->
+          expect(@spy.calls[0].args[1]).toEqual("group")
 
-      it "fire change:genre event with 1:properties default key",->
-        genreView = new MapList.GenresView(options)
-        wrap = $("<div id='genre'>")
-        target = $("<div>").data(options.genreDataName, "foo").appendTo(wrap)
-        e = { currentTarget : target[0] }
-        genreView.trigger = spy = createSpy("change:genre")
-        genreView.selectGenre(e)
-        expect(spy.calls[0].args[1]).toEqual({genre:"foo"})
+        it "fire change:genre event with 2:properties",->
+          expect(@spy.calls[0].args[2]).toEqual("foo")
+
+      describe "default genre key",->
+        beforeEach ->
+          wrap = $("<div id='genre'>")
+          target = $("<div>").data(@options.genreDataName, "foo").appendTo(wrap)
+          event = { currentTarget : target[0] }
+          @genreView.trigger = @spy = @createSpy("change:genre")
+          @genreView.selectGenre(event)
+
+        it "fire change:genre event",->
+          expect(@spy).toHaveBeenCalled()
+
+        it "fire change:genre event with 0:eventName",->
+          expect(@spy.calls[0].args[0]).toEqual("change:genre")
+
+
+        it "fire change:genre event with 1:properties",->
+          expect(@spy.calls[0].args[1]).toEqual("genre")
+
+        it "fire change:genre event with 2:properties",->
+          expect(@spy.calls[0].args[2]).toEqual("foo")
 
   #}}}
+
