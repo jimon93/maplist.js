@@ -759,77 +759,23 @@
       beforeEach(function() {
         return this.Entry = MapList.Entry;
       });
-      describe(".makeInfo", function() {
+      describe(".view", function() {
         beforeEach(function() {
-          this.entry = new Backbone.Model({
-            title: "FooBar"
+          var options;
+          options = new MapList.Options({
+            infoTemplate: "<div>info</div>",
+            listTemplate: "<div>list</div>"
           });
-          this.entry.closeInfo = this.createSpy("closeInfo");
-          this.factory = MapList.HtmlFactory.create(_.template, "<%- title %>");
-          return this.info = this.Entry.prototype.makeInfo.call(this.entry, this.factory);
+          return this.entry = new this.Entry({}, options);
         });
-        it("instanceof InfoWindow", function() {
-          return expect(this.info instanceof google.maps.InfoWindow).toBeTruthy();
+        it("info", function() {
+          return expect(this.entry.view('info') instanceof google.maps.InfoWindow).toBeTruthy();
         });
-        it("make sure that info has content", function() {
-          return expect(this.info.getContent()).toEqual("FooBar");
+        it("marker", function() {
+          return expect(this.entry.view('marker') instanceof google.maps.Marker).toBeTruthy();
         });
-        return it("fires the closeclick event and execute @closeInfo", function() {
-          google.maps.event.trigger(this.info, "closeclick");
-          return expect(this.entry.closeInfo).toHaveBeenCalled();
-        });
-      });
-      describe(".makeMarker", function() {
-        beforeEach(function() {
-          this.entry = new Backbone.Model({
-            lat: 35,
-            lng: 135,
-            icon: "icon.png",
-            shadow: "shadow.png"
-          });
-          this.entry.openInfo = this.createSpy("openInfo");
-          this.entry.info = true;
-          return this.marker = this.Entry.prototype.makeMarker.call(this.entry);
-        });
-        it("instance of Marker", function() {
-          return expect(this.marker instanceof google.maps.Marker).toBeTruthy();
-        });
-        it("position instanceof LatLng", function() {
-          return expect(this.marker.getPosition() instanceof google.maps.LatLng).toBeTruthy();
-        });
-        it("check lat", function() {
-          return expect(this.marker.getPosition().lat()).toEqual(35);
-        });
-        it("check lng", function() {
-          return expect(this.marker.getPosition().lng()).toEqual(135);
-        });
-        it("check icon", function() {
-          return expect(this.marker.getIcon()).toEqual("icon.png");
-        });
-        it("check shadow", function() {
-          return expect(this.marker.getShadow()).toEqual("shadow.png");
-        });
-        return it("fires the click event and execute @openInfo", function() {
-          google.maps.event.trigger(this.marker, "click");
-          return expect(this.entry.openInfo).toHaveBeenCalled();
-        });
-      });
-      describe(".makeList", function() {
-        beforeEach(function() {
-          this.entry = new Backbone.Model({
-            title: "FooBar"
-          });
-          this.factory = MapList.HtmlFactory.create(_.template, "<div><%- title %></div>");
-          return this.res = this.Entry.prototype.makeList.call(this.entry, this.factory);
-        });
-        it("responce itstanceof jQuery", function() {
-          return expect(this.res instanceof jQuery).toBeTruthy();
-        });
-        it("class is '__list'", function() {
-          return expect(this.res.attr("class")).toEqual("__list");
-        });
-        return it("have entry", function() {
-          return expect(this.res.data("entry")).toBe(this.entry);
+        return it("list", function() {
+          return expect(this.entry.view('list') instanceof jQuery).toBeTruthy();
         });
       });
       describe(".isExistPoint", function() {
@@ -955,24 +901,84 @@
         });
       });
       return describe("constructor", function() {
-        return describe("yes template", function() {
-          beforeEach(function() {
-            var options;
-            options = new MapList.Options({
-              infoTemplate: "<div>foo</div>",
-              listTemplate: "<div>bar</div>"
-            });
-            return this.entry = new this.Entry({}, options);
-          });
-          it("instance check info", function() {
-            return expect(this.entry.info instanceof google.maps.InfoWindow).toBeTruthy();
-          });
-          it("instance check marker", function() {
-            return expect(this.entry.marker instanceof google.maps.Marker).toBeTruthy();
-          });
-          return it("instance check list", function() {
-            return expect(this.entry.list instanceof jQuery).toBeTruthy();
-          });
+        return it("instance check views", function() {
+          var entry;
+          entry = new this.Entry;
+          return expect(entry.views instanceof MapList.EntryViews).toBeTruthy();
+        });
+      });
+    });
+    describe("EntryViews", function() {
+      beforeEach(function() {
+        var options;
+        this.entry = new MapList.Entry({
+          lat: 35,
+          lng: 135,
+          icon: "icon.png",
+          shadow: "shadow.png"
+        });
+        this.entry.closeInfo = this.createSpy('closeInfo');
+        this.entry.openInfo = this.createSpy('openInfo');
+        options = new MapList.Options({
+          infoTemplate: "<div>info</div>",
+          listTemplate: "<div>list</div>"
+        });
+        return this.views = new MapList.EntryViews(this.entry, options);
+      });
+      describe(".createInfo", function() {
+        beforeEach(function() {
+          return this.info = this.views.createInfo();
+        });
+        it("instanceof InfoWindow", function() {
+          return expect(this.info instanceof google.maps.InfoWindow).toBeTruthy();
+        });
+        it("make sure that info has content", function() {
+          return expect(this.info.getContent()).toEqual("<div>info</div>");
+        });
+        return it("fires the closeclick event and execute @closeInfo", function() {
+          google.maps.event.trigger(this.info, "closeclick");
+          return expect(this.entry.closeInfo).toHaveBeenCalled();
+        });
+      });
+      describe(".createMarker", function() {
+        beforeEach(function() {
+          return this.marker = this.views.createMarker();
+        });
+        it("instance of Marker", function() {
+          return expect(this.marker instanceof google.maps.Marker).toBeTruthy();
+        });
+        it("position instanceof LatLng", function() {
+          return expect(this.marker.getPosition() instanceof google.maps.LatLng).toBeTruthy();
+        });
+        it("check lat", function() {
+          return expect(this.marker.getPosition().lat()).toEqual(35);
+        });
+        it("check lng", function() {
+          return expect(this.marker.getPosition().lng()).toEqual(135);
+        });
+        it("check icon", function() {
+          return expect(this.marker.getIcon()).toEqual("icon.png");
+        });
+        it("check shadow", function() {
+          return expect(this.marker.getShadow()).toEqual("shadow.png");
+        });
+        return it("fires the click event and execute @openInfo", function() {
+          google.maps.event.trigger(this.marker, "click");
+          return expect(this.entry.openInfo).toHaveBeenCalled();
+        });
+      });
+      return describe(".createList", function() {
+        beforeEach(function() {
+          return this.res = this.views.createList();
+        });
+        it("responce itstanceof jQuery", function() {
+          return expect(this.res instanceof jQuery).toBeTruthy();
+        });
+        it("class is '__list'", function() {
+          return expect(this.res.attr("class")).toEqual("__list");
+        });
+        return it("have entry", function() {
+          return expect(this.res.data("entry")).toBe(this.entry);
         });
       });
     });

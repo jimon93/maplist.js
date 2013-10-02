@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.5.13
+MapList JavaScript Library v1.5.14
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -304,9 +304,7 @@ do ($=jQuery,global=this)->
   #}}}
   class Entry extends Backbone.Model #{{{
     initialize: (attributes = {}, options = {})=>
-      @info   = @makeInfo(options.infoHtmlFactory)
-      @marker = @makeMarker()
-      @list   = @makeList(options.listHtmlFactory)
+      @views = new EntryViews(@, options)
 
     openInfo:=>
       @trigger('openinfo', @)
@@ -314,23 +312,8 @@ do ($=jQuery,global=this)->
     closeInfo:=>
       @trigger('closeinfo', @)
 
-    makeInfo:(infoHtmlFactory)=>
-      content = @get('__infoElement') || infoHtmlFactory.make( @toJSON() )
-      if content? and !!content.replace(/\s/g,"")
-        info = new google.maps.InfoWindow {content}
-        google.maps.event.addListener( info, 'closeclick', @closeInfo )
-        return info
-
-    makeMarker:=>
-      position = new google.maps.LatLng( @get('lat'), @get('lng') )
-      marker = new google.maps.Marker { position, icon: @get('icon'), shadow: @get('shadow') }
-      google.maps.event.addListener( marker, 'click', @openInfo ) if @info?
-      return marker
-
-    makeList:(listHtmlFactory)=>
-      content = listHtmlFactory.make( @toJSON() )
-      if content? and !!content.replace(/\s/g,"")
-        $(content).addClass("__list").data("entry",@)
+    view: (type)=>
+      @views.get(type)
 
     isExistPoint:=>
       return @_isExistPoint ?= do=>
@@ -341,6 +324,40 @@ do ($=jQuery,global=this)->
     isSelect:(properties)=>
       @isExistPoint() and ( _.isEmpty(properties) or _([@toJSON()]).findWhere(properties)? ) ? true : false
 
+  #}}}
+  class EntryViews #{{{
+    constructor: (@entry, @options)->
+      @data = {}
+
+    get: (type)=>
+      unless @data.hasOwnProperty(type)
+        @data[type] = switch type
+          when "info"   then @createInfo()
+          when "marker" then @createMarker()
+          when "list"   then @createList()
+      @data[type]
+
+    createInfo: =>
+      htmlFactory = @options.infoHtmlFactory
+      content = @entry.get('__infoElement') || htmlFactory.make( @entry.toJSON() )
+      if content? and !!content.replace(/\s/g,"")
+        info = new google.maps.InfoWindow {content}
+        google.maps.event.addListener( info, 'closeclick', @entry.closeInfo )
+        return info
+
+    createMarker: =>
+      position = new google.maps.LatLng( @entry.get('lat'), @entry.get('lng') )
+      icon = @entry.get('icon')
+      shadow = @entry.get('shadow')
+      marker = new google.maps.Marker { position, icon, shadow }
+      google.maps.event.addListener( marker, 'click', @entry.openInfo )
+      return marker
+
+    createList: =>
+      htmlFactory = @options.listHtmlFactory
+      content = htmlFactory.make( @entry.toJSON() )
+      if content? and !!content.replace(/\s/g,"")
+        $(content).addClass("__list").data("entry",@entry)
   #}}}
   class Entries extends Backbone.Collection #{{{
     model: Entry
@@ -408,30 +425,30 @@ do ($=jQuery,global=this)->
     # マーカー，インフォ，リストを構築
     build:(entries)=>
       for entry in entries
-        entry.marker.setMap(@map)
+        entry.view('marker').setMap(@map)
       @fitBounds(entries) if @options.canFitBounds
 
     # マーカー, インフォ, リストを消す
     clear:(entries)=>
       @closeOpenedInfo()
       for entry in entries
-        entry.marker.setMap(null)
+        entry.view('marker').setMap(null)
 
     openInfo:(entry)=>
       @openedInfoEntry?.closeInfo()
-      entry.info.open(@map,entry.marker)
+      entry.view('info').open(@map,entry.view('marker'))
       @openedInfoEntry = entry
 
     closeOpenedInfo:=>
       if @openedInfoEntry?
-        @openedInfoEntry.info.close()
+        @openedInfoEntry.view('info').close()
         @openedInfoEntry = null
 
     fitBounds:(entries)=>
       if entries.length > 0
         bounds = new google.maps.LatLngBounds
         for entry in entries
-          bounds.extend( entry.marker.getPosition() )
+          bounds.extend( entry.view('marker').getPosition() )
         if @options.fixedZoom
           @map.setCenter( bounds.getCenter() )
           @map.setZoom( @options.zoom )
@@ -447,11 +464,11 @@ do ($=jQuery,global=this)->
 
     build:(entries)=>
       for entry in entries
-        entry.list?.appendTo(@$el)
+        entry.view('list')?.appendTo(@$el)
 
     clear:(entries)=>
       for entry in entries
-        entry.list?.detach()
+        entry.view('list')?.detach()
 
     openInfo:(e)=>
       $target = $(e.currentTarget)
@@ -479,6 +496,7 @@ do ($=jQuery,global=this)->
     Source
     Parser
     Entry
+    EntryViews
     Entries
     HtmlFactory
     MapView

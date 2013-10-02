@@ -438,66 +438,20 @@ describe "MapList", ->
     beforeEach ->
       @Entry = MapList.Entry
 
-    describe ".makeInfo", ->
+    describe ".view",->
       beforeEach ->
-        @entry = new Backbone.Model({title:"FooBar"})
-        @entry.closeInfo = @createSpy("closeInfo")
-        @factory = MapList.HtmlFactory.create(_.template,"<%- title %>")
-        @info = @Entry::makeInfo.call(@entry,@factory)
+        options = new MapList.Options {infoTemplate:"<div>info</div>", listTemplate:"<div>list</div>"}
+        @entry = new @Entry {}, options
 
-      it "instanceof InfoWindow",->
-        expect(@info instanceof google.maps.InfoWindow).toBeTruthy()
+      it "info",->
+        expect(@entry.view('info') instanceof google.maps.InfoWindow).toBeTruthy()
 
-      it "make sure that info has content", ->
-        expect(@info.getContent()).toEqual("FooBar")
+      it "marker",->
+        expect(@entry.view('marker') instanceof google.maps.Marker).toBeTruthy()
 
-      it "fires the closeclick event and execute @closeInfo",->
-        google.maps.event.trigger(@info,"closeclick")
-        expect(@entry.closeInfo).toHaveBeenCalled()
+      it "list",->
+        expect(@entry.view('list') instanceof jQuery).toBeTruthy()
 
-    describe ".makeMarker",->
-      beforeEach ->
-        @entry = new Backbone.Model({lat:35,lng:135,icon:"icon.png",shadow:"shadow.png"})
-        @entry.openInfo = @createSpy("openInfo")
-        @entry.info = true
-        @marker = @Entry::makeMarker.call(@entry)
-
-      it "instance of Marker",->
-        expect(@marker instanceof google.maps.Marker).toBeTruthy()
-
-      it "position instanceof LatLng",->
-        expect(@marker.getPosition() instanceof google.maps.LatLng).toBeTruthy()
-
-      it "check lat",->
-        expect(@marker.getPosition().lat()).toEqual(35)
-
-      it "check lng",->
-        expect(@marker.getPosition().lng()).toEqual(135)
-
-      it "check icon",->
-        expect(@marker.getIcon()).toEqual("icon.png")
-
-      it "check shadow",->
-        expect(@marker.getShadow()).toEqual("shadow.png")
-
-      it "fires the click event and execute @openInfo",->
-        google.maps.event.trigger(@marker,"click")
-        expect(@entry.openInfo).toHaveBeenCalled()
-
-    describe ".makeList", ->
-      beforeEach ->
-        @entry = new Backbone.Model({title:"FooBar"})
-        @factory = MapList.HtmlFactory.create(_.template,"<div><%- title %></div>")
-        @res = @Entry::makeList.call(@entry,@factory)
-
-      it "responce itstanceof jQuery",->
-        expect(@res instanceof jQuery).toBeTruthy()
-
-      it "class is '__list'",->
-        expect(@res.attr("class")).toEqual("__list")
-
-      it "have entry",->
-        expect(@res.data("entry")).toBe(@entry)
 
     describe ".isExistPoint",->
       beforeEach ->
@@ -557,20 +511,70 @@ describe "MapList", ->
         @Entry::closeInfo.call(entry)
 
     describe "constructor",->
-      describe "yes template",->
-        beforeEach ->
-          options = new MapList.Options {infoTemplate:"<div>foo</div>", listTemplate:"<div>bar</div>"}
-          @entry = new @Entry({},options)
+      it "instance check views",->
+        entry = new @Entry
+        expect(entry.views instanceof MapList.EntryViews).toBeTruthy()
+  #}}}
+  describe "EntryViews",-> #{{{
+    beforeEach ->
+      @entry = new MapList.Entry {lat: 35, lng: 135, icon: "icon.png", shadow: "shadow.png"}
+      @entry.closeInfo = @createSpy('closeInfo')
+      @entry.openInfo = @createSpy('openInfo')
+      options = new MapList.Options {infoTemplate:"<div>info</div>", listTemplate:"<div>list</div>"}
+      @views = new MapList.EntryViews( @entry, options )
 
-        it "instance check info",->
-          expect(@entry.info instanceof google.maps.InfoWindow).toBeTruthy()
+    describe ".createInfo", ->
+      beforeEach ->
+        @info = @views.createInfo()
 
-        it "instance check marker",->
-          expect(@entry.marker instanceof google.maps.Marker).toBeTruthy()
+      it "instanceof InfoWindow",->
+        expect(@info instanceof google.maps.InfoWindow).toBeTruthy()
 
-        it "instance check list",->
-          expect(@entry.list instanceof jQuery).toBeTruthy()
+      it "make sure that info has content", ->
+        expect(@info.getContent()).toEqual("<div>info</div>")
 
+      it "fires the closeclick event and execute @closeInfo",->
+        google.maps.event.trigger(@info,"closeclick")
+        expect(@entry.closeInfo).toHaveBeenCalled()
+
+    describe ".createMarker",->
+      beforeEach ->
+        @marker = @views.createMarker()
+
+      it "instance of Marker",->
+        expect(@marker instanceof google.maps.Marker).toBeTruthy()
+
+      it "position instanceof LatLng",->
+        expect(@marker.getPosition() instanceof google.maps.LatLng).toBeTruthy()
+
+      it "check lat",->
+        expect(@marker.getPosition().lat()).toEqual(35)
+
+      it "check lng",->
+        expect(@marker.getPosition().lng()).toEqual(135)
+
+      it "check icon",->
+        expect(@marker.getIcon()).toEqual("icon.png")
+
+      it "check shadow",->
+        expect(@marker.getShadow()).toEqual("shadow.png")
+
+      it "fires the click event and execute @openInfo",->
+        google.maps.event.trigger(@marker,"click")
+        expect(@entry.openInfo).toHaveBeenCalled()
+
+    describe ".createList", ->
+      beforeEach ->
+        @res = @views.createList()
+
+      it "responce itstanceof jQuery",->
+        expect(@res instanceof jQuery).toBeTruthy()
+
+      it "class is '__list'",->
+        expect(@res.attr("class")).toEqual("__list")
+
+      it "have entry",->
+        expect(@res.data("entry")).toBe(@entry)
   #}}}
   describe "Entries", -> #{{{
   #}}}
