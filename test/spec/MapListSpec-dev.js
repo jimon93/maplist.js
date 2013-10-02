@@ -1121,7 +1121,119 @@
         return expect(result).toEqual("<div>Bob</div>");
       });
     });
-    describe("MapView", function() {});
+    describe("MapView", function() {
+      beforeEach(function() {
+        this.options = new MapList.Options({
+          infoTemplate: "<div>info</div>",
+          listTemplate: "<div>list</div>"
+        });
+        this.mapView = new MapList.MapView(this.options);
+        return this.entries = new MapList.Entries(this.data.entries.object, this.options);
+      });
+      afterEach(function() {
+        return $("#map_canvas").children().remove();
+      });
+      describe("constructor", function() {
+        it("instance of Backbone.View", function() {
+          return expect(this.mapView instanceof Backbone.View).toBeTruthy();
+        });
+        return it("google maps create", function() {
+          return expect(this.mapView.map instanceof google.maps.Map).toBeTruthy();
+        });
+      });
+      describe(".build", function() {
+        beforeEach(function() {
+          var _this = this;
+          this.setMap = this.createSpy("setMap");
+          this.entries.each(function(entry) {
+            return entry.view('marker').setMap = _this.setMap;
+          });
+          return this.mapView.fitBounds = this.createSpy("fitBounds");
+        });
+        it("execute entry.marker.setMap", function() {
+          this.mapView.build(this.entries.models);
+          return expect(this.setMap.calls.length).toEqual(this.entries.length);
+        });
+        it("execute entry.marker.setMap with @map", function() {
+          this.mapView.build(this.entries.models);
+          return expect(this.setMap.calls[0].args[0]).toBe(this.mapView.map);
+        });
+        it("execute @fitBounds if @options.doFit == true", function() {
+          this.mapView.build(this.entries.models);
+          return expect(this.mapView.fitBounds).toHaveBeenCalled();
+        });
+        return it("execute @fitBounds with entries", function() {
+          this.mapView.build(this.entries.models);
+          return expect(this.mapView.fitBounds.calls[0].args[0]).toBe(this.entries.models);
+        });
+      });
+      describe(".clear", function() {
+        beforeEach(function() {
+          var _this = this;
+          this.setMap = this.createSpy("setMap");
+          this.entries.each(function(entry) {
+            return entry.view('marker').setMap = _this.setMap;
+          });
+          this.mapView.closeOpenedInfo = this.createSpy("closeOpenedInfo");
+          return this.mapView.clear(this.entries.models);
+        });
+        it("execute @closeOpenedInfo", function() {
+          return expect(this.mapView.closeOpenedInfo).toHaveBeenCalled();
+        });
+        it("execute entry.marker.setMap", function() {
+          return expect(this.setMap.calls.length).toEqual(this.entries.length);
+        });
+        return it("execute entry.marker.setMap with null", function() {
+          return expect(this.setMap.calls[0].args[0]).toBe(null);
+        });
+      });
+      describe(".openInfo", function() {
+        beforeEach(function() {
+          var _this = this;
+          this.info = {
+            open: this.createSpy("open")
+          };
+          this.marker = 'marker';
+          this.entry = {
+            view: function(type) {
+              switch (type) {
+                case "info":
+                  return _this.info;
+                case "marker":
+                  return _this.marker;
+              }
+            }
+          };
+          return this.mapView.openInfo(this.entry);
+        });
+        it("execute info.open", function() {
+          return expect(this.info.open).toHaveBeenCalled();
+        });
+        it("execute info.open with 0:@map", function() {
+          return expect(this.info.open.calls[0].args[0]).toBe(this.mapView.map);
+        });
+        it("execute info.open with 1:marker", function() {
+          return expect(this.info.open.calls[0].args[1]).toBe(this.marker);
+        });
+        return it("chche @openedInfo", function() {
+          return expect(this.mapView.openedInfoEntry).toBe(this.entry);
+        });
+      });
+      return describe(".closeOpenedInfo", function() {
+        beforeEach(function() {
+          this.close = this.createSpy("close");
+          this.mapView.openedInfoEntry = new MapList.Entry({}, this.options);
+          this.mapView.openedInfoEntry.view('info').close = this.close;
+          return this.mapView.closeOpenedInfo();
+        });
+        it("execute openedInfo.close", function() {
+          return expect(this.close).toHaveBeenCalled();
+        });
+        return it("nonchche openedInfo", function() {
+          return expect(this.mapView.openedInfoEntry).toBe(null);
+        });
+      });
+    });
     describe("ListView", function() {
       beforeEach(function() {
         this.options = new MapList.Options;

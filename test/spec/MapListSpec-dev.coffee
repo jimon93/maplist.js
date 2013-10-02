@@ -578,7 +578,7 @@ describe "MapList", ->
   #}}}
   describe "Entries", -> #{{{
     beforeEach ->
-      options = new MapList.Options #{infoTemplate:"<div>info</div>", listTemplate:"<div>list</div>"}
+      options = new MapList.Options
       @entries = new MapList.Entries @data.entries.object, options
       @prop = {genre: "関東"}
 
@@ -682,6 +682,95 @@ describe "MapList", ->
       expect(result).toEqual("<div>Bob</div>")
   #}}}
   describe "MapView", -> #{{{
+    beforeEach ->
+      @options = new MapList.Options {infoTemplate:"<div>info</div>", listTemplate:"<div>list</div>"}
+      @mapView = new MapList.MapView(@options)
+      @entries = new MapList.Entries(@data.entries.object, @options)
+
+    afterEach ->
+      $("#map_canvas").children().remove()
+
+    describe "constructor",->
+      it "instance of Backbone.View",->
+        expect(@mapView instanceof Backbone.View).toBeTruthy()
+
+      it "google maps create",->
+        expect(@mapView.map instanceof google.maps.Map).toBeTruthy()
+
+    describe ".build",->
+      beforeEach ->
+        @setMap = @createSpy("setMap")
+        @entries.each (entry) => entry.view('marker').setMap = @setMap
+        @mapView.fitBounds = @createSpy("fitBounds")
+
+      it "execute entry.marker.setMap",->
+        @mapView.build(@entries.models)
+        expect(@setMap.calls.length).toEqual(@entries.length)
+
+      it "execute entry.marker.setMap with @map",->
+        @mapView.build(@entries.models)
+        expect(@setMap.calls[0].args[0]).toBe(@mapView.map)
+
+      it "execute @fitBounds if @options.doFit == true",->
+        @mapView.build(@entries.models)
+        expect(@mapView.fitBounds).toHaveBeenCalled()
+
+      it "execute @fitBounds with entries",->
+        @mapView.build(@entries.models)
+        expect(@mapView.fitBounds.calls[0].args[0]).toBe(@entries.models)
+
+    describe ".clear",->
+      beforeEach ->
+        @setMap = @createSpy("setMap")
+        @entries.each (entry) => entry.view('marker').setMap = @setMap
+        @mapView.closeOpenedInfo = @createSpy("closeOpenedInfo")
+        @mapView.clear(@entries.models)
+
+      it "execute @closeOpenedInfo",->
+        expect(@mapView.closeOpenedInfo).toHaveBeenCalled()
+
+      it "execute entry.marker.setMap",->
+        expect(@setMap.calls.length).toEqual(@entries.length)
+
+      it "execute entry.marker.setMap with null",->
+        expect(@setMap.calls[0].args[0]).toBe(null)
+
+    describe ".openInfo",->
+      beforeEach ->
+        @info = { open: @createSpy("open") }
+        @marker = 'marker'
+        @entry = {
+          view: (type)=>
+            switch type
+              when "info" then @info
+              when "marker" then @marker
+        }
+        @mapView.openInfo(@entry)
+
+      it "execute info.open", ->
+        expect(@info.open).toHaveBeenCalled()
+
+      it "execute info.open with 0:@map", ->
+        expect(@info.open.calls[0].args[0]).toBe(@mapView.map)
+
+      it "execute info.open with 1:marker", ->
+        expect(@info.open.calls[0].args[1]).toBe(@marker)
+
+      it "chche @openedInfo",->
+        expect(@mapView.openedInfoEntry).toBe(@entry)
+
+    describe ".closeOpenedInfo",->
+      beforeEach ->
+        @close = @createSpy("close")
+        @mapView.openedInfoEntry = new MapList.Entry({}, @options)
+        @mapView.openedInfoEntry.view('info').close = @close
+        @mapView.closeOpenedInfo()
+
+      it "execute openedInfo.close",->
+        expect(@close).toHaveBeenCalled()
+
+      it "nonchche openedInfo", ->
+        expect(@mapView.openedInfoEntry).toBe(null)
   #}}}
   describe "ListView", -> #{{{
     beforeEach ->
