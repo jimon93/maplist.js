@@ -441,7 +441,7 @@ do ($=jQuery,global=this)->
 
     closeOpenedInfo:=>
       if @openedInfoEntry?
-        @openedInfoEntry.view('info').close()
+        @openedInfoEntry.view('info')?.close()
         @openedInfoEntry = null
 
     fitBounds:(entries)=>
