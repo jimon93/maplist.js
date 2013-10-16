@@ -1,5 +1,5 @@
 ###
-MapList JavaScript Library v1.6.0
+MapList JavaScript Library v1.6.1
 http://github.com/jimon93/maplist.js
 
 Require Library
@@ -436,7 +436,7 @@ do ($=jQuery,global=this)->
 
     openInfo:(entry)=>
       @openedInfoEntry?.closeInfo()
-      entry.view('info').open(@map,entry.view('marker'))
+      entry.view('info')?.open(@map,entry.view('marker'))
       @openedInfoEntry = entry
 
     closeOpenedInfo:=>
